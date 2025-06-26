@@ -1,0 +1,2 @@
+Day 1 26 June  
+1. Install all shadcn , magiu , accernity navbar 
