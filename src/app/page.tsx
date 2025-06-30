@@ -1,4 +1,4 @@
-import KeyboardWrapper from '@/components/Dashboard/Keyboard/keyboardWrapper'
+import Section1 from '@/components/Dashboard/layout/Section1'
 import { NavbarMain } from '@/components/Dashboard/navbar'
 import { Spotlight } from '@/components/ui/spotlight'
 import React from 'react'
@@ -11,8 +11,11 @@ function page() {
         fill="white"
       />
       <NavbarMain />
-      <KeyboardWrapper />
-      
+      <div className="mt-8"> 
+      <Section1 />
+       
+      </div>
+
     </div>
   )
 }
