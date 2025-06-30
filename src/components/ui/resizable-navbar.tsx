@@ -276,11 +276,21 @@ export const NavbarButton = ({
       "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]",
   };
 
-  return (
-    <Tag
-      href={href || undefined}
+  // Type guard to check if Tag is 'a'
+  const isAnchor = Tag === "a" || Tag === "A";
+
+  return isAnchor ? (
+    <a
+      href={href}
       className={cn(baseStyles, variantStyles[variant], className)}
-      {...props}
+      {...(props as React.ComponentPropsWithoutRef<"a">)}
+    >
+      {children}
+    </a>
+  ) : (
+    <Tag
+      className={cn(baseStyles, variantStyles[variant], className)}
+      {...(props as React.ComponentPropsWithoutRef<any>)}
     >
       {children}
     </Tag>
