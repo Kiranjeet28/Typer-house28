@@ -37,8 +37,8 @@ export function NavbarMain() {
                     <NavbarLogo />
                     <NavItems items={navItems} />
                     <div className="flex items-center gap-4">
-                        <NavbarButton variant="secondary">Login</NavbarButton>
-                        <NavbarButton variant="primary">Create Typo</NavbarButton>
+                    <NavbarButton variant="secondary" className="border-green-600 text-green-400 hover:bg-slate-800 bg-transparent">Login</NavbarButton>
+                    <NavbarButton variant="primary" className="bg-green-600 hover:bg-green-700 text-white">Create Typo</NavbarButton>
                     </div>
                 </NavBody>
 
@@ -70,14 +70,14 @@ export function NavbarMain() {
                             <NavbarButton
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 variant="primary"
-                                className="w-full"
+                            className="border-green-600 text-green-400 hover:bg-slate-800 bg-transparent"
                             >
                                 Login
                             </NavbarButton>
                             <NavbarButton
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 variant="primary"
-                                className="w-full"
+                            className="bg-green-600 hover:bg-green-700 text-white"
                             >
                                 Join You Typo&apos;s
                             </NavbarButton>
