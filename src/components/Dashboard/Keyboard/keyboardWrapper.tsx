@@ -20,27 +20,26 @@ function CanvasLoader() {
 
 function KeyboardWrapper() {
     // Leva controls for the keyboard
-    const keyboardProps = useControls('Keyboard', {
-        position: {
-            value: [0, 0, 0],
-            step: 0.1,
-        },
-        rotation: {
-            value: [-0.60, 3.2, 0],
-            step: 0.01,
-        },
-        scale: {
-            value: [5.5, 6, 6],
-            min: 0.1,
-            max: 10,
-            step: 0.1,
-        },
-    })
+    // Track scroll position
+    const [scrollY, setScrollY] = React.useState(0)
+
+    React.useEffect(() => {
+        const handleScroll = () => setScrollY(window.scrollY)
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    // Map scrollY to keyboard properties
+    const keyboardProps = {
+        position: [0, -2.0, 0 + scrollY * 0.01] as [number, number, number],
+        rotation: [-6.03 + scrollY * 0.001, 3.2, 0] as [number, number, number],
+        scale: [5.5 , 6, 6] as [number, number, number],
+    }
 
     // Camera controls
     const cameraProps = useControls('Camera', {
         cameraPosition: {
-            value: [0, 10, -7],
+            value: [0, 10, -2],
             step: 0.5,
         },
     })
@@ -55,8 +54,8 @@ function KeyboardWrapper() {
     return (
         <div className="relative">
             {/* Leva panel removed */}
-            <Leva hidden/>
-            <Canvas className="w-[30vw] h-[40vw]">
+            <Leva hidden />
+            <Canvas>
                 <Suspense fallback={<CanvasLoader />}>
                     <PerspectiveCamera makeDefault position={cameraProps.cameraPosition} />
                     <OrbitControls enableZoom={false} />
