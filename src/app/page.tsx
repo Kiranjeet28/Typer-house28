@@ -1,4 +1,5 @@
 import Section1 from '@/components/Dashboard/layout/Section1'
+import Section2 from '@/components/Dashboard/layout/Section2'
 import { NavbarMain } from '@/components/Dashboard/navbar'
 import { Spotlight } from '@/components/ui/spotlight'
 import React from 'react'
@@ -13,7 +14,7 @@ function page() {
       <NavbarMain />
       <div className="mt-8"> 
       <Section1 />
-       
+      <Section2/>
       </div>
 
     </div>

@@ -4,3 +4,5 @@ Day 30 june
 section 1 & Navbar is complete 
 Day 1 july 
 main page steps to endroll
+2 july 
+add section 2 of the steps 
