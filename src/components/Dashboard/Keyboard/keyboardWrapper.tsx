@@ -19,9 +19,11 @@ function CanvasLoader() {
 }
 
 function KeyboardWrapper() {
-    // Leva controls for the keyboard
     // Track scroll position
     const [scrollY, setScrollY] = React.useState(0)
+    // Track animation state
+    const [isLoaded, setIsLoaded] = React.useState(false)
+    const [animationProgress, setAnimationProgress] = React.useState(0)
 
     React.useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY)
@@ -29,11 +31,65 @@ function KeyboardWrapper() {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
-    // Map scrollY to keyboard properties
+    // Animation effect for 3D reveal
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoaded(true)
+        }, 300) // Small delay to ensure canvas is ready
+
+        return () => clearTimeout(timer)
+    }, [])
+
+    // Animate the rotation progress
+    React.useEffect(() => {
+        if (!isLoaded) return
+
+        const animationDuration = 2000 // 2 seconds
+        const startTime = Date.now()
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime
+            const progress = Math.min(elapsed / animationDuration, 1)
+
+            // Easing function for smooth animation (ease-out)
+            const easeOut = 1 - Math.pow(1 - progress, 3)
+            setAnimationProgress(easeOut)
+
+            if (progress < 1) {
+                requestAnimationFrame(animate)
+            }
+        }
+
+        animate()
+    }, [isLoaded])
+
+    // Calculate rotation based on animation progress
+    const getRotation = (): [number, number, number] => {
+        // Original/target rotation values
+        const baseRotationX = -6.03 + scrollY * 0.001
+        const baseRotationY = 3.2
+        const baseRotationZ = 0
+
+        // Start with 45-degree rotation, then animate to original position
+        const startRotationY = Math.PI / 4 // 45 degrees in radians
+        const startRotationX = Math.PI / 12 // Slight X rotation for better 3D effect
+
+        // Interpolate from start position to target position
+        const animationRotationY = startRotationY * (1 - animationProgress)
+        const animationRotationX = startRotationX * (1 - animationProgress)
+
+        return [
+            baseRotationX + animationRotationX,
+            baseRotationY + animationRotationY,
+            baseRotationZ
+        ]
+    }
+
+    // Map scrollY to keyboard properties with animation
     const keyboardProps = {
         position: [0, -2.0, 0 + scrollY * 0.01] as [number, number, number],
-        rotation: [-6.03 + scrollY * 0.001, 3.2, 0] as [number, number, number],
-        scale: [5.5 , 6, 6] as [number, number, number],
+        rotation: getRotation(),
+        scale: [5.5, 6, 6] as [number, number, number],
     }
 
     // Camera controls
@@ -52,8 +108,8 @@ function KeyboardWrapper() {
     })
 
     return (
-        <div className="relative">
-            {/* Leva panel removed */}
+        <div className="absoulte  lg:w-[45vw] h-[30vh] z-10">
+            {/* Leva panel hidden */}
             <Leva hidden />
             <Canvas>
                 <Suspense fallback={<CanvasLoader />}>
