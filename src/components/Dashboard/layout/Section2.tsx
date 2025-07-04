@@ -1,11 +1,12 @@
-import {
-    Card,
+  import {  Card,
     CardContent,
     CardHeader,
     CardTitle
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { ShineBorder } from "@/components/magicui/shine-border";
+import { MagicCard } from "@/components/magicui/magic-card";
+import { RainbowButton } from "@/components/magicui/rainbow-button";
 
 function Section2() {
     return (
@@ -19,7 +20,7 @@ function Section2() {
                 </div>
 
                 {/* Grid Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto justify-items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto justify-center items-">
 
                     {/* Step 1 - Login */}
                     <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
@@ -63,7 +64,7 @@ function Section2() {
                             </p>
                         </CardContent>
                     </Card>
-
+                    
                     {/* Step 4 - Share with Friends */}
                     <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
@@ -98,14 +99,19 @@ function Section2() {
 
                 {/* Additional CTA Section */}
                 <div className="text-center mt-12">
-                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 max-w-2xl mx-auto">
+                 
+                    <div >
+                        <MagicCard
+                            gradientColor={"#262626"}
+                            className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 max-w-2xl mx-auto"
+                        >
                         <h3 className="text-2xl font-bold text-slate-100 mb-4">Ready to Test Your Speed?</h3>
                         <p className="text-slate-400 mb-6">
                             Join thousands of users improving their typing skills with competitive multiplayer tests
-                        </p>
-                        <Button size="lg" className="bg-slate-700 hover:bg-slate-600 text-slate-100 px-8 py-3 rounded-lg font-semibold transition-colors border border-slate-600">
-                            Get Started Now
-                        </Button>
+                            </p>
+                            <RainbowButton variant="outline">Get Started Now</RainbowButton>
+                       
+            </MagicCard>
                     </div>
                 </div>
             </div>

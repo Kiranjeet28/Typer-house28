@@ -11,6 +11,7 @@ import {
     MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
 import { useState } from "react";
+import { RainbowButton } from "../magicui/rainbow-button";
 
 export function NavbarMain() {
     const navItems = [
@@ -38,7 +39,7 @@ export function NavbarMain() {
                     <NavItems items={navItems} />
                     <div className="flex items-center gap-4">
                     <NavbarButton variant="secondary" className="border-green-600 text-green-400 hover:bg-slate-800 bg-transparent">Login</NavbarButton>
-                    <NavbarButton variant="primary" className="bg-green-600 hover:bg-green-700 text-white">Create Typo</NavbarButton>
+                    <RainbowButton variant="outline" className="bg-green-600 hover:bg-green-700 text-white">create Typo</RainbowButton>
                     </div>
                 </NavBody>
 
