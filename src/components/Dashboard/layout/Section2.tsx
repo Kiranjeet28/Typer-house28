@@ -20,7 +20,7 @@ function Section2() {
                 </div>
 
                 {/* Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto justify-center items-">
+            <div className=" flex flex-col md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto justify-center items-center">
 
                     {/* Step 1 - Login */}
                     <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
