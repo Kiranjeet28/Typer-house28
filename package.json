@@ -22,6 +22,7 @@
     "lucide-react": "^0.523.0",
     "motion": "^12.19.1",
     "next": "15.3.1",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-simple-keyboard": "^3.8.88",
