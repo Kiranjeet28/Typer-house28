@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NavbarMain } from '@/components/Dashboard/navbar'
-import Footer from '@/components/Footer/Footer'
+import { Geist, Geist_Mono } from "next/font/google";
+import Providers from "./providers"; // ✅ import client-side wrapper
+import { NavbarMain } from "@/components/Dashboard/navbar";
+import Footer from "@/components/Footer/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,26 +14,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Typerhouse",
   description: "Check Typo",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
       >
-        <NavbarMain />
-
-        {children}
-        <Footer />
-
+        <Providers>
+          <NavbarMain />
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
