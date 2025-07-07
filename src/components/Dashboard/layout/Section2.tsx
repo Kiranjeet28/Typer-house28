@@ -1,9 +1,6 @@
   import {  Card,
     CardContent,
-    CardHeader,
-    CardTitle
 } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
 import { ShineBorder } from "@/components/magicui/shine-border";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
@@ -45,7 +42,7 @@ function Section2() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">Create a Room</h3>
                             <p className="text-slate-400 leading-relaxed">
-                                Click on "Create Room" to set up a new typing test session for you and your friends
+                                Click on &quot;Create Room&quot; to set up a new typing test session for you and your friends
                             </p>
                         </CardContent>
                     </Card>
@@ -60,7 +57,7 @@ function Section2() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">You Have a Code</h3>
                             <p className="text-slate-400 leading-relaxed">
-                                Once your room is created, you'll receive a unique room code to share with others
+                                Once your room is created, you&apos;ll receive a unique room code to share with others
                             </p>
                         </CardContent>
                     </Card>
@@ -88,7 +85,7 @@ function Section2() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">Start Typing</h3>
                             <p className="text-slate-400 leading-relaxed">
-                                Once everyone has joined, click "Start" and begin your competitive typing test together!
+                                Once everyone has joined, click &quot;Start&quot; and begin your competitive typing test together!
                             </p>
                             <div className="mt-6">
                              

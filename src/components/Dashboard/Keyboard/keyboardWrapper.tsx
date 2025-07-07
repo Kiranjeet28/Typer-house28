@@ -5,15 +5,6 @@ import { PerspectiveCamera, OrbitControls } from '@react-three/drei'
 import { Leva, useControls } from 'leva'
 import Keyboard from './keyboard'
 
-// Extend the JSX namespace for react-three-fiber to support SVG if needed
-declare global {
-    namespace JSX {
-        interface IntrinsicElements {
-            svg: React.DetailedHTMLProps<React.SVGAttributes<SVGSVGElement>, SVGSVGElement>;
-        }
-    }
-}
-
 function CanvasLoader() {
     return null
 }
@@ -108,7 +99,7 @@ function KeyboardWrapper() {
     })
 
     return (
-        <div className="absoulte  lg:w-[45vw] h-[30vh] z-10">
+        <div className="absolute lg:w-[45vw] h-[30vh] z-10">
             {/* Leva panel hidden */}
             <Leva hidden />
             <Canvas>
