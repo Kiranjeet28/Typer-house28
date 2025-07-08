@@ -99,7 +99,7 @@ function KeyboardWrapper() {
     })
 
     return (
-        <div className="absolute lg:w-[45vw] h-[30vh] z-10">
+        <div className="lg:w-[45vw] h-[30vh] z-10">
             {/* Leva panel hidden */}
             <Leva hidden />
             <Canvas>

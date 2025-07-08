@@ -4,7 +4,7 @@ import KeyboardWrapper from '../Keyboard/keyboardWrapper'
 
 function Section1() {
     return (
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 px-6 py-16">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 px-6 py-16 flex">
                     <div className="container mx-auto">
                             <div className="grid lg:grid-cols-2 gap-12 items-center">
                                     <div>
