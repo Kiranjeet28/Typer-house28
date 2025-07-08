@@ -20,15 +20,13 @@ type GLTFResult = {
 
 type KeyboardProps = ThreeElements["group"] & {
     glowEnabled?: boolean;
-    glowSpeed?: number;
 };
 
-export function Keyboard({ glowEnabled = true, glowSpeed = 200, ...props }: KeyboardProps) {
+export function Keyboard({ glowEnabled = true,  ...props }: KeyboardProps) {
     const { nodes, materials } = useGLTF("/models/kb.glb") as unknown as GLTFResult;
     const [glowIntensity, setGlowIntensity] = useState(0);
 
     // Create materials once using useMemo
-    // console.log("Available materials:", Object.keys(glowSpeed));
     const { glowMaterial, basicMaterial } = useMemo(() => {
         const glow = materials["Letter Glow"].clone();
         const basic = materials["Letter Glow"].clone();
@@ -66,15 +64,6 @@ export function Keyboard({ glowEnabled = true, glowSpeed = 200, ...props }: Keyb
     }, [glowMaterial, basicMaterial]);
 
     const currentMaterial = glowIntensity === 0 ? basicMaterial : glowMaterial;
-    // Add this in your useMemo block to create a special material for the K key
-    const kKeyMaterial = useMemo(() => {
-        const mat = materials["Letter Glow"].clone();
-        mat.color.set("#ff0000"); // Set to red or any color you want
-        mat.emissiveIntensity = glowIntensity;
-        return mat;
-    }, [materials, glowIntensity]);
-
-    // In your JSX, add a mesh for the K key (replace 'K_Key' with the actual node name)
    
     return (
         <group {...props} dispose={null}>

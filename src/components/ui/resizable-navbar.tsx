@@ -7,6 +7,8 @@ import {
   useScroll,
   useMotionValueEvent,
 } from "motion/react";
+import Image from "next/image";
+import Link from "next/link";
 
 import React, { useRef, useState } from "react";
 
@@ -46,7 +48,7 @@ interface MobileNavMenuProps {
   children: React.ReactNode;
   className?: string;
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export const Navbar = ({ children, className }: NavbarProps) => {
@@ -232,36 +234,33 @@ export const MobileNavToggle = ({
 
 export const NavbarLogo = () => {
   return (
-    <a
-      href="#"
+    <Link
+      href="/"
       className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
     >
-      <img
-        src="https://assets.aceternity.com/logo-dark.png"
+      <Image
+        src="./logo/Logo.png"
         alt="logo"
         width={30}
         height={30}
       />
-      <span className="font-medium text-black dark:text-white">Startup</span>
-    </a>
+      <span className="font-medium text-black dark:text-white">Typer House</span>
+    </Link>
   );
 };
 
 export const NavbarButton = ({
   href,
-  as: Tag = "a",
   children,
   className,
   variant = "primary",
   ...props
 }: {
   href?: string;
-  as?: React.ElementType;
   children: React.ReactNode;
   className?: string;
   variant?: "primary" | "secondary" | "dark" | "gradient";
 } & (
-  | React.ComponentPropsWithoutRef<"a">
   | React.ComponentPropsWithoutRef<"button">
 )) => {
   const baseStyles =
@@ -277,22 +276,14 @@ export const NavbarButton = ({
   };
 
   // Type guard to check if Tag is 'a'
-  const isAnchor = Tag === "a" || Tag === "A";
 
-  return isAnchor ? (
-    <a
-      href={href}
+  return( 
+    <Link
+      href={href || "#"}
       className={cn(baseStyles, variantStyles[variant], className)}
       {...(props as React.ComponentPropsWithoutRef<"a">)}
     >
       {children}
-    </a>
-  ) : (
-    <Tag
-      className={cn(baseStyles, variantStyles[variant], className)}
-      {...(props as React.ComponentPropsWithoutRef<any>)}
-    >
-      {children}
-    </Tag>
+    </Link>
   );
 };
