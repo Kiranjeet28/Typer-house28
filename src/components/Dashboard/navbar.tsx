@@ -48,7 +48,7 @@ export function NavbarMain() {
                             <Image
                                 src={session.user.image ?? "/default-profile.png"}
                                 alt="Profile"
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-10 h-10 border-green-600 border-2 rounded-full object-cover"
                                 height={40}
                                 width={40}
                             />
@@ -57,7 +57,8 @@ export function NavbarMain() {
                         )
                     ) : (
                         <>
-                            <RainbowButton
+                                <RainbowButton
+                                    onClick={() => signIn("google")}
                                 variant="outline"
                                 className="bg-green-600 hover:bg-green-700 text-white"
                             >
@@ -107,7 +108,7 @@ export function NavbarMain() {
                                     <Image
                                         alt="Profile"
                                         src={session.user.image ?? "/default-profile.png"}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-10 h-10 border-green-600 border-2 rounded-full object-cover"
                                         height={40}
                                         width={40}
                                     />
@@ -130,7 +131,10 @@ export function NavbarMain() {
                                 <RainbowButton
                                     variant="outline"
                                     className="bg-green-600 hover:bg-green-700 text-white"
-                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    onClick={() => {
+                                        setIsMobileMenuOpen(false);
+                                        signIn("google");
+                                    }}
                                 >
                                     Create Typo&apos;s
                                 </RainbowButton>

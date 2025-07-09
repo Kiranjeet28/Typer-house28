@@ -1,11 +1,14 @@
-  import {  Card,
+"use client" 
+import {
+    Card,
     CardContent,
 } from "@/components/ui/card";
 import { ShineBorder } from "@/components/magicui/shine-border";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
-
+import { useSession } from "next-auth/react";
 function Section2() {
+     const { data: session } = useSession();
     return (
         <div className=" min-h-screen py-12 px-4">
             <div className="container mx-auto">
@@ -95,22 +98,23 @@ function Section2() {
                 </div>
 
                 {/* Additional CTA Section */}
+            {(!session?.user) && (
                 <div className="text-center mt-12">
-                 
-                    <div >
+                    <div>
                         <MagicCard
                             gradientColor={"#262626"}
                             className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 max-w-2xl mx-auto"
                         >
-                        <h3 className="text-2xl font-bold text-slate-100 mb-4">Ready to Test Your Speed?</h3>
-                        <p className="text-slate-400 mb-6">
-                            Join thousands of users improving their typing skills with competitive multiplayer tests
+                            <h3 className="text-2xl font-bold text-slate-100 mb-4">Ready to Test Your Speed?</h3>
+                            <p className="text-slate-400 mb-6">
+                                Join thousands of users improving their typing skills with competitive multiplayer tests
                             </p>
                             <RainbowButton variant="outline">Get Started Now</RainbowButton>
-                       
-            </MagicCard>
+                        </MagicCard>
                     </div>
                 </div>
+            )}
+                
             </div>
         </div>
     )

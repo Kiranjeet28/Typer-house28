@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import React from 'react'
 import KeyboardWrapper from '../Keyboard/keyboardWrapper'
+import { RainbowButton } from '@/components/magicui/rainbow-button'
 
 function Section1() {
     return (
@@ -13,16 +14,12 @@ function Section1() {
                                             </h1>
                                             <p className="text-lg text-slate-300 mb-8">Experience instant results and track your progress easily.</p>
                                             <div className="flex gap-4">
-                                                    <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
-                                                            Create
-                                                    </Button>
-                                                    <Button
-                                                            size="lg"
-                                                            variant="outline"
-                                                            className="border-green-600 text-green-400 hover:bg-slate-800 bg-transparent"
-                                                    >
-                                                            Learn more
-                                                    </Button>
+                                                    <RainbowButton variant="outline">
+                                                            Create Typo&apos;s
+                                                    </RainbowButton>
+                                                    <RainbowButton variant="outline">
+                                                            Join Typo&apos;s
+                                                    </RainbowButton>
                                             </div>
                                     </div>
                                                     <KeyboardWrapper />
