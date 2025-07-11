@@ -15,7 +15,7 @@ declare module "next-auth" {
     }
 }
 
-const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
     // Use Prisma adapter for automatic user/account/session management
     adapter: PrismaAdapter(prisma),
 
