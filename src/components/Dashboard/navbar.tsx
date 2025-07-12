@@ -16,6 +16,7 @@ import {
 import { RainbowButton } from "../magicui/rainbow-button";
 import Image from "next/image";
 import { Keyboard } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function NavbarMain() {
     const navItems = [
@@ -35,7 +36,7 @@ export function NavbarMain() {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { data: session } = useSession();
-
+    const route = useRouter();
     return (
         <Navbar>
             {/* Desktop Navigation */}
@@ -58,12 +59,12 @@ export function NavbarMain() {
                     ) : (
                         <>
                                 <RainbowButton
-                                    onClick={() => signIn("google")}
-                                variant="outline"
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                                Create Typo&apos;s
-                            </RainbowButton>
+                                    onClick={() => { signIn("google"); route.push("/createRoom"); }}
+                                    variant="outline"
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    Create Typo&apos;s
+                                </RainbowButton>
                             <NavbarButton
                                 onClick={() => signIn("google")}
                                 variant="secondary"
@@ -134,6 +135,7 @@ export function NavbarMain() {
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
                                         signIn("google");
+                                        
                                     }}
                                 >
                                     Create Typo&apos;s

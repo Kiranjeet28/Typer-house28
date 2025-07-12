@@ -1,9 +1,12 @@
+"use client";
 import { Button } from '@/components/ui/button'
 import React from 'react'
 import KeyboardWrapper from '../Keyboard/keyboardWrapper'
+import { useRouter } from 'next/navigation';
 import { RainbowButton } from '@/components/magicui/rainbow-button'
 
 function Section1() {
+        const route = useRouter();
     return (
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 px-6 py-16 flex">
                     <div className="container mx-auto">
@@ -14,7 +17,7 @@ function Section1() {
                                             </h1>
                                             <p className="text-lg text-slate-300 mb-8">Experience instant results and track your progress easily.</p>
                                             <div className="flex gap-4">
-                                                    <RainbowButton variant="outline">
+                                                    <RainbowButton variant="outline" onClick={() => { route.push("/createRoom"); }}>
                                                             Create Typo&apos;s
                                                     </RainbowButton>
                                                     <RainbowButton variant="outline">

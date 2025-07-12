@@ -14,18 +14,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner'; // optional: for notifications
+import { toast } from 'sonner';
 
 export default function CreateRoomForm() {
     const router = useRouter();
     const [form, setForm] = useState({
         name: '',
         description: '',
-        maxPlayers: '4',
+        maxPlayers: 4,
         isPrivate: false,
         gameMode: 'SPEED_TEST',
         textLength: 'MEDIUM',
-        timeLimit: '60',
+        timeLimit: 60,
         customText: '',
     });
     const [loading, setLoading] = useState(false);
@@ -36,7 +36,9 @@ export default function CreateRoomForm() {
             ...prev,
             [name]: type === 'checkbox'
                 ? (e.target as HTMLInputElement).checked
-                : value,
+                : name === 'maxPlayers' || name === 'timeLimit'
+                    ? Number(value)
+                    : value,
         }));
     };
 
@@ -84,8 +86,8 @@ export default function CreateRoomForm() {
                     <div className="space-y-2">
                         <Label htmlFor="maxPlayers">Max Players</Label>
                         <Select
-                            value={form.maxPlayers}
-                            onValueChange={(value) => setForm(prev => ({ ...prev, maxPlayers: value }))}
+                            value={form.maxPlayers.toString()}
+                            onValueChange={(value) => setForm(prev => ({ ...prev, maxPlayers: Number(value) }))}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select max players" />

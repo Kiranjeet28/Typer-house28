@@ -14,8 +14,7 @@ export async function createRoomHandler(request: Request) {
             throw new AppError(401, 'Authentication required');
         }
 
-        const body = await request.json();
-        const result = createRoomSchema.safeParse(body);
+        const result = createRoomSchema.safeParse(request);
 
         if (!result.success) {
             throw new AppError(400, result.error.errors[0].message);
