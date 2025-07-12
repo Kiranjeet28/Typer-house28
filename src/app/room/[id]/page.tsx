@@ -1,11 +1,11 @@
 " use client"
-import CreateRoomForm from '@/components/Room/createRoom'
+import WaitingRoom from '@/components/Room/waitingRoom'
 import React from 'react'
 
 function page() {
   return (
       <div>
-          <CreateRoomForm />
+          <WaitingRoom />
        </div>
   )
 }
