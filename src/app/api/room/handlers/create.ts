@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { generateJoinCode, getRoomExpiration } from '../utils';
 import { AppError } from '@/lib/error';
 import { NextResponse } from 'next/server';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 
 export async function createRoomHandler(request: Request) {
     try {
@@ -96,8 +96,8 @@ export async function createRoomHandler(request: Request) {
 
         return NextResponse.json({
             message: 'Room created successfully',
-            roomId: room.id,          
-            room,                     
+            roomId: room.id,
+            room,
         }, { status: 201 });
 
     } catch (error) {

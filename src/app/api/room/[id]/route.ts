@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { RoomError } from '@/app/api/room/schema';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
@@ -18,7 +18,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             );
         }
 
-        const roomId = params.id;
+        // Extract roomId from the URL
+        const urlParts = request.url.split('/');
+        const roomId = urlParts[urlParts.length - 1];
 
         if (!roomId) {
             return NextResponse.json(

@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const roomId = params.id;
+    const roomId = request.nextUrl.searchParams.get('id');
+    // If using dynamic route, extract id from pathname:
+    // const roomId = request.nextUrl.pathname.split('/').at(-2);
+
+    if (!roomId) {
+        return NextResponse.json({ error: 'Room ID is required' }, { status: 400 });
+    }
 
     try {
         const updatedRoom = await prisma.room.update({
