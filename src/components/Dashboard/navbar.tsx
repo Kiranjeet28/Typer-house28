@@ -17,6 +17,7 @@ import { RainbowButton } from "../magicui/rainbow-button";
 import Image from "next/image";
 import { Keyboard } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Dropdown from "./Profile/Dropdown";
 
 export function NavbarMain() {
     const navItems = [
@@ -26,7 +27,7 @@ export function NavbarMain() {
         },
         {
             name: "Join Typo's",
-            link: "#pricing",
+            link: "/join",
         },
         {
             name: "About",
@@ -44,36 +45,7 @@ export function NavbarMain() {
                 <NavbarLogo />
                 <NavItems items={navItems} />
                 <div className="flex items-center gap-4">
-                    {session?.user ? (
-                        session.user.image && session.user.image !== "" ? (
-                            <Image
-                                src={session.user.image ?? "/default-profile.png"}
-                                alt="Profile"
-                                className="w-10 h-10 border-green-600 border-2 rounded-full object-cover"
-                                height={40}
-                                width={40}
-                            />
-                        ) : (
-                            <Keyboard className="w-5 h-5" />
-                        )
-                    ) : (
-                        <>
-                                <RainbowButton
-                                    onClick={() => { signIn("google"); route.push("/createRoom"); }}
-                                    variant="outline"
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                    Create Typo&apos;s
-                                </RainbowButton>
-                            <NavbarButton
-                                onClick={() => signIn("google")}
-                                variant="secondary"
-                                className="border-green-600 text-green-400 hover:bg-slate-800 bg-transparent"
-                            >
-                                Login
-                            </NavbarButton>
-                        </>
-                    )}
+                    <Dropdown/>
                 </div>
             </NavBody>
 
@@ -135,7 +107,7 @@ export function NavbarMain() {
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
                                         signIn("google");
-                                        
+                                        route.push("/createRoom");
                                     }}
                                 >
                                     Create Typo&apos;s

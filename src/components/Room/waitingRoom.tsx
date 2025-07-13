@@ -77,6 +77,7 @@ export default function WaitingRoom() {
             </CardHeader>
 
             <CardContent className="space-y-6">
+
                 <div className="bg-muted rounded-xl p-4">
                     <h2 className="font-semibold text-lg mb-2 text-white">Players Joined:</h2>
                     <ul className="space-y-2">

@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,12 +9,13 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { ShineBorder } from '../magicui/shine-border';
+import { BottomGradient } from './joinRoom';
 
 export default function CreateRoomForm() {
     const router = useRouter();
@@ -51,100 +52,117 @@ export default function CreateRoomForm() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'create', ...form }),
             });
-
             const data = await res.json();
             if (!res.ok) {
                 throw new Error(data.error || 'Failed to create room');
             }
-
+            const roomId = data?.roomId;
+            if (!roomId) {
+                throw new Error('Room ID missing in response');
+            }
+            console.log(data);
             toast.success('Room created successfully!');
-            router.push(`/room/${data.roomId}`);
+            router.push(`/room/${roomId}`);
+            
         } catch (error: any) {
             toast.error(error.message || 'Something went wrong');
         } finally {
             setLoading(false);
         }
     };
+    
+    
 
     return (
-        <Card className="max-w-xl mx-auto mt-12 bg-background border border-border">
+       <Card className="relative overflow-hidden max-w-[60vw] w-full">
+                  <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
             <CardHeader>
-                <CardTitle className="text-2xl text-center">Create a Room</CardTitle>
+                <CardTitle className="text-2xl text-center text-green-300">Create a Room</CardTitle>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Room Name</Label>
-                        <Input name="name" value={form.name} onChange={handleChange} required />
+                        <Label htmlFor="name" >Room Name</Label>
+                        <Input name="name"  value={form.name} onChange={handleChange} required />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="description">Description</Label>
                         <Input name="description" value={form.description} onChange={handleChange} />
                     </div>
+                    <div className="flex flex-row justify-between space-x-4 items-center">
+                        <div className="space-y-2">
+                            <Label htmlFor="maxPlayers">Max Players</Label>
+                            <Select
+                                value={form.maxPlayers.toString()}
+                                onValueChange={(value) => setForm(prev => ({ ...prev, maxPlayers: Number(value) }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue 
+                                        className="border-1 border-green-300"
 
-                    <div className="space-y-2">
-                        <Label htmlFor="maxPlayers">Max Players</Label>
-                        <Select
-                            value={form.maxPlayers.toString()}
-                            onValueChange={(value) => setForm(prev => ({ ...prev, maxPlayers: Number(value) }))}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select max players" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[2, 3, 4, 5, 6].map(num => (
-                                    <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                                        placeholder="Select max players" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[2, 3, 4, 5, 6].map(num => (
+                                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="gameMode">Game Mode</Label>
+                            <Select
+                                
+                                value={form.gameMode}
+                                onValueChange={(value) => setForm(prev => ({ ...prev, gameMode: value }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue
+                                        className="border-1 border-green-300"
+
+                                        placeholder="Select mode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="SPEED_TEST">Speed Test</SelectItem>
+                                    <SelectItem value="ACCURACY_TEST">Accuracy Test</SelectItem>
+                                    <SelectItem value="SURVIVAL">Survival</SelectItem>
+                                    <SelectItem value="CUSTOM_TEXT">Custom Text</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="textLength">Text Length</Label>
+                            <Select
+
+                                value={form.textLength}
+                                onValueChange={(value) => setForm(prev => ({ ...prev, textLength: value }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select length" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="SHORT">Short</SelectItem>
+                                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                                    <SelectItem value="LONG">Long</SelectItem>
+                                    <SelectItem value="MARATHON">Marathon</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="isPrivate"
+                                checked={form.isPrivate}
+                                onCheckedChange={(checked) => setForm(prev => ({ ...prev, isPrivate: Boolean(checked) }))}
+                            />
+                            <Label htmlFor="isPrivate">Private Room</Label>
+                        </div>
                     </div>
-
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="isPrivate"
-                            checked={form.isPrivate}
-                            onCheckedChange={(checked) => setForm(prev => ({ ...prev, isPrivate: Boolean(checked) }))}
-                        />
-                        <Label htmlFor="isPrivate">Private Room</Label>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="gameMode">Game Mode</Label>
-                        <Select
-                            value={form.gameMode}
-                            onValueChange={(value) => setForm(prev => ({ ...prev, gameMode: value }))}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select mode" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="SPEED_TEST">Speed Test</SelectItem>
-                                <SelectItem value="ACCURACY_TEST">Accuracy Test</SelectItem>
-                                <SelectItem value="SURVIVAL">Survival</SelectItem>
-                                <SelectItem value="CUSTOM_TEXT">Custom Text</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="textLength">Text Length</Label>
-                        <Select
-                            value={form.textLength}
-                            onValueChange={(value) => setForm(prev => ({ ...prev, textLength: value }))}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select length" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="SHORT">Short</SelectItem>
-                                <SelectItem value="MEDIUM">Medium</SelectItem>
-                                <SelectItem value="LONG">Long</SelectItem>
-                                <SelectItem value="MARATHON">Marathon</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
+                   
+                   
                     <div className="space-y-2">
                         <Label htmlFor="timeLimit">Time Limit (seconds)</Label>
                         <Input
@@ -169,10 +187,13 @@ export default function CreateRoomForm() {
                             />
                         </div>
                     )}
-
-                    <Button type="submit" disabled={loading} className="w-full">
+                    <button
+                        type="submit" disabled={loading}
+                        className="group/btn relative block h-10 w-full rounded-md bg-black font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
+                    >
                         {loading ? 'Creating...' : 'Create Room'}
-                    </Button>
+                        <BottomGradient />
+                    </button>
                 </form>
             </CardContent>
         </Card>

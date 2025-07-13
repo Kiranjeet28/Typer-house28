@@ -95,12 +95,9 @@ export async function createRoomHandler(request: Request) {
         });
 
         return NextResponse.json({
-            success: true,
-            data: {
-                roomId: room.id,
-                joinCode: room.joinCode,
-            },
             message: 'Room created successfully',
+            roomId: room.id,          
+            room,                     
         }, { status: 201 });
 
     } catch (error) {
