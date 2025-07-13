@@ -22,17 +22,21 @@ import Dropdown from "./Profile/Dropdown";
 export function NavbarMain() {
     const navItems = [
         {
+            name: "Home",
+            link: "/",
+        },
+        {
             name: "Pricing",
-            link: "#features",
+            link: "/others/pricing",
         },
         {
-            name: "Join Typo's",
+            name: "Create",
+            link: "/createRoom",
+        },
+        {
+            name: "Join",
             link: "/join",
-        },
-        {
-            name: "About",
-            link: "#about",
-        },
+        }
     ];
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
