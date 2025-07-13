@@ -20,7 +20,7 @@ function Section1() {
                                                     <RainbowButton variant="outline" onClick={() => { route.push("/createRoom"); }}>
                                                             Create Typo&apos;s
                                                     </RainbowButton>
-                                                    <RainbowButton variant="outline">
+                                                    <RainbowButton variant="outline" onClick={() => { route.push("/join"); }}>
                                                             Join Typo&apos;s
                                                     </RainbowButton>
                                             </div>

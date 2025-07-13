@@ -4,10 +4,7 @@ import React, { Suspense } from 'react'
 import { PerspectiveCamera, OrbitControls } from '@react-three/drei'
 import { Leva, useControls } from 'leva'
 import Keyboard from './keyboard'
-
-function CanvasLoader() {
-    return null
-}
+import CanvasLoader from './CanvasLoader'
 
 function KeyboardWrapper() {
     // Track scroll position
