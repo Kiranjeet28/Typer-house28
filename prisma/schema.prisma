@@ -27,25 +27,27 @@ model User {
 }
 
 model Account {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  id                 String @id @default(auto()) @map("_id") @db.ObjectId
   userId             String
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String? 
-  access_token       String? 
+  refresh_token      String?  
+  access_token       String?  
   expires_at         Int?     
-  token_type         String? 
-  scope              String? 
-  id_token           String? 
-  session_state      String?
-  createdAt          DateTime // <- This is the issue
-  updatedAt          DateTime
+  token_type         String?  
+  scope              String?  
+  id_token           String?  
+  session_state      String?  
+
+  createdAt          DateTime @default(now()) // ✅ Add this line or modify if already present
+  updatedAt          DateTime @updatedAt      // ✅ Optional but recommended
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
+
 
 
 
