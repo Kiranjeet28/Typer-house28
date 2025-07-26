@@ -62,7 +62,7 @@ export default function CreateRoomForm() {
             }
             console.log(data);
             toast.success('Room created successfully!');
-            router.push(`/room/${roomId}`);
+            router.push(`/room/${roomId}/waiting`);
             
         } catch (error: any) {
             toast.error(error.message || 'Something went wrong');
@@ -190,7 +190,7 @@ export default function CreateRoomForm() {
                    
                     <button
                         type="submit" disabled={loading}
-                        className="group/btn relative block h-10 w-full rounded-md bg-black font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset]  bg-black dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
+                        className="group/btn relative block h-10 w-full rounded-md font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset]  bg-black dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
                     >
                         {loading ? 'Creating...' : 'Create Room'}
                         <BottomGradient />

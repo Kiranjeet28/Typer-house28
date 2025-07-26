@@ -1,4 +1,3 @@
-// Updated Waiting Room Page
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,8 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Types
 
 type RoomMember = {
     id: string;
@@ -33,27 +30,32 @@ type RoomData = {
     members: RoomMember[];
 };
 
-export default function WaitingRoom() {
+export default function WaitingRoomPage() {
     const { id } = useParams();
     const router = useRouter();
+
     const [room, setRoom] = useState<RoomData | null>(null);
     const [loading, setLoading] = useState(true);
     const [starting, setStarting] = useState(false);
 
     const fetchRoom = async () => {
+        if (!id || typeof id !== 'string') return;
+
         try {
             const res = await fetch(`/api/room/${id}`);
             const data = await res.json();
             setRoom(data.data);
             setLoading(false);
 
+            if (data.data?.status === 'IN_GAME') {
                 router.push(`/room/${id}/test`);
+            }
         } catch (err) {
             console.error('Failed to fetch room:', err);
         }
     };
 
-    // Polling every 3s
+    // Poll every 3 seconds
     useEffect(() => {
         fetchRoom();
         const interval = setInterval(fetchRoom, 3000);
@@ -61,6 +63,8 @@ export default function WaitingRoom() {
     }, [id]);
 
     const startGame = async () => {
+        if (!id || typeof id !== 'string') return;
+
         setStarting(true);
         try {
             const res = await fetch(`/api/room/${id}/start`, {
@@ -68,7 +72,6 @@ export default function WaitingRoom() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-
             router.push(`/room/${id}/test`);
         } catch (err: any) {
             console.error('Failed to start game:', err);
@@ -77,6 +80,14 @@ export default function WaitingRoom() {
             setStarting(false);
         }
     };
+
+    if (!id || typeof id !== 'string') {
+        return (
+            <div className="max-w-xl mx-auto mt-20 text-center text-red-500">
+                Invalid room ID in URL.
+            </div>
+        );
+    }
 
     if (loading || !room) {
         return (
@@ -88,13 +99,13 @@ export default function WaitingRoom() {
     }
 
     return (
-        <Card className="max-w-2xl mx-auto mt-16 bg-background">
+        <Card className="max-w-2xl  mx-auto mt-16 bg-background">
             <CardHeader>
                 <CardTitle className="text-center text-2xl">
-                    Waiting Room: <span className="text-indigo-500">{room.name}</span>
+                    Waiting Room: <span className="text-green-500">{room.name}</span>
                 </CardTitle>
                 <p className="text-sm text-muted-foreground text-center">
-                    Join Code: <span className="font-semibold">{room.joinCode}</span>
+                    Join Code: <span className="font-semibold text-green-500">{room.joinCode}</span>
                 </p>
             </CardHeader>
 
