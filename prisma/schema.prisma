@@ -24,6 +24,7 @@ model User {
   gameResults   GameResult[]
   playerStats   PlayerStats[]
   roomMembers   RoomMember[]
+  typingSpeeds  TypingSpeed[] // Added relation for TypingSpeed
 }
 
 model Account {
@@ -162,6 +163,16 @@ model GameResult {
   @@index([gameId])
   @@index([userId])
   @@index([wpm])
+}
+model TypingSpeed {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String
+  roomId    String
+  wpm       Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  @@unique([userId, roomId])
 }
 
 // Player statistics and achievements
