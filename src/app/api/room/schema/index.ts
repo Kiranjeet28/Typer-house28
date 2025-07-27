@@ -93,15 +93,17 @@ export const joinRoomSchema = z.object({
 });
 export const startRoomSchema = z.object({
     action: z.literal('start'),
-    id : z.string().uuid('Invalid room ID format'),
+    id : z.string(),
 });
 export const endrollRoomSchema = z.object({
-    action: z.literal('endroll'),
-    id : z.string().uuid('Invalid room ID format'),
+    action: z.literal("endroll").refine(val => val === "endroll", {
+        message: "Action must be 'endroll'"
+    }),
+    id: z.string(),
 });
 
 export const speedRoomSchema = z.object({
     action: z.literal('speed'),
-    roomId: z.string().uuid('Invalid room ID format'),
+    roomId: z.string(),
     wpm: z.number(),
 });

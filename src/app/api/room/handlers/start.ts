@@ -4,8 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth";
 import { startRoomSchema } from '../schema';
 
-export async function StartRoomHandler(request: Request) {
-    const body = await request.json();
+export async function StartRoomHandler(body: Request) {
     const result = startRoomSchema.safeParse(body);
      const { id: roomId } = result.success ? result.data : { id: undefined };
     const session = await getServerSession(authOptions);

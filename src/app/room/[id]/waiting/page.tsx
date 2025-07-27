@@ -37,7 +37,9 @@ export default function WaitingRoomPage() {
     // Better handling of the id parameter
     const roomId = Array.isArray(params.id) ? params.id[0] : params.id;
     
-    console.log('Room ID:', roomId);
+    console.log('Room ID from params:', roomId);
+    console.log('Room ID type:', typeof roomId);
+    
     const [room, setRoom] = useState<RoomData | null>(null);
     const [loading, setLoading] = useState(true);
     const [starting, setStarting] = useState(false);
@@ -51,31 +53,55 @@ export default function WaitingRoomPage() {
             return;
         }
 
+        console.log('Fetching room with ID:', roomId);
+
         try {
             setError(null); // Clear previous errors
-            const res = await fetch(`/api/room`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ action: 'endroll', id: roomId }),
+            
+            const requestBody = {
+                action: "endroll",
+                id: roomId,
+            };
+            
+            console.log('Request body:', requestBody);
+            console.log('Request body JSON:', JSON.stringify(requestBody));
+
+            const res = await fetch('/api/room', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
             });
 
+            console.log('Response status:', res.status);
+            console.log('Response ok:', res.ok);
+
             if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
+                const errorText = await res.text();
+                console.error('Error response text:', errorText);
+                
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    console.error('Error response JSON:', errorJson);
+                    throw new Error(errorJson.error || `HTTP error! status: ${res.status}`);
+                } catch (parseError) {
+                    throw new Error(`HTTP error! status: ${res.status}. Response: ${errorText}`);
+                }
             }
 
             const data = await res.json();
+            console.log('Success response data:', data);
 
             if (data.error) {
-            throw new Error(data.error);
+                throw new Error(data.error);
             }
 
             setRoom(data.data);
             setLoading(false);
 
             if (data.data?.status === 'IN_GAME') {
-            router.push(`./test`);
+                router.push(`./test`);
             }
         } catch (err: any) {
             console.error('Failed to fetch room:', err);
@@ -114,18 +140,24 @@ export default function WaitingRoomPage() {
         setError(null);
         
         try {
+            const requestBody = { action: 'start', id: roomId };
+            console.log('Start game request body:', requestBody);
+            
             const res = await fetch(`/api/room`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ action: 'start', id: roomId }),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
             });
             
+            console.log('Start game response status:', res.status);
+            
             const data = await res.json();
+            console.log('Start game response data:', data);
             
             if (!res.ok) {
-            throw new Error(data.error || `HTTP error! status: ${res.status}`);
+                throw new Error(data.error || `HTTP error! status: ${res.status}`);
             }
             
             console.log('Game started successfully, redirecting...');
@@ -148,6 +180,9 @@ export default function WaitingRoomPage() {
                 <p className="text-muted-foreground">
                     Room ID is missing from the URL.
                 </p>
+                <p className="text-xs text-gray-500 mt-2">
+                    Debug: params = {JSON.stringify(params)}
+                </p>
             </div>
         );
     }
@@ -160,6 +195,10 @@ export default function WaitingRoomPage() {
                     Error
                 </div>
                 <p className="text-muted-foreground mb-4">{error}</p>
+                <div className="text-xs text-gray-500 mb-4">
+                    <p>Room ID: {roomId}</p>
+                    <p>Room ID type: {typeof roomId}</p>
+                </div>
                 <Button onClick={() => {
                     setError(null);
                     setLoading(true);
@@ -177,6 +216,9 @@ export default function WaitingRoomPage() {
             <div className="max-w-xl mx-auto mt-20">
                 <Skeleton className="h-10 w-full mb-4" />
                 <Skeleton className="h-40 w-full" />
+                <div className="text-xs text-gray-500 mt-2 text-center">
+                    Loading room: {roomId}
+                </div>
             </div>
         );
     }
@@ -189,6 +231,9 @@ export default function WaitingRoomPage() {
                 </CardTitle>
                 <p className="text-sm text-muted-foreground text-center">
                     Join Code: <span className="font-semibold text-green-500">{room.joinCode}</span>
+                </p>
+                <p className="text-xs text-gray-500 text-center">
+                    Room ID: {roomId}
                 </p>
             </CardHeader>
 

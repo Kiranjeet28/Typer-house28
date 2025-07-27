@@ -4,10 +4,29 @@ import { getServerSession } from 'next-auth';
 import { endrollRoomSchema, RoomError } from '@/app/api/room/schema';
 import { authOptions } from "@/lib/auth";
 
-export async function EndrollRoomHandler(request: Request) {
-    const body = await request.json();
+export async function EndrollRoomHandler(body: any) {
+    console.log('EndrollRoomHandler received body:', body);
+    console.log('Body type:', typeof body);
+    console.log('Body keys:', Object.keys(body || {}));
+    
     const result = endrollRoomSchema.safeParse(body);
-    const { id: roomId } = result.success ? result.data : { id: undefined };
+    
+    if (!result.success) {
+        console.error('Schema validation failed:', result.error.errors);
+        return NextResponse.json(
+            {
+                error: 'Invalid request data',
+                code: 'INVALID_REQUEST',
+                details: result.error.errors,
+                receivedData: body,
+            },
+            { status: 400 }
+        );
+    }
+    
+    const { id: roomId } = result.data;
+    console.log('Validated roomId:', roomId);
+    
     try {
         const session = await getServerSession(authOptions);
 
@@ -18,18 +37,6 @@ export async function EndrollRoomHandler(request: Request) {
                     code: 'UNAUTHORIZED',
                 },
                 { status: 401 }
-            );
-        }
-
-     
-
-        if (!roomId) {
-            return NextResponse.json(
-                {
-                    error: 'Room ID is required',
-                    code: 'MISSING_ROOM_ID',
-                },
-                { status: 400 }
             );
         }
 

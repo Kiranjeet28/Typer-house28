@@ -4,8 +4,7 @@ import type { TypingSpeed, User } from "@prisma/client";
 import { z } from "zod";
 import { speedRoomSchema } from "../schema";
 
-export async function SpeedRoomHandler(request: Request) {
-    const body = await request.json();
+export async function SpeedRoomHandler(body: Request) {
     const parseResult = speedRoomSchema.safeParse(body);
 
     if (!parseResult.success) {
@@ -15,7 +14,7 @@ export async function SpeedRoomHandler(request: Request) {
     const { roomId, wpm } = parseResult.data;
 
     // Example: Extract user from headers (replace with your actual auth logic)
-    const user = request.headers.get("x-user-id");
+    const user = body.headers.get("x-user-id");
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (!roomId) return NextResponse.json({ error: "Missing room id" }, { status: 400 });
 
