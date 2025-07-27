@@ -1,68 +1,63 @@
 "use client";
+import { useEffect, useState } from "react";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useSession } from "next-auth/react";
 
-import { useEffect, useRef, useState } from "react";
-
-interface TypingInputProps {
-    sampleText: string;
-    onComplete: () => void;
-    timeLimit: number;
-    onProgress: (wpm: number) => void;
-}
-
-export default function TypingInput({
-    sampleText,
-    onComplete,
-    timeLimit,
-    onProgress,
-}: TypingInputProps) {
+export default function TypingInput({ roomId, paragraph }: { roomId: string, paragraph: string }) {
     const [input, setInput] = useState("");
+    const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
-    const [finished, setFinished] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const debouncedInput = useDebounce(input, 1000);
+    const { data: session } = useSession();
 
     useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
+        if (!debouncedInput || !session?.user?.id) return;
+        const words = debouncedInput.trim().split(/\s+/).length;
+        const time = (Date.now() - (startTime ?? Date.now())) / 60000;
+        const speed = Math.round(words / time);
 
-    useEffect(() => {
-        if (input.length === 1 && !startTime) {
-            setStartTime(Date.now());
-        }
+        setWpm(speed);
+        fetch(`/api/room/${roomId}/speed`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "user-id": session.user.id,
+            },
+            body: JSON.stringify({ wpm: speed }),
+        });
+    }, [debouncedInput, session?.user?.id, roomId, startTime]);
 
-        if (startTime) {
-            const elapsedSeconds = (Date.now() - startTime) / 1000;
-            const wordsTyped = input.trim().split(" ").length;
-            const wpm = Math.round((wordsTyped / elapsedSeconds) * 60);
-            onProgress(wpm);
-        }
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        if (!startTime) setStartTime(Date.now());
+        setInput(e.target.value);
+    };
 
-        if (input.length >= sampleText.length) {
-            setFinished(true);
-            onComplete();
-        }
-    }, [input]);
+    const getColorizedParagraph = () => {
+        return paragraph.split("").map((char, idx) => {
+            let color = "";
+            if (idx < input.length) {
+                color = input[idx] === char ? "text-green-500" : "text-red-500";
+            }
+            return (
+                <span key={idx} className={color}>
+                    {char}
+                </span>
+            );
+        });
+    };
 
     return (
-        <div className="space-y-4 w-full">
-            <div className="text-muted-foreground text-lg whitespace-pre-wrap">
-                {sampleText}
+        <div className="space-y-4">
+            <div className="p-4 border rounded-md leading-7 bg-background">
+                {getColorizedParagraph()}
             </div>
-
-            <input
-                ref={inputRef}
-                className="w-full p-3 border rounded-md text-base"
+            <textarea
                 value={input}
-                onChange={(e) => !finished && setInput(e.target.value)}
-                disabled={finished}
-                placeholder="Start typing here..."
+                onChange={handleChange}
+                className="w-full p-2 border rounded-md"
+                placeholder="Start typing..."
+                rows={5}
             />
-
-            <div className="flex justify-between text-sm text-muted-foreground">
-                <p>
-                    Characters typed: {input.length} / {sampleText.length}
-                </p>
-                {finished ? <p className="text-green-600 font-semibold">Done!</p> : <p>Typing...</p>}
-            </div>
         </div>
     );
 }

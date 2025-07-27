@@ -17,7 +17,7 @@ const fetchText = async (length: number) => {
 export default function TypingTestPage() {
     const { id } = useParams();
     const router = useRouter();
-    const [text, setText] = useState("");
+    const [text, setText] = useState<string>("Goals are the compass that guides you towards your dreams. Without them, you're like a ship adrift at sea, vulnerable to the whims of fate. Set goals that are meaningful to you, that resonate with your values and aspirations. Don't be afraid to dream big, but make sure your goals are also realistic and achievable. Break down large, intimidating goals into smaller, manageable steps. This will not only make them seem less daunting but also provide a sense of accomplishment as you complete each milestone. Remember, the journey of a thousand miles begins with a single step.");
     const [loading, setLoading] = useState(true);
     const [duration, setDuration] = useState<number>(60); // You can set this from room settings
     const [wpm, setWpm] = useState(0);
@@ -57,10 +57,8 @@ export default function TypingTestPage() {
                     </CardHeader>
                     <CardContent>
                         <TypingInput
-                            sampleText={text}
-                            timeLimit={duration}
-                            onComplete={handleComplete}
-                            onProgress={(speed: number) => setWpm(speed)}
+                            paragraph={text}
+                            roomId={id as string}
                         />
                     </CardContent>
                 </Card>

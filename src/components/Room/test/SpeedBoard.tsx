@@ -1,12 +1,13 @@
+// src/components/Room/test/SpeedBoard.tsx
 "use client";
-
 import { useEffect, useState } from "react";
+import { useInterval } from "@/lib/hooks/useInterval";
+import { useSession } from "next-auth/react";
 
-interface PlayerSpeed {
-    id: string;
+type PlayerSpeed = {
     name: string;
     wpm: number;
-}
+};
 
 interface SpeedBoardProps {
     roomId: string;
@@ -14,29 +15,22 @@ interface SpeedBoardProps {
 
 export default function SpeedBoard({ roomId }: SpeedBoardProps) {
     const [players, setPlayers] = useState<PlayerSpeed[]>([]);
+    const { data: session } = useSession();
 
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            try {
-                const res = await fetch(`/api/room/${roomId}/speed`);
-                const data = await res.json();
-                setPlayers(data.players);
-            } catch (err) {
-                console.error("Failed to fetch player speeds:", err);
-            }
-        }, 2000);
-
-        return () => clearInterval(interval);
-    }, [roomId]);
+    useInterval(() => {
+        fetch(`/api/room/${roomId}/speed`)
+            .then(res => res.json())
+            .then((data: PlayerSpeed[]) => setPlayers(data));
+    }, 1000);
 
     return (
-        <div className="w-64 p-4 rounded-md border shadow-sm bg-muted">
-            <h2 className="font-semibold mb-2">Live WPM</h2>
-            <ul className="space-y-1">
-                {players.map((p) => (
-                    <li key={p.id} className="flex justify-between text-sm">
+        <div className="bg-muted rounded-xl p-4 mt-4 w-full">
+            <h3 className="text-lg font-semibold mb-2">Live WPM</h3>
+            <ul className="grid grid-cols-2 gap-2">
+                {players.map((p, i) => (
+                    <li key={i} className="text-sm flex justify-between">
                         <span>{p.name}</span>
-                        <span className="font-mono">{p.wpm}</span>
+                        <span className="font-mono">{p.wpm} WPM</span>
                     </li>
                 ))}
             </ul>
