@@ -17,13 +17,13 @@ export default function TypingInput({ roomId, paragraph }: { roomId: string, par
         const speed = Math.round(words / time);
 
         setWpm(speed);
-        fetch(`/api/room/${roomId}/speed`, {
+        fetch(`/api/room`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "user-id": session.user.id,
             },
-            body: JSON.stringify({ wpm: speed }),
+            body: JSON.stringify({ action: "speed", roomId: roomId, wpm: speed }),
         });
     }, [debouncedInput, session?.user?.id, roomId, startTime]);
 

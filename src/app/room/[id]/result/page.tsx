@@ -12,12 +12,21 @@ export default function ResultPage({ params }: PageProps) {
   const [roomId, setRoomId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Resolve the params promise first
     params.then((resolvedParams) => {
       setRoomId(resolvedParams.id);
-      
-      // Then fetch the data
-      fetch(`/api/room/${resolvedParams.id}/speed`)
+
+      fetch(`/api/room`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: resolvedParams.id,
+          action: "speed",
+          // wpm: user.wpm // Removed because 'user' is not defined
+          
+        }),
+      })
         .then((res) => res.json())
         .then((d) => {
           const transformed = d.map((user: any) => ({

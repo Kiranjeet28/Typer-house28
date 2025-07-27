@@ -18,7 +18,16 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
     const { data: session } = useSession();
 
     useInterval(() => {
-        fetch(`/api/room/${roomId}/speed`)
+        fetch(`/api/room`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                action: 'speed',
+                roomId: roomId,
+            }),
+        })
             .then(res => res.json())
             .then((data: PlayerSpeed[]) => setPlayers(data));
     }, 1000);

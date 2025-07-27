@@ -53,23 +53,29 @@ export default function WaitingRoomPage() {
 
         try {
             setError(null); // Clear previous errors
-            const res = await fetch(`/api/room/${roomId}`);
-            
+            const res = await fetch(`/api/room`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'endroll', id: roomId }),
+            });
+
             if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
+            throw new Error(`HTTP error! status: ${res.status}`);
             }
-            
+
             const data = await res.json();
-            
+
             if (data.error) {
-                throw new Error(data.error);
+            throw new Error(data.error);
             }
-            
+
             setRoom(data.data);
             setLoading(false);
 
             if (data.data?.status === 'IN_GAME') {
-                router.push(`./test`);
+            router.push(`./test`);
             }
         } catch (err: any) {
             console.error('Failed to fetch room:', err);
@@ -108,17 +114,18 @@ export default function WaitingRoomPage() {
         setError(null);
         
         try {
-            const res = await fetch(`/api/room/${roomId}/start`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+            const res = await fetch(`/api/room`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'start', id: roomId }),
             });
             
             const data = await res.json();
             
             if (!res.ok) {
-                throw new Error(data.error || `HTTP error! status: ${res.status}`);
+            throw new Error(data.error || `HTTP error! status: ${res.status}`);
             }
             
             console.log('Game started successfully, redirecting...');
