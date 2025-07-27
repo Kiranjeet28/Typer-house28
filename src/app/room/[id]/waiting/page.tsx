@@ -31,64 +31,140 @@ type RoomData = {
 };
 
 export default function WaitingRoomPage() {
-    const { id } = useParams();
+    const params = useParams();
     const router = useRouter();
-
+    
+    // Better handling of the id parameter
+    const roomId = Array.isArray(params.id) ? params.id[0] : params.id;
+    
+    console.log('Room ID:', roomId);
     const [room, setRoom] = useState<RoomData | null>(null);
     const [loading, setLoading] = useState(true);
     const [starting, setStarting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchRoom = async () => {
-        if (!id || typeof id !== 'string') return;
+        // More robust validation
+        if (!roomId || roomId === '') {
+            setError('Invalid room ID');
+            setLoading(false);
+            return;
+        }
 
         try {
-            const res = await fetch(`/api/room/${id}`);
+            setError(null); // Clear previous errors
+            const res = await fetch(`/api/room/${roomId}`);
+            
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
             const data = await res.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
             setRoom(data.data);
             setLoading(false);
 
             if (data.data?.status === 'IN_GAME') {
-                router.push(`/room/${id}/test`);
+                router.push(`./test`);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to fetch room:', err);
+            setError(err.message || 'Failed to fetch room data');
+            setLoading(false);
         }
     };
 
-    // Poll every 3 seconds
+    // Poll every 3 seconds, but only if we have a valid roomId
     useEffect(() => {
-        fetchRoom();
-        const interval = setInterval(fetchRoom, 3000);
-        return () => clearInterval(interval);
-    }, [id]);
+        if (roomId) {
+            fetchRoom();
+            const interval = setInterval(fetchRoom, 3000);
+            return () => clearInterval(interval);
+        } else {
+            setLoading(false);
+            setError('Room ID is missing from URL');
+        }
+    }, [roomId]); // Dependency on roomId instead of params.id
 
     const startGame = async () => {
-        if (!id || typeof id !== 'string') return;
+        // More detailed validation and error handling
+        if (!roomId || roomId === '') {
+            console.error('Cannot start game: Room ID is missing');
+            setError('Room ID is required to start the game');
+            return;
+        }
 
+        if (starting) {
+            console.log('Game start already in progress...');
+            return;
+        }
+
+        console.log('Starting game for room:', roomId);
         setStarting(true);
+        setError(null);
+        
         try {
-            const res = await fetch(`/api/room/${id}/start`, {
+            const res = await fetch(`/api/room/${roomId}/start`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
+            
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            router.push(`/room/${id}/test`);
+            
+            if (!res.ok) {
+                throw new Error(data.error || `HTTP error! status: ${res.status}`);
+            }
+            
+            console.log('Game started successfully, redirecting...');
+            router.push(`./test`);
         } catch (err: any) {
             console.error('Failed to start game:', err);
-            alert(err.message);
+            setError(err.message || 'Failed to start the game');
         } finally {
             setStarting(false);
         }
     };
 
-    if (!id || typeof id !== 'string') {
+    // Early return for invalid room ID
+    if (!roomId || roomId === '') {
         return (
-            <div className="max-w-xl mx-auto mt-20 text-center text-red-500">
-                Invalid room ID in URL.
+            <div className="max-w-xl mx-auto mt-20 text-center">
+                <div className="text-red-500 text-lg font-semibold mb-2">
+                    Invalid Room
+                </div>
+                <p className="text-muted-foreground">
+                    Room ID is missing from the URL.
+                </p>
             </div>
         );
     }
 
+    // Error state
+    if (error && !loading) {
+        return (
+            <div className="max-w-xl mx-auto mt-20 text-center">
+                <div className="text-red-500 text-lg font-semibold mb-2">
+                    Error
+                </div>
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <Button onClick={() => {
+                    setError(null);
+                    setLoading(true);
+                    fetchRoom();
+                }}>
+                    Try Again
+                </Button>
+            </div>
+        );
+    }
+
+    // Loading state
     if (loading || !room) {
         return (
             <div className="max-w-xl mx-auto mt-20">
@@ -99,7 +175,7 @@ export default function WaitingRoomPage() {
     }
 
     return (
-        <Card className="max-w-2xl  mx-auto mt-16 bg-background">
+        <Card className="max-w-2xl mx-auto mt-16 bg-background">
             <CardHeader>
                 <CardTitle className="text-center text-2xl">
                     Waiting Room: <span className="text-green-500">{room.name}</span>
@@ -110,6 +186,12 @@ export default function WaitingRoomPage() {
             </CardHeader>
 
             <CardContent className="space-y-6">
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-red-700 text-sm">{error}</p>
+                    </div>
+                )}
+                
                 <div className="bg-muted rounded-xl p-4">
                     <h2 className="font-semibold text-lg mb-2 text-white">Players Joined:</h2>
                     <ul className="space-y-2">
@@ -126,11 +208,17 @@ export default function WaitingRoomPage() {
 
                 <div className="flex justify-end">
                     {room.members.length >= 2 ? (
-                        <Button onClick={startGame} disabled={starting}>
+                        <Button 
+                            onClick={startGame} 
+                            disabled={starting}
+                            className="min-w-[140px]"
+                        >
                             {starting ? 'Starting...' : 'Start Typing Test'}
                         </Button>
                     ) : (
-                        <Button disabled>Waiting for players...</Button>
+                        <Button disabled className="min-w-[140px]">
+                            Waiting for players...
+                        </Button>
                     )}
                 </div>
             </CardContent>
