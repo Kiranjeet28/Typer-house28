@@ -91,3 +91,17 @@ export const joinRoomSchema = z.object({
         .length(6, 'Join code must be exactly 6 characters')
         .regex(/^[A-Z0-9]{6}$/, 'Join code must contain only uppercase letters and numbers'),
 });
+export const startRoomSchema = z.object({
+    action: z.literal('start'),
+    id : z.string().uuid('Invalid room ID format'),
+});
+export const endrollRoomSchema = z.object({
+    action: z.literal('endroll'),
+    id : z.string().uuid('Invalid room ID format'),
+});
+
+export const speedRoomSchema = z.object({
+    action: z.literal('speed'),
+    roomId: z.string().uuid('Invalid room ID format'),
+    wpm: z.number(),
+});

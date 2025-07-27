@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { RoomError } from '@/app/api/room/schema';
+import { endrollRoomSchema, RoomError } from '@/app/api/room/schema';
 import { authOptions } from "@/lib/auth";
 
-export async function GET(request: Request) {
+export async function EndrollRoomHandler(request: Request) {
+    const body = await request.json();
+    const result = endrollRoomSchema.safeParse(body);
+    const { id: roomId } = result.success ? result.data : { id: undefined };
     try {
         const session = await getServerSession(authOptions);
 
@@ -18,10 +21,7 @@ export async function GET(request: Request) {
             );
         }
 
-        const url = new URL(request.url);
-        const pathParts = url.pathname.split('/');
-        const roomIndex = pathParts.indexOf('room');
-        const roomId = roomIndex !== -1 ? pathParts[roomIndex + 1] : undefined;
+     
 
         if (!roomId) {
             return NextResponse.json(

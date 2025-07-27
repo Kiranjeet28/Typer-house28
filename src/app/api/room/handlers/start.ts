@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth";
+import { startRoomSchema } from '../schema';
 
-export async function POST(request: NextRequest) {
+export async function StartRoomHandler(request: Request) {
+    const body = await request.json();
+    const result = startRoomSchema.safeParse(body);
+     const { id: roomId } = result.success ? result.data : { id: undefined };
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const roomId = request.nextUrl.searchParams.get('id');
-    // If using dynamic route, extract id from pathname:
-    // const roomId = request.nextUrl.pathname.split('/').at(-2);
 
     if (!roomId) {
         return NextResponse.json({ error: 'Room ID is required' }, { status: 400 });
