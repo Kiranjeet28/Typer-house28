@@ -18,9 +18,10 @@ export async function GET(request: Request) {
             );
         }
 
-        // Extract roomId from the URL
-        const urlParts = request.url.split('/');
-        const roomId = urlParts[urlParts.length - 1];
+        const url = new URL(request.url);
+        const pathParts = url.pathname.split('/');
+        const roomIndex = pathParts.indexOf('room');
+        const roomId = roomIndex !== -1 ? pathParts[roomIndex + 1] : undefined;
 
         if (!roomId) {
             return NextResponse.json(
