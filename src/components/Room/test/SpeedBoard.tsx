@@ -17,19 +17,34 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
     const [players, setPlayers] = useState<PlayerSpeed[]>([]);
     const { data: session } = useSession();
 
+    const fetchSpeeds = async () => {
+        try {
+            const response = await fetch(`/api/room?id=${roomId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            
+            if (response.ok) {
+                const data: PlayerSpeed[] = await response.json();
+                setPlayers(data);
+            } else {
+                console.error("Failed to fetch speeds:", response.status);
+            }
+        } catch (error) {
+            console.error("Error fetching speeds:", error);
+        }
+    };
+
+    // Fetch speeds immediately on mount
+    useEffect(() => {
+        fetchSpeeds();
+    }, [roomId]);
+
+    // Use interval to fetch speeds every second
     useInterval(() => {
-        fetch(`/api/room`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                action: 'speed',
-                roomId: roomId,
-            }),
-        })
-            .then(res => res.json())
-            .then((data: PlayerSpeed[]) => setPlayers(data));
+        fetchSpeeds();
     }, 1000);
 
     return (

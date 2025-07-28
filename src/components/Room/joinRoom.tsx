@@ -38,7 +38,7 @@ export default function JoinRoom() {
             if (!roomId) throw new Error('Room ID missing in response');
 
             toast.success('Joined room successfully!');
-            router.push(`/room/${roomId}`);
+            router.push(`/room/${roomId}/test`);
         } catch (err: any) {
             toast.error(err.message || 'Something went wrong');
         } finally {

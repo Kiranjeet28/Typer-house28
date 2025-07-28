@@ -11,24 +11,43 @@ export default function TypingInput({ roomId, paragraph }: { roomId: string, par
     const { data: session } = useSession();
 
     useEffect(() => {
-        if (!debouncedInput || !session?.user?.id) return;
-        const words = debouncedInput.trim().split(/\s+/).length;
-        const time = (Date.now() - (startTime ?? Date.now())) / 60000;
-        const speed = Math.round(words / time);
-
-        setWpm(speed);
-        fetch(`/api/room`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "user-id": session.user.id,
-            },
-            body: JSON.stringify({ action: "speed", roomId: roomId, wpm: speed }),
-        });
+        // Only update WPM if we have valid data
+        if (!debouncedInput || !session?.user?.id || !startTime) return;
+        
+        const words = debouncedInput.trim().split(/\s+/).filter(word => word.length > 0).length;
+        if (words === 0) return; // Don't calculate WPM for empty input
+        
+        const timeInMinutes = (Date.now() - startTime) / 60000;
+        if (timeInMinutes <= 0) return; // Prevent division by zero
+        
+        const speed = Math.round(words / timeInMinutes);
+        
+        // Only update if WPM is reasonable (0-200 range)
+        if (speed >= 0 && speed <= 200) {
+            setWpm(speed);
+            
+            // Send WPM update to server
+            fetch(`/api/room`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "user-id": session.user.id,
+                },
+                body: JSON.stringify({ 
+                    action: "speed", 
+                    roomId: roomId, 
+                    wpm: speed 
+                }),
+            }).catch(error => {
+                console.error("Failed to update WPM:", error);
+            });
+        }
     }, [debouncedInput, session?.user?.id, roomId, startTime]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        if (!startTime) setStartTime(Date.now());
+        if (!startTime) {
+            setStartTime(Date.now());
+        }
         setInput(e.target.value);
     };
 
@@ -58,6 +77,9 @@ export default function TypingInput({ roomId, paragraph }: { roomId: string, par
                 placeholder="Start typing..."
                 rows={5}
             />
+            <div className="text-sm text-muted-foreground">
+                Current WPM: {wpm}
+            </div>
         </div>
     );
 }
