@@ -5,6 +5,8 @@ import { joinRoomHandler } from './handlers/join';
 import { StartRoomHandler } from './handlers/start';
 import { EndrollRoomHandler } from './handlers/endroll';
 import { SpeedRoomHandler } from './handlers/speed';
+import { joinRoomCheckHandler } from './handlers/checkJoin';
+import { getHandler } from './handlers/get';
 
 // Handle POST requests (your existing logic)
 export async function POST(request: NextRequest) {
@@ -24,6 +26,7 @@ export async function POST(request: NextRequest) {
                 return StartRoomHandler(body);
             case "endroll":
                 return EndrollRoomHandler(body);
+            
             case 'speed':
                 // Pass the request object for header access
                 return SpeedRoomHandler(request, body);
@@ -55,11 +58,13 @@ export async function GET(request: NextRequest) {
                 // Create a body-like object for the speed handler
                 const speedBody = { action: 'speed', roomId };
                 return SpeedRoomHandler(request, speedBody);
-            
-            // You can add more GET actions here in the future
-            // case 'room-info':
-            //     return getRoomInfoHandler(roomId);
-            
+            case 'check-join':
+                const checkJoinBody = { action: 'check-join', roomId };
+                return joinRoomCheckHandler(checkJoinBody);
+             case 'get':
+                const getRoomBody = { action: 'get', roomId };
+                const roomData = await getHandler(getRoomBody);
+                return NextResponse.json(roomData);
             default:
                 throw new AppError(400, 'Invalid GET action');
         }

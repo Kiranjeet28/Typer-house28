@@ -107,3 +107,7 @@ export const speedRoomSchema = z.object({
     roomId: z.string(),
     wpm: z.number(),
 });
+export const get = z.object({
+    action: z.literal('get'),
+    roomId: z.string(),
+});

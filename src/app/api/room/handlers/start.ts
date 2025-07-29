@@ -18,7 +18,10 @@ export async function StartRoomHandler(body: Request) {
     try {
         const updatedRoom = await prisma.room.update({
             where: { id: roomId },
-            data: { status: 'IN_GAME' },
+            data: {
+                status: 'IN_GAME',
+                codeValid : false,
+             },
         });
 
         return NextResponse.json({ message: 'Game started', data: updatedRoom });

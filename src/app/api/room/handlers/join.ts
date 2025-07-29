@@ -54,9 +54,11 @@ export async function joinRoomHandler(body: object) {
                 },
             },
         });
-
         if (!room) {
             throw new RoomError('Room not found', 'ROOM_NOT_FOUND', 404);
+        }
+        if (!room.codeValid) {
+            throw new RoomError('Room code is invalid', 'INVALID_ROOM_CODE', 400);
         }
 
         if (room.expiresAt < new Date()) {
