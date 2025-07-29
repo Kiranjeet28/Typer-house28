@@ -112,7 +112,7 @@ export default function CreateRoomForm() {
                             </Select>
                         </div>
 
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label htmlFor="gameMode">Game Mode</Label>
                             <Select
                                 
@@ -132,11 +132,11 @@ export default function CreateRoomForm() {
                                     <SelectItem value="CUSTOM_TEXT">Custom Text</SelectItem>
                                 </SelectContent>
                             </Select>
-                        </div>
+                        </div> */}
 
-                        <div className="space-y-2">
-                            <Label htmlFor="textLength">Text Length</Label>
-                            <Select
+                        {/* <div className="space-y-2">
+                           <Label htmlFor="textLength">Text Length</Label>
+                             <Select
 
                                 value={form.textLength}
                                 onValueChange={(value) => setForm(prev => ({ ...prev, textLength: value }))}
@@ -150,8 +150,8 @@ export default function CreateRoomForm() {
                                     <SelectItem value="LONG">Long</SelectItem>
                                     <SelectItem value="MARATHON">Marathon</SelectItem>
                                 </SelectContent>
-                            </Select>
-                        </div>
+                            </Select> 
+                        </div>*/}
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="isPrivate"
@@ -164,15 +164,21 @@ export default function CreateRoomForm() {
                    
                    
                     <div className="space-y-2">
-                        <Label htmlFor="timeLimit">Time Limit (seconds)</Label>
-                        <Input
-                            name="timeLimit"
-                            type="number"
-                            min={15}
-                            max={300}
-                            value={form.timeLimit}
-                            onChange={handleChange}
-                        />
+                        <Label htmlFor="timeLimit">Time Limit</Label>
+                        <Select
+                            value={form.timeLimit.toString()}
+                            onValueChange={(value) => setForm(prev => ({ ...prev, timeLimit: Number(value) }))}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select time limit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="60">1 minutes</SelectItem>
+                                <SelectItem value="180">3 minutes</SelectItem>
+                                <SelectItem value="300">5 minutes</SelectItem>
+                                <SelectItem value="600">10 minutes</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {form.gameMode === 'CUSTOM_TEXT' && (

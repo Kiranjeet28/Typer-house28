@@ -30,22 +30,11 @@ export default function TypingTestPage() {
 
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10">
-            <div className="md:col-span-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-center text-xl">
-                            Typing Test - Room ID: {id}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <TypingInput
-                            paragraph={text}
-                            roomId={id as string}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
+        <div className="flex gap-2 md:flex-row flex-col mx-4 md:mx-10 my-10 ">
+                <TypingInput
+                    paragraph={text}
+                    roomId={id as string}
+                />
             <SpeedBoard roomId={id as string} />
         </div>
     );

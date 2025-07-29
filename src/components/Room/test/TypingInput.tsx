@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useSession } from "next-auth/react";
+import clsx from "clsx";
 
 export default function TypingInput({ roomId, paragraph }: { roomId: string, paragraph: string }) {
     const [input, setInput] = useState("");
@@ -10,23 +11,34 @@ export default function TypingInput({ roomId, paragraph }: { roomId: string, par
     const debouncedInput = useDebounce(input, 1000);
     const { data: session } = useSession();
 
+    // Count correctly typed words - more flexible approach
+    const getCorrectWordsCount = (typedText: string, originalText: string) => {
+        if (!typedText.trim()) return 0;
+        const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
+        const normalizedTyped = typedText.trim().replace(/\s+/g, ' ');
+        const typedWords = normalizedTyped.split(' ');
+        const originalWords = normalizedOriginal.split(' ');
+        let correctWords = 0;
+        for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
+            if (typedWords[i] === originalWords[i]) {
+                correctWords++;
+            } else {
+                break;
+            }
+        }
+        return correctWords;
+    };
+
     useEffect(() => {
-        // Only update WPM if we have valid data
         if (!debouncedInput || !session?.user?.id || !startTime) return;
-        
-        const words = debouncedInput.trim().split(/\s+/).filter(word => word.length > 0).length;
-        if (words === 0) return; // Don't calculate WPM for empty input
-        
+        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
+        const correctWords = getCorrectWordsCount(debouncedInput, normalizedParagraph);
+        if (correctWords === 0) return;
         const timeInMinutes = (Date.now() - startTime) / 60000;
-        if (timeInMinutes <= 0) return; // Prevent division by zero
-        
-        const speed = Math.round(words / timeInMinutes);
-        
-        // Only update if WPM is reasonable (0-200 range)
+        if (timeInMinutes <= 0) return;
+        const speed = Math.round(correctWords / timeInMinutes);
         if (speed >= 0 && speed <= 200) {
             setWpm(speed);
-            
-            // Send WPM update to server
             fetch(`/api/room`, {
                 method: "POST",
                 headers: {
@@ -42,7 +54,7 @@ export default function TypingInput({ roomId, paragraph }: { roomId: string, par
                 console.error("Failed to update WPM:", error);
             });
         }
-    }, [debouncedInput, session?.user?.id, roomId, startTime]);
+    }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (!startTime) {
@@ -52,33 +64,63 @@ export default function TypingInput({ roomId, paragraph }: { roomId: string, par
     };
 
     const getColorizedParagraph = () => {
-        return paragraph.split("").map((char, idx) => {
-            let color = "";
+        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
+        return normalizedParagraph.split("").map((char, idx) => {
+            let colorClass = "text-gray-500";
+            let bgClass = "";
             if (idx < input.length) {
-                color = input[idx] === char ? "text-green-500" : "text-red-500";
+                if (input[idx] === char) {
+                    colorClass = "text-green-400 font-bold drop-shadow-glow";
+                    bgClass = "bg-green-900/30 rounded";
+                } else {
+                    colorClass = "text-red-400 font-semibold";
+                    bgClass = "bg-red-900/30 rounded";
+                }
+            } else if (idx === input.length) {
+                colorClass = "text-green-300 font-bold animate-pulse";
+                bgClass = "bg-green-800/60 rounded";
             }
             return (
-                <span key={idx} className={color}>
+                <span
+                    key={idx}
+                    className={clsx(
+                        "transition-colors duration-150 px-0.5",
+                        colorClass,
+                        bgClass
+                    )}
+                >
                     {char}
                 </span>
             );
         });
     };
 
+    const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
+    const correctWordsCount = getCorrectWordsCount(input, normalizedParagraph);
+
     return (
-        <div className="space-y-4">
-            <div className="p-4 border rounded-md leading-7 bg-background">
+        <div className="space-y-4 bg-[#10151a] p-6 rounded-xl shadow-lg border border-green-900/40">
+            <div className="p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner">
                 {getColorizedParagraph()}
             </div>
             <textarea
                 value={input}
                 onChange={handleChange}
-                className="w-full p-2 border rounded-md"
+                className="w-full p-3 border border-green-900/40 rounded-md resize-none bg-[#181f26] text-green-200 placeholder:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600/70 font-mono text-lg transition"
                 placeholder="Start typing..."
                 rows={5}
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
             />
-            <div className="text-sm text-muted-foreground">
-                Current WPM: {wpm}
+            <div className="text-sm flex items-center gap-6">
+                <span className="text-green-400 font-semibold">
+                    Current WPM: <span className="font-mono text-2xl text-green-500 drop-shadow-glow">{wpm}</span>
+                </span>
+                <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
+                    Correct words: {correctWordsCount}
+                </span>
             </div>
         </div>
     );
