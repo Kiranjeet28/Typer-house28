@@ -195,10 +195,7 @@ export default function WaitingRoomPage() {
                     Error
                 </div>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <div className="text-xs text-gray-500 mb-4">
-                    <p>Room ID: {roomId}</p>
-                    <p>Room ID type: {typeof roomId}</p>
-                </div>
+               
                 <Button onClick={() => {
                     setError(null);
                     setLoading(true);
@@ -226,15 +223,11 @@ export default function WaitingRoomPage() {
     return (
         <Card className="max-w-2xl mx-auto mt-16 bg-background">
             <CardHeader>
-                <CardTitle className="text-center text-2xl">
-                    Waiting Room: <span className="text-green-500">{room.name}</span>
-                </CardTitle>
+               
                 <p className="text-sm text-muted-foreground text-center">
                     Join Code: <span className="font-semibold text-green-500">{room.joinCode}</span>
                 </p>
-                <p className="text-xs text-gray-500 text-center">
-                    Room ID: {roomId}
-                </p>
+               
             </CardHeader>
 
             <CardContent className="space-y-6">
