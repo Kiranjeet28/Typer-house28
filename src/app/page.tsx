@@ -5,14 +5,14 @@ import React from 'react'
 function page() {
   return (
     <div className="">
-      {/* <Spotlight
+      <Spotlight
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="white"
       />
       <div className="mt-8"> 
       <Section1 />
-      <Section2/> */}
-      {/* </div> */}
+      <Section2/> 
+    </div>
     </div>
   )
 }
