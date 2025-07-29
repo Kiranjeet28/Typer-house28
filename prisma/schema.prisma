@@ -106,7 +106,8 @@ model RoomMember {
   role     RoomMemberRole   @default(PLAYER)
   status   RoomMemberStatus @default(JOINED)
   joinedAt DateTime         @default(now())
-  
+  mode     Active         @default(INACTIVE) 
+  codeVailed  Boolean          @default(true) 
   // Relations
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
@@ -290,7 +291,10 @@ enum GameStatus {
   FINISHED
   CANCELLED
 }
-
+enum Active {
+  ACTIVE
+  INACTIVE
+}
 enum LeaderboardType {
   SPEED
   ACCURACY
