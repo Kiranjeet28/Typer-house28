@@ -55,32 +55,38 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
             </svg>
             Live WPM
             </h3>
-            <ul className="divide-y divide-gray-700">
-            {players.length === 0 ? (
-                <li className="py-4 text-center text-gray-500">No players yet</li>
-            ) : (
-                players
-                .sort((a, b) => b.wpm - a.wpm)
-                .map((p, i) => (
+           <ul className="divide-y divide-gray-700">
+    {players.length === 0 ? (
+        <li className="py-4 text-center text-gray-500">No players yet</li>
+    ) : (
+        players
+            .sort((a, b) => b.wpm - a.wpm)
+            .map((p, i) => {
+                const isCurrentUser = session?.user?.name === p.name;
+                return (
                     <li
-                    key={i}
-                    className={`flex items-center justify-between py-3 px-2 rounded-lg transition ${
-                        i === 0
-                        ? "bg-gray-800 font-bold text-green-300 shadow"
-                        : "hover:bg-gray-800"
-                    }`}
+                        key={i}
+                        className={`flex items-center justify-between py-3 px-2 rounded-lg transition ${
+                            i === 0
+                                ? "bg-gray-800 font-bold text-green-300 shadow"
+                                : "hover:bg-gray-800"
+                        }`}
                     >
-                    <div className="flex items-center gap-2">
-                        {i === 0 && (
-                        <span className="text-yellow-400 text-lg" title="Top player">★</span>
-                        )}
-                        <span className="truncate max-w-[120px] text-gray-200">{p.name}</span>
-                    </div>
-                    <span className="font-mono text-lg text-green-300">{p.wpm} <span className="text-xs text-green-500">WPM</span></span>
+                        <div className="flex items-center gap-2">
+                            {i === 0 && (
+                                <span className="text-yellow-400 text-lg" title="Top player">★</span>
+                            )}
+                            <span className="truncate max-w-[120px] text-gray-200">
+                                {isCurrentUser ? "you" : p.name}
+                            </span>
+                        </div>
+                        <span className="font-mono text-lg text-green-300">{p.wpm} <span className="text-xs text-green-500">WPM</span></span>
                     </li>
-                ))
-            )}
-            </ul>
+                );
+            })
+    )}
+</ul>
+
         </div>
     );
 }

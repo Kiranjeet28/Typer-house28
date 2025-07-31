@@ -20,28 +20,45 @@ import { useRouter } from "next/navigation";
 import Dropdown from "./Profile/Dropdown";
 
 export function NavbarMain() {
+    const { data: session } = useSession();
+    const route = useRouter();
     const navItems = [
         {
             name: "Home",
             link: "/",
+            onClick: () => route.push("/"),
         },
         {
             name: "Pricing",
             link: "/others/pricing",
+            onClick: () => route.push("/others/pricing"),
         },
         {
             name: "Create",
             link: "/createRoom",
+            onClick: () => {
+                if (!session) {
+                    signIn("google");
+                } else {
+                    route.push("/createRoom");
+                }
+            },
         },
         {
             name: "Join",
             link: "/join",
+            onClick: () => {
+                if (!session) {
+                    signIn("google");
+                } else {
+                    route.push("/join");
+                }
+            },
         }
     ];
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { data: session } = useSession();
-    const route = useRouter();
+
     return (
         <Navbar>
             {/* Desktop Navigation */}

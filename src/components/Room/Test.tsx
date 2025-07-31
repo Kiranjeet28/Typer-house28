@@ -6,14 +6,30 @@ import TypingInput from "./test/TypingInput";
 import SpeedBoard from "./test/SpeedBoard";
 import { smallText } from "@/resources/text";
 import { useRoomContext, Room } from "@/lib/context";
+import TypingClock from "./test/TypingClock";
 
 export default function TypingTestPage() {
     const { id } = useParams();
     const { state, dispatch } = useRoomContext();
     const router = useRouter();
-
+    const [timeLimit, setTimeLimit] = useState(60); // Default time limit
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isTyping, setIsTyping] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [overLimit, setOverLimit] = useState(false);
+    const handleTypingStatusChange = (typing: boolean) => {
+        setIsTyping(typing);
+    };
+
+    const handleTimeUpdate = (seconds: number) => {
+        setCurrentTime(seconds);
+    };
+
+    const handleTimeUp = () => {
+        setOverLimit(true);
+        router.push(`/room/${id}/result`);
+    };
 
     useEffect(() => {
         if (!id) {
@@ -35,7 +51,7 @@ export default function TypingTestPage() {
                 }
 
                 const roomData: Room = await response.json();
-                
+                setTimeLimit(roomData.timeLimit || 60); // Default to 60 seconds if not set
                 if (!roomData) {
                     throw new Error("Room not found");
                 }
@@ -77,6 +93,11 @@ export default function TypingTestPage() {
                     const roomData: Room = await response.json();
                     if (roomData && roomData.status !== state.room?.status) {
                         dispatch({ type: 'SET_ROOM', payload: roomData });
+                        
+                        // If room status changed to FINISHED or EXPIRED, redirect
+                        if (roomData.status === 'FINISHED' || roomData.status === 'EXPIRED') {
+                            router.push(`/room/${id}/result`);
+                        }
                     }
                 }
             } catch (error) {
@@ -90,7 +111,7 @@ export default function TypingTestPage() {
         return () => {
             clearInterval(statusInterval);
         };
-    }, [id, state.room, dispatch, isLoading]);
+    }, [id, state.room, dispatch, isLoading, router]);
 
     // Cleanup context on unmount
     useEffect(() => {
@@ -144,7 +165,7 @@ export default function TypingTestPage() {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
                     <p className="text-gray-600">Game completed. Redirecting to results...</p>
                 </div>
             </div>
@@ -153,12 +174,23 @@ export default function TypingTestPage() {
 
     return (
         <div className="flex gap-2 md:flex-row flex-col mx-4 md:mx-10 my-10">
-            {/* Main game components */}
+          
             <TypingInput
                 paragraph={state.room.customText || smallText}
                 roomId={id as string}
+                onTypingStatusChange={handleTypingStatusChange} // Make sure to pass this prop
+                overLimit={overLimit}
+            />
+            <div className="flex gap-1  flex-col items-center justify-center w-full">   
+                 <TypingClock
+                isTyping={isTyping}
+                onTimeUpdate={handleTimeUpdate}
+                roomId={id as string}
+                timeLimit={timeLimit} // 60 seconds time limit
+                onTimeUp={handleTimeUp}
             />
             <SpeedBoard roomId={id as string} />
+            </div>
         </div>
     );
 }

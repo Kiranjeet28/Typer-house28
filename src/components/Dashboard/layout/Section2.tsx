@@ -8,10 +8,11 @@ import { MagicCard } from "@/components/magicui/magic-card";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { useSession } from "next-auth/react";
 function Section2() {
-     const { data: session } = useSession();
+    const { data: session } = useSession();
+    if (session?.user) return null;
     return (
         <div className=" min-h-screen py-12 px-4">
-            <div className="container mx-auto">
+            <div className="containe</div>r mx-auto">
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold text-slate-100 mb-4">How It Works</h2>
                     <p className="text-slate-400 text-lg max-w-2xl mx-auto">
