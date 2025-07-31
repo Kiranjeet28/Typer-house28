@@ -5,9 +5,6 @@ import { endrollRoomSchema, RoomError } from '@/app/api/room/schema';
 import { authOptions } from "@/lib/auth";
 
 export async function EndrollRoomHandler(body: any) {
-    console.log('EndrollRoomHandler received body:', body);
-    console.log('Body type:', typeof body);
-    console.log('Body keys:', Object.keys(body || {}));
     
     const result = endrollRoomSchema.safeParse(body);
     
@@ -25,7 +22,6 @@ export async function EndrollRoomHandler(body: any) {
     }
     
     const { id: roomId } = result.data;
-    console.log('Validated roomId:', roomId);
     
     try {
         const session = await getServerSession(authOptions);
@@ -40,43 +36,47 @@ export async function EndrollRoomHandler(body: any) {
             );
         }
 
-        const room = await prisma.room.findUnique({
-            where: { id: roomId },
-            include: {
-                creator: {
-                    select: {
-                        id: true,
-                        name: true,
-                        username: true,
-                    },
-                },
-                members: {
-                    where: {
-                        status: {
-                            not: 'LEFT',
+        // Now perform the original query
+        let room;
+        try {
+            room = await prisma.room.findUniqueOrThrow({
+                where: { id: roomId },
+                include: {
+                    creator: {
+                        select: {
+                            id: true,
+                            name: true,
+                            username: true,
                         },
                     },
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true,
-                                username: true,
+                    members: {
+                        where: {
+                            // Only include members where the user exists
+                            user: {}
+                        },
+                        select: {
+                            userId: true,
+                            role: true,
+                            status: true,
+                            user: {
+                                select: {
+                                    name: true,
+                                    username: true,
+                                },
                             },
                         },
-                    },
+                    }
                 },
-                _count: {
-                    select: {
-                        members: true,
-                    },
-                },
-            },
-        });
-
-        if (!room) {
-            throw new RoomError('Room not found', 'ROOM_NOT_FOUND', 404);
+            });
+        } catch (prismaError: any) {
+            if (prismaError.name === 'NotFoundError') {
+                throw new RoomError('Room not found', 'ROOM_NOT_FOUND', 404);
+            }
+            throw prismaError;
         }
+
+        // No longer need this filter since we're filtering at the database level
+        // room.members = room.members.filter((member: any) => member.user !== null);
 
         // Check access if private room
         const isCreator = room.creatorId === session.user.id;
@@ -84,31 +84,31 @@ export async function EndrollRoomHandler(body: any) {
 
         if (room.isPrivate && !isCreator && !isMember) {
             return NextResponse.json(
-                {
-                    error: 'Access denied to private room',
-                    code: 'PRIVATE_ROOM_ACCESS_DENIED',
-                },
-                { status: 403 }
+            {
+                error: 'Access denied to private room',
+                code: 'PRIVATE_ROOM_ACCESS_DENIED',
+            },
+            { status: 403 }
             );
         }
 
         return NextResponse.json(
             {
-                success: true,
-                data: room,
+            success: true,
+            data: room,
             },
             { status: 200 }
         );
-    } catch (error: any) {
+        } catch (error: any) {
         console.error('Get Room Error:', error);
 
         if (error instanceof RoomError) {
             return NextResponse.json(
-                {
-                    error: error.message,
-                    code: error.code,
-                },
-                { status: error.statusCode }
+            {
+                error: error.message,
+                code: error.code,
+            },
+            { status: error.statusCode }
             );
         }
 

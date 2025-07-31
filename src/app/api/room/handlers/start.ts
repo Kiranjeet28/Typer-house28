@@ -6,7 +6,7 @@ import { startRoomSchema } from '../schema';
 
 export async function StartRoomHandler(body: Request) {
     const result = startRoomSchema.safeParse(body);
-     const { id: roomId } = result.success ? result.data : { id: undefined };
+     const { id: roomId,status } = result.success ? result.data : { id: undefined };
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -19,7 +19,7 @@ export async function StartRoomHandler(body: Request) {
         const updatedRoom = await prisma.room.update({
             where: { id: roomId },
             data: {
-                status: 'IN_GAME',
+                status: status,
                 codeValid : false,
              },
         });

@@ -93,7 +93,8 @@ export const joinRoomSchema = z.object({
 });
 export const startRoomSchema = z.object({
     action: z.literal('start'),
-    id : z.string(),
+    id: z.string(),
+    status: z.enum(['WAITING', 'IN_GAME', 'FINISHED', 'EXPIRED']),
 });
 export const endrollRoomSchema = z.object({
     action: z.literal("endroll").refine(val => val === "endroll", {
