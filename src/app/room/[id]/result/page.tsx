@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 
 interface PageProps {
@@ -16,6 +17,7 @@ export default function ResultPage({ params }: PageProps) {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -49,6 +51,14 @@ export default function ResultPage({ params }: PageProps) {
         });
     });
   }, [params]);
+
+  // Helper function to display player name
+  const getDisplayName = (playerName: string) => {
+    if (session?.user?.name && playerName === session.user.name) {
+      return "You";
+    }
+    return playerName;
+  };
 
   if (loading) {
     return (
@@ -108,6 +118,7 @@ export default function ResultPage({ params }: PageProps) {
                   tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: 14 }}
                   axisLine={{ stroke: "#52525b" }}
                   tickLine={{ stroke: "#52525b" }}
+                  tickFormatter={(value) => getDisplayName(value)}
                 />
                 <YAxis
                   domain={[0, 'dataMax + 20']}
@@ -125,7 +136,7 @@ export default function ResultPage({ params }: PageProps) {
                 />
                 <Tooltip
                   formatter={(value, name) => [`${value} WPM`, 'Speed']}
-                  labelFormatter={(label) => `Player: ${label}`}
+                  labelFormatter={(label) => `Player: ${getDisplayName(label)}`}
                   contentStyle={{
                     backgroundColor: '#23232b',
                     border: '1px solid #52525b',
@@ -157,6 +168,11 @@ export default function ResultPage({ params }: PageProps) {
                     else if (rank === 1) color = '#a1a1aa'; // Silver for 2nd
                     else if (rank === 2) color = '#f59e0b'; // Bronze for 3rd
 
+                    // Highlight current user's bar with a special color
+                    if (session?.user?.name && entry.name === session.user.name) {
+                      color = '#10b981'; // Green for current user
+                    }
+
                     return <Cell key={`cell-${index}`} fill={color} />;
                   })}
                 </Bar>
@@ -170,13 +186,14 @@ export default function ResultPage({ params }: PageProps) {
               <span className="text-3xl">🏆</span> Leaderboard
             </h3>
             <div className="grid gap-4">
-              {data
+              {[...data]
                 .sort((a, b) => b.wpm - a.wpm)
                 .map((player, index) => {
                   let medal = '';
                   let bgColor = 'bg-[#23232b]';
                   let border = 'border border-[#27272a]';
                   let textColor = 'text-gray-100';
+                  const isCurrentUser = session?.user?.name && player.name === session.user.name;
 
                   if (index === 0) {
                     medal = '🥇';
@@ -195,16 +212,25 @@ export default function ResultPage({ params }: PageProps) {
                     textColor = 'text-[#f59e0b]';
                   }
 
+                  // Special styling for current user
+                  if (isCurrentUser) {
+                    bgColor = `${bgColor} ring-2 ring-green-500/50`;
+                    border = `${border} ring-green-500/30`;
+                  }
+
                   return (
                     <div
                       key={player.name}
-                      className={`flex justify-between items-center p-5 rounded-xl shadow-lg ${bgColor} ${border} ${textColor} transition-all hover:scale-[1.02] hover:shadow-2xl`}
+                      className={`flex justify-between items-center p-5 rounded-xl shadow-lg ${bgColor} ${border} ${textColor} transition-all hover:scale-[1.02] hover:shadow-2xl ${isCurrentUser ? 'ring-2 ring-green-500/30' : ''}`}
                     >
                       <div className="flex items-center gap-4">
                         <span className="text-3xl">{medal}</span>
                         <div>
                           <span className="font-bold text-xl">#{index + 1}</span>
-                          <span className="font-medium ml-3 text-lg">{player.name}</span>
+                          <span className={`font-medium ml-3 text-lg ${isCurrentUser ? 'text-green-400 font-bold' : ''}`}>
+                            {getDisplayName(player.name)}
+                            {isCurrentUser && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">YOU</span>}
+                          </span>
                         </div>
                       </div>
                       <div className="text-right">

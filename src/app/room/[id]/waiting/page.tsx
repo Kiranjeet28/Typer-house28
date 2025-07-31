@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { $Enums } from '@prisma/client';
 
 type RoomMember = {
     id: string;
@@ -97,6 +98,10 @@ export default function WaitingRoomPage() {
                 throw new Error(data.error);
             }
 
+            // Filter out members with null user to avoid rendering errors
+            if (data.data) {
+                data.data.members = data.data.members.filter((member: RoomMember) => member.user !== null);
+            }
             setRoom(data.data);
             setLoading(false);
 
@@ -140,7 +145,7 @@ export default function WaitingRoomPage() {
         setError(null);
         
         try {
-            const requestBody = { action: 'start', id: roomId };
+            const requestBody = { action: 'start', id: roomId,status:'IN_GAME' };
             console.log('Start game request body:', requestBody);
             
             const res = await fetch(`/api/room`, {
@@ -244,7 +249,7 @@ export default function WaitingRoomPage() {
                             <li key={member.id} className="flex items-center gap-3 text-white">
                                 <div className="w-2 h-2 rounded-full bg-green-500" />
                                 <span>
-                                    {member.user.name || member.user.username} ({member.role})
+                                    {member?.user?.name || member.user.username} ({member.role})
                                 </span>
                             </li>
                         ))}
