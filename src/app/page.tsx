@@ -11,8 +11,8 @@ function page() {
       />
       <div className="mt-8"> 
       <Section1 />
-      <Section2/>
-      </div>
+      <Section2/> 
+    </div>
     </div>
   )
 }
