@@ -143,7 +143,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     const correctWordsCount = getCorrectWordsCount(input, normalizedParagraph);
 
     return (
-        <div className="space-y-4 bg-[#10151a] p-6 rounded-xl shadow-lg border border-green-900/40">
+        <div className=" space-y-4 bg-[#10151a] p-6 rounded-xl shadow-lg border border-green-900/40">
             <div 
                 ref={paragraphRef}
                 className="p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"

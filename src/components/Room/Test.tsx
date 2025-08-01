@@ -216,7 +216,7 @@ export default function TypingTestPage() {
                 onTypingStatusChange={handleTypingStatusChange}
                 overLimit={overLimit}
             />
-            <div className="flex gap-1 flex-col items-center justify-center w-full">   
+            <div className="flex gap-1 flex-col md:w-20 items-center justify-center w-full">   
                 <TypingClock
                     isTyping={isTyping}
                     onTimeUpdate={handleTimeUpdate}
