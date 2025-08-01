@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Copy, Check } from 'lucide-react';
 import {
     Card,
     CardContent,
@@ -30,6 +31,36 @@ type RoomData = {
     joinCode: string;
     status: string;
     members: RoomMember[];
+};
+
+// Copy component with icon switching
+const CopyButton = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            // Reset the icon back to copy after 2 seconds
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleCopy}
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+            title={copied ? 'Copied!' : 'Copy join code'}
+        >
+            {copied ? (
+                <Check className="w-4 h-4 text-green-500" />
+            ) : (
+                <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" />
+            )}
+        </button>
+    );
 };
 
 export default function WaitingRoomPage() {
@@ -224,16 +255,16 @@ export default function WaitingRoomPage() {
                 </div>
             </div>
         );
-    }
+        }
 
-    return (
+        return (
         <Card className="max-w-2xl mx-auto mt-16 bg-background">
             <CardHeader>
-               
-                <p className="text-md text-muted-foreground text-center">
-                    Join Code: <Highlight className="text-white font-bold font-2xl">{room.joinCode}</Highlight>
-                </p>
-               
+            <p className="text-md text-muted-foreground text-center flex items-center justify-center gap-2">
+                {/* Copy button with icon switching */}
+                <CopyButton text={room.joinCode} />
+                Join Code: <Highlight className="text-white font-bold text-2xl">{room.joinCode}</Highlight>
+            </p>
             </CardHeader>
 
             <CardContent className="space-y-6">

@@ -162,46 +162,8 @@ export default function TypingClock({
                 </div>
             </div>
             
-            {/* Status indicator */}
-            <div className="mt-4 text-center">
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    isTimeUp 
-                        ? 'bg-red-900/40 text-red-400 border border-red-800/60'
-                        : isActive 
-                        ? 'bg-green-900/40 text-green-400 border border-green-800/60' 
-                        : 'bg-gray-900/40 text-gray-500 border border-gray-800/60'
-                }`}>
-                    <div className={`w-2 h-2 rounded-full ${
-                        isTimeUp 
-                            ? 'bg-red-500' 
-                            : isActive 
-                            ? 'bg-green-500 animate-pulse' 
-                            : 'bg-gray-500'
-                    }`}></div>
-                    {isTimeUp ? 'FINISHED' : isActive ? 'ACTIVE' : 'READY'}
-                </div>
-            </div>
-            
-            {/* Progress bar */}
-            <div className="mt-4">
-                <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                            isTimeUp ? 'bg-red-500' : 
-                            isTimeRunningOut ? 'bg-yellow-500' : 
-                            'bg-green-500'
-                        }`}
-                        style={{ width: `${(elapsedTime / timeLimit) * 100}%` }}
-                    ></div>
-                </div>
-            </div>
-            
-            {/* Additional status message */}
-            <div className="mt-2 text-center">
-                <div className="text-xs text-gray-500">
-                    {isTyping ? 'User is typing...' : 'Waiting for user to start typing'}
-                </div>
-            </div>
+          
+         
         </div>
     );
 }

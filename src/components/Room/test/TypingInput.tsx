@@ -143,44 +143,44 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     const correctWordsCount = getCorrectWordsCount(input, normalizedParagraph);
 
     return (
-        <div className=" space-y-4 bg-[#10151a] p-6 rounded-xl shadow-lg border border-green-900/40">
+        <div className="space-y-4 bg-[#10151a] p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg border border-green-900/40 w-full ">
             <div 
-                ref={paragraphRef}
-                className="p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"
-                style={{
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#15803d #1f2937'
-                }}
+            ref={paragraphRef}
+            className="p-3 sm:p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 sm:h-40 lg:h-48 xl:h-56 2xl:h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"
+            style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#15803d #1f2937'
+            }}
             >
-                {getColorizedParagraph()}
+            {getColorizedParagraph()}
             </div>
             <textarea
-                value={input}
-                onChange={handleChange}
-                disabled={overLimit}
-                className={clsx(
-                    "w-full p-3 border border-green-900/40 rounded-md resize-none bg-[#181f26] text-green-200 placeholder:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600/70 font-mono text-lg transition",
-                    overLimit && "opacity-50 cursor-not-allowed bg-gray-800/50"
-                )}
-                placeholder={overLimit ? "Typing disabled - limit reached" : "Start typing..."}
-                rows={5}
-                spellCheck={false}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
+            value={input}
+            onChange={handleChange}
+            disabled={overLimit}
+            className={clsx(
+                "w-full p-2 sm:p-3 lg:p-4 border border-green-900/40 rounded-md resize-none bg-[#181f26] text-green-200 placeholder:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600/70 font-mono text-base sm:text-lg lg:text-xl transition",
+                overLimit && "opacity-50 cursor-not-allowed bg-gray-800/50"
+            )}
+            placeholder={overLimit ? "Typing disabled - limit reached" : "Start typing..."}
+            rows={5}
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
             />
-            <div className="text-sm flex items-center gap-6">
-                <span className="text-green-400 font-semibold">
-                    Current WPM: <span className="font-mono text-2xl text-green-500 drop-shadow-glow">{wpm}</span>
+            <div className="text-xs sm:text-sm flex flex-wrap items-center gap-4 sm:gap-6">
+            <span className="text-green-400 font-semibold">
+                Current WPM: <span className="font-mono text-xl sm:text-2xl lg:text-3xl text-green-500 drop-shadow-glow">{wpm}</span>
+            </span>
+            <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
+                Correct words: {correctWordsCount}
+            </span>
+            {overLimit && (
+                <span className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded font-semibold">
+                Limit reached
                 </span>
-                <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
-                    Correct words: {correctWordsCount}
-                </span>
-                {overLimit && (
-                    <span className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded font-semibold">
-                        Limit reached
-                    </span>
-                )}
+            )}
             </div>
         </div>
     );

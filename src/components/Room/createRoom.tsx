@@ -66,9 +66,8 @@ export default function CreateRoomForm() {
             
         } catch (error: any) {
             toast.error(error.message || 'Something went wrong');
-        } finally {
             setLoading(false);
-        }
+        } 
     };
     
     
