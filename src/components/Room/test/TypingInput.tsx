@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useSession } from "next-auth/react";
 import clsx from "clsx";
@@ -17,6 +17,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     const [startTime, setStartTime] = useState<number | null>(null);
     const debouncedInput = useDebounce(input, 1000);
     const { data: session } = useSession();
+    const paragraphRef = useRef<HTMLDivElement>(null);
 
     // Stop typing when overLimit becomes true
     useEffect(() => {
@@ -25,6 +26,21 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
             onTypingStatusChange?.(false);
         }
     }, [overLimit, startTime, onTypingStatusChange]);
+
+    // Auto-scroll paragraph box based on typing progress
+    useEffect(() => {
+        if (!paragraphRef.current) return;
+        
+        // Find the current cursor position element
+        const currentElement = paragraphRef.current.querySelector(`[data-index="${input.length}"]`);
+        if (currentElement) {
+            currentElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+        }
+    }, [input.length]);
 
     // Count correctly typed words - more flexible approach
     const getCorrectWordsCount = (typedText: string, originalText: string) => {
@@ -110,6 +126,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
             return (
                 <span
                     key={idx}
+                    data-index={idx}
                     className={clsx(
                         "transition-colors duration-150 px-0.5",
                         colorClass,
@@ -127,7 +144,14 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
 
     return (
         <div className="space-y-4 bg-[#10151a] p-6 rounded-xl shadow-lg border border-green-900/40">
-            <div className="p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner">
+            <div 
+                ref={paragraphRef}
+                className="p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"
+                style={{
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: '#15803d #1f2937'
+                }}
+            >
                 {getColorizedParagraph()}
             </div>
             <textarea

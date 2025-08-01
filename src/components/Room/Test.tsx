@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import TypingInput from "./test/TypingInput";
 import SpeedBoard from "./test/SpeedBoard";
-import { smallText } from "@/resources/text";
+import { mediumText, alternativeTexts, customParagraphs, largeText, tenMinuteText, smallText } from "@/resources/text";
 import { useRoomContext, Room } from "@/lib/context";
 import TypingClock from "./test/TypingClock";
 
@@ -18,6 +18,7 @@ export default function TypingTestPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [overLimit, setOverLimit] = useState(false);
+    
     const handleTypingStatusChange = (typing: boolean) => {
         setIsTyping(typing);
     };
@@ -29,6 +30,36 @@ export default function TypingTestPage() {
     const handleTimeUp = () => {
         setOverLimit(true);
         router.push(`/room/${id}/result`);
+    };
+
+    // Function to get appropriate text based on time limit
+    const getTextByTimeLimit = (timeLimitSeconds: number, customText?: string): string => {
+        // If custom text is provided, use it regardless of time limit
+        if (customText && customText.trim()) {
+            return customText;
+        }
+
+        switch (timeLimitSeconds) {
+            case 60: // 1 minute
+                return mediumText;
+            case 180: // 3 minutes
+                return largeText;
+            case 300: // 5 minutes
+                return tenMinuteText;
+            case 600: // 10 minutes
+                return customParagraphs.join(" ");
+            default:
+                // For any other time limit, determine based on duration
+                if (timeLimitSeconds <= 60) {
+                    return smallText;
+                } else if (timeLimitSeconds <= 180) {
+                    return mediumText;
+                } else if (timeLimitSeconds <= 300) {
+                    return largeText;
+                } else {
+                    return tenMinuteText;
+                }
+        }
     };
 
     useEffect(() => {
@@ -51,7 +82,9 @@ export default function TypingTestPage() {
                 }
 
                 const roomData: Room = await response.json();
-                setTimeLimit(roomData.timeLimit || 60); // Default to 60 seconds if not set
+                const roomTimeLimit = roomData.timeLimit || 60;
+                setTimeLimit(roomTimeLimit); // Set time limit from room data
+                
                 if (!roomData) {
                     throw new Error("Room not found");
                 }
@@ -172,24 +205,26 @@ export default function TypingTestPage() {
         );
     }
 
+    // Get the appropriate text based on time limit and custom text
+    const paragraphText = getTextByTimeLimit(timeLimit, state.room.customText);
+
     return (
         <div className="flex gap-2 md:flex-row flex-col mx-4 md:mx-10 my-10">
-          
             <TypingInput
-                paragraph={state.room.customText || smallText}
+                paragraph={paragraphText}
                 roomId={id as string}
-                onTypingStatusChange={handleTypingStatusChange} // Make sure to pass this prop
+                onTypingStatusChange={handleTypingStatusChange}
                 overLimit={overLimit}
             />
-            <div className="flex gap-1  flex-col items-center justify-center w-full">   
-                 <TypingClock
-                isTyping={isTyping}
-                onTimeUpdate={handleTimeUpdate}
-                roomId={id as string}
-                timeLimit={timeLimit} // 60 seconds time limit
-                onTimeUp={handleTimeUp}
-            />
-            <SpeedBoard roomId={id as string} />
+            <div className="flex gap-1 flex-col items-center justify-center w-full">   
+                <TypingClock
+                    isTyping={isTyping}
+                    onTimeUpdate={handleTimeUpdate}
+                    roomId={id as string}
+                    timeLimit={timeLimit}
+                    onTimeUp={handleTimeUp}
+                />
+                <SpeedBoard roomId={id as string} />
             </div>
         </div>
     );
