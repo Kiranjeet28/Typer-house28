@@ -49,24 +49,29 @@ export async function joinRoomHandler(body: object) {
                 },
                 _count: {
                     select: {
-                        members: true,
+                        // Count only active members (not LEFT)
+                        members: {
+                            where: {
+                                status: {
+                                    not: 'LEFT'
+                                }
+                            }
+                        },
                     },
                 },
             },
         });
+        
         if (!room) {
             throw new RoomError('Room not found', 'ROOM_NOT_FOUND', 404);
         }
+        
         if (!room.codeValid) {
             throw new RoomError('Room code is invalid', 'INVALID_ROOM_CODE', 400);
         }
 
         if (room.expiresAt < new Date()) {
             throw new RoomError('Room has expired', 'ROOM_EXPIRED', 400);
-        }
-
-        if (room._count.members >= room.maxPlayers) {
-            throw new RoomError('Room is full', 'ROOM_FULL', 400);
         }
 
         if (room.status === 'FINISHED') {
@@ -81,20 +86,33 @@ export async function joinRoomHandler(body: object) {
             (member) => member.userId === session.user.id
         );
 
-        if (existingMember) {
-            if (existingMember.status === 'LEFT') {
-                await prisma.roomMember.update({
-                    where: { id: existingMember.id },
-                    data: { status: 'JOINED', joinedAt: new Date() },
-                });
-            } else {
-                throw new RoomError(
-                    'You are already in this room',
-                    'ALREADY_IN_ROOM',
-                    400
-                );
-            }
+        // Check if user is already an active member
+        if (existingMember && existingMember.status !== 'LEFT') {
+            throw new RoomError(
+                'You are already in this room',
+                'ALREADY_IN_ROOM',
+                400
+            );
+        }
+
+        // Check room capacity BEFORE adding/re-adding the user
+        // If user is rejoining (status was LEFT), they don't count toward current capacity
+        if (room._count.members >= room.maxPlayers) {
+            throw new RoomError(
+                `Room is full. Maximum capacity is ${room.maxPlayers} players.`,
+                'ROOM_FULL',
+                400
+            );
+        }
+
+        if (existingMember && existingMember.status === 'LEFT') {
+            // User is rejoining
+            await prisma.roomMember.update({
+                where: { id: existingMember.id },
+                data: { status: 'JOINED', joinedAt: new Date() },
+            });
         } else {
+            // New user joining
             await prisma.roomMember.create({
                 data: {
                     roomId: room.id,
@@ -124,7 +142,15 @@ export async function joinRoomHandler(body: object) {
                     },
                 },
                 _count: {
-                    select: { members: true },
+                    select: { 
+                        members: {
+                            where: {
+                                status: {
+                                    not: 'LEFT'
+                                }
+                            }
+                        }
+                    },
                 },
             },
         });

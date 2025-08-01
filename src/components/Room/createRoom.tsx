@@ -91,8 +91,8 @@ export default function CreateRoomForm() {
                         <Label htmlFor="description">Description</Label>
                         <Input name="description" value={form.description} onChange={handleChange} />
                     </div>
-                    <div className="flex flex-row justify-between space-x-4 items-center">
-                        <div className="space-y-2">
+                    <div className="flex flex-row justify-around space-x-4 items-center">
+                        <div className="flex gap-2 items-center space-y-2">
                             <Label htmlFor="maxPlayers">Max Players</Label>
                             <Select
                                 value={form.maxPlayers.toString()}
@@ -152,18 +152,17 @@ export default function CreateRoomForm() {
                                 </SelectContent>
                             </Select> 
                         </div>*/}
-                        <div className="flex items-center space-x-2">
+                        {/* <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="isPrivate"
                                 checked={form.isPrivate}
                                 onCheckedChange={(checked) => setForm(prev => ({ ...prev, isPrivate: Boolean(checked) }))}
                             />
                             <Label htmlFor="isPrivate">Private Room</Label>
-                        </div>
-                    </div>
+                        </div> */}
                    
                    
-                    <div className="space-y-2">
+                    <div className="flex gap-2 items-center space-y-2">
                         <Label htmlFor="timeLimit">Time Limit</Label>
                         <Select
                             value={form.timeLimit.toString()}
@@ -179,6 +178,7 @@ export default function CreateRoomForm() {
                                 <SelectItem value="600">10 minutes</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
                     </div>
 
                     {form.gameMode === 'CUSTOM_TEXT' && (
