@@ -17,7 +17,7 @@ export default function TypingClock({
     onTimeUp 
 }: TypingClockProps) {
     const [elapsedTime, setElapsedTime] = useState(0);
-    const [isActive, setIsActive] = useState(false);
+    const [isActive, setIsActive] = useState(true); // Start immediately
     const [gameFinished, setGameFinished] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number | null>(null);
@@ -59,33 +59,31 @@ export default function TypingClock({
         }
     };
 
-    // Start timer when typing begins
+    // Start timer immediately when component mounts
     useEffect(() => {
-        if (isTyping && !isActive && !gameFinished) {
+        if (!gameFinished && !startTimeRef.current) {
             setIsActive(true);
             startTimeRef.current = Date.now();
-            console.log('Timer started');
+            console.log('Timer started automatically on component mount');
         }
-    }, [isTyping, isActive, gameFinished]);
+    }, []); // Empty dependency array means this runs once on mount
 
-    // Main timer effect
+    // Main timer effect - starts immediately, no dependency on isTyping
     useEffect(() => {
-        if (isActive && !gameFinished) {
+        if (isActive && !gameFinished && startTimeRef.current) {
             intervalRef.current = setInterval(() => {
-                if (startTimeRef.current) {
-                    const now = Date.now();
-                    const elapsed = Math.floor((now - startTimeRef.current) / 1000);
-                    
-                    if (elapsed >= timeLimit) {
-                        // Time is up
-                        setElapsedTime(timeLimit);
-                        setIsActive(false);
-                        onTimeUpdate?.(timeLimit);
-                        finishGame();
-                    } else {
-                        setElapsedTime(elapsed);
-                        onTimeUpdate?.(elapsed);
-                    }
+                const now = Date.now();
+                const elapsed = Math.floor((now - startTimeRef.current!) / 1000);
+                
+                if (elapsed >= timeLimit) {
+                    // Time is up
+                    setElapsedTime(timeLimit);
+                    setIsActive(false);
+                    onTimeUpdate?.(timeLimit);
+                    finishGame();
+                } else {
+                    setElapsedTime(elapsed);
+                    onTimeUpdate?.(elapsed);
                 }
             }, 100); // Update every 100ms for smooth display
         }
@@ -195,6 +193,13 @@ export default function TypingClock({
                         }`}
                         style={{ width: `${(elapsedTime / timeLimit) * 100}%` }}
                     ></div>
+                </div>
+            </div>
+            
+            {/* Additional status message */}
+            <div className="mt-2 text-center">
+                <div className="text-xs text-gray-500">
+                    {isTyping ? 'User is typing...' : 'Waiting for user to start typing'}
                 </div>
             </div>
         </div>
