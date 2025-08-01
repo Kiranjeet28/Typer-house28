@@ -74,7 +74,7 @@ export default function CreateRoomForm() {
     
 
     return (
-       <Card className="relative overflow-hidden max-w-[60vw] w-full">
+       <Card className="relative overflow-hidden m-2 md:m-1 md:max-w-[60vw] w-full">
                   <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
             <CardHeader>
                 <CardTitle className="text-2xl text-center text-green-300">Create a Room</CardTitle>

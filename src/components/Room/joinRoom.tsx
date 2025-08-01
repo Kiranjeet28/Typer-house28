@@ -138,7 +138,7 @@ export default function JoinRoom() {
     const isButtonDisabled = loading || waiting;
 
     return (
-        <Card className="relative overflow-hidden max-w-[350px] w-full">
+        <Card className="relative overflow-hidden md:m-0 m-2 max-w-[350px] w-full">
             <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
             <CardHeader>
                 <CardTitle className="text-center text-2xl text-green-300">Join a Room</CardTitle>
