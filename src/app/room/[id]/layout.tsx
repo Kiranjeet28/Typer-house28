@@ -5,7 +5,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body>
+      <body className="w-[80vw]">
           {children}
       </body>
     </html>

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { $Enums } from '@prisma/client';
+import { Highlight } from '@/components/ui/hero-highlight';
 
 type RoomMember = {
     id: string;
@@ -229,8 +230,8 @@ export default function WaitingRoomPage() {
         <Card className="max-w-2xl mx-auto mt-16 bg-background">
             <CardHeader>
                
-                <p className="text-sm text-muted-foreground text-center">
-                    Join Code: <span className="font-semibold text-green-500">{room.joinCode}</span>
+                <p className="text-md text-muted-foreground text-center">
+                    Join Code: <Highlight className="text-white">{room.joinCode}</Highlight>
                 </p>
                
             </CardHeader>
