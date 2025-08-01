@@ -231,7 +231,7 @@ export default function WaitingRoomPage() {
             <CardHeader>
                
                 <p className="text-md text-muted-foreground text-center">
-                    Join Code: <Highlight className="text-white">{room.joinCode}</Highlight>
+                    Join Code: <Highlight className="text-white font-bold font-2xl">{room.joinCode}</Highlight>
                 </p>
                
             </CardHeader>

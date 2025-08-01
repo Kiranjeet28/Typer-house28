@@ -62,10 +62,9 @@ export default function ResultPage({ params }: PageProps) {
 
   if (loading) {
     return (
-        <div className="p-6 max-w-3xl mx-auto bg-[#18181b] min-h-screen flex items-center justify-center">
-          <div className="text-center text-gray-300 animate-pulse">Loading speed results...</div>
+      <div className="p-6 max-w-3xl mx-auto bg-[#18181b] min-h-screen flex items-center justify-center">
+        <div className="text-center text-gray-300 animate-pulse">Loading speed results...</div>
       </div>
-        
     );
   }
 
@@ -83,7 +82,7 @@ export default function ResultPage({ params }: PageProps) {
   if (!roomId) {
     return (
       <div>
-      <div className="p-6 max-w-3xl mx-auto bg-[#18181b] min-h-screen flex items-center justify-center"></div>
+        <div className="p-6 max-w-3xl mx-auto bg-[#18181b] min-h-screen flex items-center justify-center"></div>
         <div className="text-center text-gray-400 bg-[#27272a] p-6 rounded-xl shadow-lg">
           Invalid room ID
         </div>
@@ -92,45 +91,58 @@ export default function ResultPage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-6 my-10 mx-20 bg-[#18181b] min-h-screen">
+    <div className="p-2 sm:p-6 my-4 sm:my-10 mx-1 sm:mx-20 bg-[#18181b] min-h-screen">
       {data.length === 0 ? (
-        <div className="text-center text-gray-500 bg-[#23232b] p-8 rounded-xl shadow-inner border border-[#27272a]">
+        <div className="text-center text-gray-500 bg-[#23232b] p-4 sm:p-8 rounded-xl shadow-inner border border-[#27272a]">
           <p>No speed data available for this room yet.</p>
         </div>
       ) : (
-        <>
-          <div className="mb-4 text-center">
+          <>
+            <div>
+          <div className="mb-4 text-center"></div>
             <p className="text-base text-gray-400">
               Showing results for <span className="font-semibold text-green-500 ">{data.length}</span> participant{data.length !== 1 ? 's' : ''}
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-[#23232b] to-[#18181b] p-6 rounded-2xl shadow-2xl border border-[#27272a] mb-8">
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+          <div className="bg-gradient-to-br from-[#23232b] to-[#18181b] p-2 sm:p-6 rounded-2xl shadow-2xl border border-[#27272a] mb-4 sm:mb-8">
+            <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 220 : 400}>
+              <BarChart
+                data={data}
+                margin={{
+                  top: 20,
+                  right: window.innerWidth < 640 ? 10 : 30,
+                  left: window.innerWidth < 640 ? 0 : 20,
+                  bottom: window.innerWidth < 640 ? 40 : 60,
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                 <XAxis
                   dataKey="name"
-                  angle={-45}
+                  angle={window.innerWidth < 640 ? -30 : -45}
                   textAnchor="end"
-                  height={80}
+                  height={window.innerWidth < 640 ? 50 : 80}
                   interval={0}
-                  tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: 14 }}
+                  tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: window.innerWidth < 640 ? 11 : 14 }}
                   axisLine={{ stroke: "#52525b" }}
                   tickLine={{ stroke: "#52525b" }}
                   tickFormatter={(value) => getDisplayName(value)}
                 />
                 <YAxis
                   domain={[0, 'dataMax + 20']}
-                  label={{
-                    value: 'Words Per Minute (WPM)',
-                    angle: -90,
-                    position: 'insideLeft',
-                    fill: "#f3f4f6",
-                    fontWeight: 700,
-                    fontSize: 14,
-                  }}
-                  tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: 14 }}
+                  label={
+                    window.innerWidth < 640
+                      ? undefined
+                      : {
+                          value: 'Words Per Minute (WPM)',
+                          angle: -90,
+                          position: 'insideLeft',
+                          fill: "#f3f4f6",
+                          fontWeight: 700,
+                          fontSize: 14,
+                        }
+                  }
+                  tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: window.innerWidth < 640 ? 11 : 14 }}
                   axisLine={{ stroke: "#52525b" }}
                   tickLine={{ stroke: "#52525b" }}
                 />
@@ -181,11 +193,11 @@ export default function ResultPage({ params }: PageProps) {
           </div>
 
           {/* Results Summary with Medal Icons */}
-          <div className="mt-8">
-            <h3 className="text-2xl font-bold mb-5 text-[#fbbf24] flex items-center gap-2">
-              <span className="text-3xl">🏆</span> Leaderboard
+          <div className="mt-4 sm:mt-8">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-5 text-[#fbbf24] flex items-center gap-2">
+              <span className="text-2xl sm:text-3xl">🏆</span> Leaderboard
             </h3>
-            <div className="grid gap-4">
+            <div className="grid gap-2 sm:gap-4">
               {[...data]
                 .sort((a, b) => b.wpm - a.wpm)
                 .map((player, index) => {
@@ -221,23 +233,23 @@ export default function ResultPage({ params }: PageProps) {
                   return (
                     <div
                       key={player.name}
-                      className={`flex justify-between items-center p-5 rounded-xl shadow-lg ${bgColor} ${border} ${textColor} transition-all hover:scale-[1.02] hover:shadow-2xl ${isCurrentUser ? 'ring-2 ring-green-500/30' : ''}`}
+                      className={`flex flex-col sm:flex-row justify-between items-center p-3 sm:p-5 rounded-xl shadow-lg ${bgColor} ${border} ${textColor} transition-all hover:scale-[1.02] hover:shadow-2xl ${isCurrentUser ? 'ring-2 ring-green-500/30' : ''}`}
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">{medal}</span>
+                      <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
+                        <span className="text-2xl sm:text-3xl">{medal}</span>
                         <div>
-                          <span className="font-bold text-xl">#{index + 1}</span>
-                          <span className={`font-medium ml-3 text-lg ${isCurrentUser ? 'text-green-400 font-bold' : ''}`}>
+                          <span className="font-bold text-lg sm:text-xl">#{index + 1}</span>
+                          <span className={`font-medium ml-2 sm:ml-3 text-base sm:text-lg ${isCurrentUser ? 'text-green-400 font-bold' : ''}`}>
                             {getDisplayName(player.name)}
                             {isCurrentUser && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">YOU</span>}
                           </span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-3xl font-extrabold text-green-500 drop-shadow-lg">
+                        <span className="text-2xl sm:text-3xl font-extrabold text-green-500 drop-shadow-lg">
                           {player.wpm}
                         </span>
-                        <span className="text-base text-green-500 ml-2 ">WPM</span>
+                        <span className="text-sm sm:text-base text-green-500 ml-1 sm:ml-2 ">WPM</span>
                       </div>
                     </div>
                   );
@@ -246,6 +258,6 @@ export default function ResultPage({ params }: PageProps) {
           </div>
         </>
       )}
-    </div>
+      </div>
   );
 }
