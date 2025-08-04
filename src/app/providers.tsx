@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { SessionProvider } from "next-auth/react";
-import { NavbarMain } from "@/components/Dashboard/navbar";
+import { NavbarMain } from "@/components/main/navbar
 import Footer from "@/components/Footer/Footer";
 
 export default function Providers({

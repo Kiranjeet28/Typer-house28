@@ -1,5 +1,5 @@
-import Section1 from '@/components/Dashboard/layout/Section1'
-import Section2 from '@/components/Dashboard/layout/Section2'
+import Section1 from '@/components/main/layout/Section1
+import Section2 from '@/components/main/layout/Section2
 import { Spotlight } from '@/components/ui/spotlight'
 import React from 'react'
 function page() {

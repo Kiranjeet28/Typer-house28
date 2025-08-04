@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "./providers"; // ✅ import client-side wrapper
-import { NavbarMain } from "@/components/Dashboard/navbar";
+import { NavbarMain } from "@/components/main/navbar
 import Footer from "@/components/Footer/Footer";
 import { RoomProvider } from "@/lib/context";
 import { Toaster } from "sonner";
@@ -33,10 +33,8 @@ export default function RootLayout({
       >
         <Providers>
           <RoomProvider >
-          {/* <NavbarMain /> */}
           {children}
-          {/* <Footer /> */}
-<Toaster />
+          <Toaster />
           </RoomProvider>
         </Providers>
       </body>
