@@ -4,6 +4,7 @@ import Providers from "./providers"; // ✅ import client-side wrapper
 import { NavbarMain } from "@/components/Dashboard/navbar";
 import Footer from "@/components/Footer/Footer";
 import { RoomProvider } from "@/lib/context";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,7 @@ export default function RootLayout({
           {/* <NavbarMain /> */}
           {children}
           {/* <Footer /> */}
-
+<Toaster />
           </RoomProvider>
         </Providers>
       </body>
