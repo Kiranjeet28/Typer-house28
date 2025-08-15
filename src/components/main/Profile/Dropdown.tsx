@@ -116,7 +116,8 @@ function Dropdown() {
                         Login
                     </NavbarButton>
                 </>
-            )}
+            )
+            }
         </div>
     );
 }
