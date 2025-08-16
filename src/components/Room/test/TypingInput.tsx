@@ -15,6 +15,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     const [input, setInput] = useState("");
     const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
+    const [maxIncorrectChars, setMaxIncorrectChars] = useState(0); // Track max incorrect chars
     const debouncedInput = useDebounce(input, 1000);
     const { data: session } = useSession();
     const paragraphRef = useRef<HTMLDivElement>(null);
@@ -42,6 +43,19 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         }
     }, [input.length]);
 
+    useEffect(() => {
+        if (!startTime || overLimit) return;
+        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
+        // Check if all characters are correct and input matches paragraph
+        if (input === normalizedParagraph) {
+            const elapsedMs = Date.now() - startTime;
+            const elapsedSec = Math.round(elapsedMs / 1000);
+            // Do something with elapsedSec, e.g., show or send to API
+            console.log("Max time for correct characters:", elapsedSec, "seconds");
+            // Optionally reset startTime or handle completion
+        }
+    }, [input, startTime, paragraph, overLimit]);
+
     // Count correctly typed words - more flexible approach
     const getCorrectWordsCount = (typedText: string, originalText: string) => {
         if (!typedText.trim()) return 0;
@@ -59,6 +73,40 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         }
         return correctWords;
     };
+
+    // Count current incorrect characters
+    const getCurrentIncorrectChars = (typedText: string, originalText: string) => {
+        const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
+        let incorrectCount = 0;
+        
+        for (let i = 0; i < typedText.length && i < normalizedOriginal.length; i++) {
+            if (typedText[i] !== normalizedOriginal[i]) {
+                incorrectCount++;
+            }
+        }
+        
+        return incorrectCount;
+    };
+
+    // Track incorrect characters and update max
+    useEffect(() => {
+        if (!input || overLimit) return;
+        
+        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
+        const currentIncorrectChars = getCurrentIncorrectChars(input, normalizedParagraph);
+        
+        // Update max incorrect chars if current is higher
+        if (currentIncorrectChars > maxIncorrectChars) {
+            setMaxIncorrectChars(currentIncorrectChars);
+        }
+    }, [input, paragraph, overLimit, maxIncorrectChars]);
+
+    // Reset max incorrect chars when typing starts fresh
+    useEffect(() => {
+        if (!startTime) {
+            setMaxIncorrectChars(0);
+        }
+    }, [startTime]);
 
     useEffect(() => {
         // Don't update WPM if overLimit is true
@@ -80,13 +128,15 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
                 body: JSON.stringify({ 
                     action: "speed", 
                     roomId: roomId, 
-                    wpm: speed 
+                    wpm: speed,
+                    correctword: correctWords,
+                    incorrectchar: maxIncorrectChars // Use max incorrect chars instead
                 }),
             }).catch(error => {
                 console.error("Failed to update WPM:", error);
             });
         }
-    }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit]);
+    }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, maxIncorrectChars]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         // Prevent input changes when overLimit is true
@@ -141,6 +191,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
 
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
     const correctWordsCount = getCorrectWordsCount(input, normalizedParagraph);
+    const currentIncorrectChars = getCurrentIncorrectChars(input, normalizedParagraph);
 
     return (
         <div className="space-y-4 bg-[#10151a] p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg border border-green-900/40 w-full ">
@@ -175,6 +226,9 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
             </span>
             <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
                 Correct words: {correctWordsCount}
+            </span>
+            <span className="text-xs text-red-700 bg-red-900/30 px-2 py-1 rounded">
+                Current errors: {currentIncorrectChars} | Max errors: {maxIncorrectChars}
             </span>
             {overLimit && (
                 <span className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded font-semibold">
