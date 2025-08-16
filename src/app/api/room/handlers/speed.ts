@@ -6,7 +6,9 @@ import { z } from "zod";
 // Schema for speed requests - make wpm optional for GET requests
 const speedRoomSchema = z.object({
   roomId: z.string().min(1, "Room ID is required"),
-  wpm: z.number().optional(),
+    wpm: z.number().optional(),
+    correctword: z.number(),
+    incorrectchar: z.array(z.string()).optional(),
   action: z.string()
 });
 
@@ -24,8 +26,8 @@ export async function SpeedRoomHandler(req: NextRequest, body: any) {
             }, { status: 400 });
         }
 
-        const { roomId, wpm, action } = parseResult.data;
-        console.log("Parsed data:", { roomId, wpm, action });
+        const { roomId, wpm, action, correctword, incorrectchar } = parseResult.data;
+        console.log("Parsed data:", { roomId, wpm, action, correctword, incorrectchar });
 
         // If this is a GET request (no wpm provided), return speeds for the room
         if (action === 'speed' && wpm === undefined) {
@@ -48,12 +50,22 @@ export async function SpeedRoomHandler(req: NextRequest, body: any) {
             return NextResponse.json({ error: "WPM is required for speed updates" }, { status: 400 });
         }
 
-        console.log("Updating speed in database:", { userId, roomId, wpm });
-        
+        console.log("Updating speed in database:", { userId, roomId, wpm, correctword, incorrectchar });
+
         await prisma.typingSpeed.upsert({
             where: { userId_roomId: { userId, roomId } },
-            update: { wpm },
-            create: { userId, roomId, wpm },
+            update: { 
+                wpm: wpm ?? 0, 
+                correctword: correctword ?? 0, 
+                incorrectchar: incorrectchar ?? [''] 
+            },
+            create: { 
+                userId, 
+                roomId, 
+                wpm: wpm ?? 0, 
+                correctword: correctword ?? 0, 
+                incorrectchar: incorrectchar ?? [''] 
+            },
         });
 
         console.log("Speed updated successfully");

@@ -168,6 +168,8 @@ model TypingSpeed {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String
   roomId    String
+  correctword  Int
+  incorrectchar String[]
   wpm       Int
   createdAt DateTime @default(now())
 
