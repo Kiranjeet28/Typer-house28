@@ -103,11 +103,6 @@ export const endrollRoomSchema = z.object({
     id: z.string(),
 });
 
-export const speedRoomSchema = z.object({
-    action: z.literal('speed'),
-    roomId: z.string(),
-    wpm: z.number(),
-});
 export const get = z.object({
     action: z.literal('get'),
     roomId: z.string(),
