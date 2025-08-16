@@ -129,7 +129,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
                     action: "speed", 
                     roomId: roomId, 
                     wpm: speed,
-                    correctword: correctWords,
+                    correctword: correctWordsCount || 0,
                     incorrectchar: maxIncorrectChars // Use max incorrect chars instead
                 }),
             }).catch(error => {
