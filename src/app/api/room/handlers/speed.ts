@@ -3,40 +3,53 @@ import { prisma } from "@/lib/prisma";
 import type { TypingSpeed, User } from "@prisma/client";
 import { z } from "zod";
 
-// Schema for speed requests - make wpm optional for GET requests
+// Schema for speed requests
 const speedRoomSchema = z.object({
   roomId: z.string().min(1, "Room ID is required"),
-    wpm: z.number().optional(),
-    correctword: z.number(),
-    incorrectchar: z.array(z.string()).optional(),
-  action: z.string()
+  wpm: z.number().min(0).max(300),
+  correctword: z.number().min(0),
+  incorrectchar: z.array(z.string()),
+  action: z.literal("speed")
+});
+
+// Schema for GET requests (fetching speeds)
+const getRoomSpeedsSchema = z.object({
+  roomId: z.string().min(1, "Room ID is required"),
+  action: z.literal("getSpeed")
 });
 
 export async function SpeedRoomHandler(req: NextRequest, body: any) {
     console.log("SpeedRoomHandler called with body:", body);
     
     try {
-        const parseResult = speedRoomSchema.safeParse(body);
+        // Check if this is a GET request for fetching speeds
+        if (body.action === 'getSpeed') {
+            const parseResult = getRoomSpeedsSchema.safeParse(body);
+            if (!parseResult.success) {
+                console.error("GET Schema validation failed:", parseResult.error.errors);
+                return NextResponse.json({ 
+                    error: "Invalid request body for fetching speeds", 
+                    details: parseResult.error.errors 
+                }, { status: 400 });
+            }
+            console.log("Handling GET request for room speeds");
+            return await getSpeedsForRoom(parseResult.data.roomId);
+        }
 
+        // Handle POST request for updating speeds
+        const parseResult = speedRoomSchema.safeParse(body);
         if (!parseResult.success) {
-            console.error("Schema validation failed:", parseResult.error.errors);
+            console.error("POST Schema validation failed:", parseResult.error.errors);
             return NextResponse.json({ 
-                error: "Invalid request body", 
+                error: "Invalid request body for speed update", 
                 details: parseResult.error.errors 
             }, { status: 400 });
         }
 
-        const { roomId, wpm, action, correctword, incorrectchar } = parseResult.data;
-        console.log("Parsed data:", { roomId, wpm, action, correctword, incorrectchar });
+        const { roomId, wpm, correctword, incorrectchar } = parseResult.data;
+        console.log("Parsed data:", { roomId, wpm, correctword, incorrectchar });
 
-        // If this is a GET request (no wpm provided), return speeds for the room
-        if (action === 'speed' && wpm === undefined) {
-            console.log("Handling GET request for room speeds");
-            return await getSpeedsForRoom(roomId);
-        }
-
-        // For POST requests (updating speeds), we need user ID and wpm
-        console.log("Handling POST request for speed update");
+        // Get user ID from headers
         const userId = req.headers.get("user-id");
         console.log("User ID from headers:", userId);
         
@@ -45,31 +58,32 @@ export async function SpeedRoomHandler(req: NextRequest, body: any) {
             return NextResponse.json({ error: "Unauthorized - missing user ID" }, { status: 401 });
         }
 
-        if (wpm === undefined) {
-            console.error("No WPM provided for POST request");
-            return NextResponse.json({ error: "WPM is required for speed updates" }, { status: 400 });
-        }
-
         console.log("Updating speed in database:", { userId, roomId, wpm, correctword, incorrectchar });
+
+        // Validate WPM is reasonable
+        if (wpm < 0 || wpm > 300) {
+            console.error("Invalid WPM value:", wpm);
+            return NextResponse.json({ error: "Invalid WPM value" }, { status: 400 });
+        }
 
         await prisma.typingSpeed.upsert({
             where: { userId_roomId: { userId, roomId } },
             update: { 
-                wpm: wpm ?? 0, 
-                correctword: correctword ?? 0, 
-                incorrectchar: incorrectchar ?? [''] 
+                wpm, 
+                correctword, 
+                incorrectchar 
             },
             create: { 
                 userId, 
                 roomId, 
-                wpm: wpm ?? 0, 
-                correctword: correctword ?? 0, 
-                incorrectchar: incorrectchar ?? [''] 
+                wpm, 
+                correctword, 
+                incorrectchar 
             },
         });
 
         console.log("Speed updated successfully");
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, wpm, correctword });
 
     } catch (error) {
         console.error("SpeedRoomHandler error:", error);
@@ -87,13 +101,16 @@ async function getSpeedsForRoom(roomId: string) {
         const data: (TypingSpeed & { user: User })[] = await prisma.typingSpeed.findMany({
             where: { roomId },
             include: { user: true },
+            orderBy: { wpm: 'desc' } // Order by WPM descending for leaderboard
         });
 
         console.log("Found speed data:", data.length, "entries");
 
         const result = data.map((entry) => ({
-            name: entry.user?.name || "Anon",
+            name: entry.user?.name || "Anonymous",
             wpm: entry.wpm,
+            correctWords: entry.correctword,
+            incorrectChars: entry.incorrectchar.length
         }));
 
         console.log("Returning speed data:", result);

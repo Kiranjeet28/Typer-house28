@@ -16,6 +16,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [maxIncorrectChars, setMaxIncorrectChars] = useState(0); // Track max incorrect chars
+    const [incorrectCharArray, setIncorrectCharArray] = useState<string[]>([]); // Track incorrect characters as array
     const debouncedInput = useDebounce(input, 1000);
     const { data: session } = useSession();
     const paragraphRef = useRef<HTMLDivElement>(null);
@@ -74,18 +75,20 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         return correctWords;
     };
 
-    // Count current incorrect characters
-    const getCurrentIncorrectChars = (typedText: string, originalText: string) => {
+    // Count current incorrect characters and track them
+    const getCurrentIncorrectCharsAndArray = (typedText: string, originalText: string) => {
         const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
         let incorrectCount = 0;
+        const incorrectChars: string[] = [];
         
         for (let i = 0; i < typedText.length && i < normalizedOriginal.length; i++) {
             if (typedText[i] !== normalizedOriginal[i]) {
                 incorrectCount++;
+                incorrectChars.push(typedText[i]);
             }
         }
         
-        return incorrectCount;
+        return { incorrectCount, incorrectChars };
     };
 
     // Track incorrect characters and update max
@@ -93,11 +96,12 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         if (!input || overLimit) return;
         
         const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-        const currentIncorrectChars = getCurrentIncorrectChars(input, normalizedParagraph);
+        const { incorrectCount, incorrectChars } = getCurrentIncorrectCharsAndArray(input, normalizedParagraph);
         
         // Update max incorrect chars if current is higher
-        if (currentIncorrectChars > maxIncorrectChars) {
-            setMaxIncorrectChars(currentIncorrectChars);
+        if (incorrectCount > maxIncorrectChars) {
+            setMaxIncorrectChars(incorrectCount);
+            setIncorrectCharArray(incorrectChars);
         }
     }, [input, paragraph, overLimit, maxIncorrectChars]);
 
@@ -105,6 +109,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     useEffect(() => {
         if (!startTime) {
             setMaxIncorrectChars(0);
+            setIncorrectCharArray([]);
         }
     }, [startTime]);
 
@@ -129,14 +134,14 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
                     action: "speed", 
                     roomId: roomId, 
                     wpm: speed,
-                    correctword: correctWordsCount || 0,
-                    incorrectchar: maxIncorrectChars // Use max incorrect chars instead
+                    correctword: correctWords,
+                    incorrectchar: getCurrentIncorrectCharsAndArray(debouncedInput, normalizedParagraph).incorrectChars
                 }),
             }).catch(error => {
                 console.error("Failed to update WPM:", error);
             });
         }
-    }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, maxIncorrectChars]);
+    }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, incorrectCharArray]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         // Prevent input changes when overLimit is true
@@ -191,7 +196,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
 
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
     const correctWordsCount = getCorrectWordsCount(input, normalizedParagraph);
-    const currentIncorrectChars = getCurrentIncorrectChars(input, normalizedParagraph);
+    const { incorrectCount: currentIncorrectChars } = getCurrentIncorrectCharsAndArray(input, normalizedParagraph);
 
     return (
         <div className="space-y-4 bg-[#10151a] p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg border border-green-900/40 w-full ">
