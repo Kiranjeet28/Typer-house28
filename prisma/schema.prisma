@@ -21,8 +21,6 @@ model User {
   accounts      Account[]
   sessions      Session[]
   createdRooms  Room[]    @relation("RoomCreator")
-  gameResults   GameResult[]
-  playerStats   PlayerStats[]
   roomMembers   RoomMember[]
   typingSpeeds  TypingSpeed[] // Added relation for TypingSpeed
 }
@@ -84,8 +82,6 @@ model Room {
   updatedAt   DateTime   @updatedAt
   expiresAt   DateTime   // Room expiration time
   codeValid  Boolean          @default(true) 
-  // Game settings
-  gameMode     GameMode    @default(SPEED_TEST)
   textLength   TextLength  @default(MEDIUM)
   timeLimit    Int?        // in seconds
   customText   String?     // for custom text mode
@@ -93,8 +89,7 @@ model Room {
   // Relations
   creator      User         @relation("RoomCreator", fields: [creatorId], references: [id])
   members      RoomMember[]
-  games        Game[]
-  
+  typingSpeeds TypingSpeed[]
   @@index([status])
   @@index([expiresAt])
 }
@@ -116,138 +111,21 @@ model RoomMember {
   @@index([userId])
 }
 
-// Game session management
-model Game {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  roomId      String
-  gameNumber  Int        // Game sequence in room (1st, 2nd, etc.)
-  text        String     // The text to be typed
-  textSource  String?    // Source of the text (book, article, etc.)
-  status      GameStatus @default(WAITING)
-  startedAt   DateTime?
-  endedAt     DateTime?
-  duration    Int?       // in seconds
-  createdAt   DateTime   @default(now())
-  
-  // Relations
-  room    Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  results GameResult[]
-  
-  @@unique([roomId, gameNumber])
-  @@index([roomId])
-  @@index([status])
-}
-
-// Individual game results
-model GameResult {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  gameId          String
-  userId          String
-  wpm             Float    // Words per minute
-  accuracy        Float    // Accuracy percentage
-  charactersTyped Int
-  errorsCount     Int
-  timeSpent       Int      // in seconds
-  position        Int      // Final position in the game
-  completedAt     DateTime @default(now())
-  
-  // Detailed typing data
-  keystrokeData   Json?    // Detailed keystroke timing data
-  progressData    Json?    // Progress over time data
-  
-  // Relations
-  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id])
-  
-  @@unique([gameId, userId])
-  @@index([gameId])
-  @@index([userId])
-  @@index([wpm])
-}
 model TypingSpeed {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String
-  roomId    String
-  correctword  Int
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  roomId        String   @db.ObjectId
+  wpm           Int
+  correctword   Int
   incorrectchar String[]
-  wpm       Int
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
+
   @@unique([userId, roomId])
 }
 
-// Player statistics and achievements
-model PlayerStats {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String
-  totalGames      Int      @default(0)
-  totalWins       Int      @default(0)
-  bestWpm         Float    @default(0)
-  averageWpm      Float    @default(0)
-  bestAccuracy    Float    @default(0)
-  averageAccuracy Float    @default(0)
-  totalTimeSpent  Int      @default(0) // in seconds
-  streak          Int      @default(0) // Current win streak
-  bestStreak      Int      @default(0) // Best win streak
-  level           Int      @default(1)
-  experience      Int      @default(0)
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-  
-  @@unique([userId])
-  @@index([bestWpm])
-  @@index([level])
-}
-
-// Leaderboards
-model Leaderboard {
-  id          String          @id @default(auto()) @map("_id") @db.ObjectId
-  type        LeaderboardType
-  period      TimePeriod
-  entries     Json            // Array of leaderboard entries
-  generatedAt DateTime        @default(now())
-  
-  @@unique([type, period])
-  @@index([type])
-  @@index([generatedAt])
-}
-
-// Friend system
-model Friendship {
-  id          String           @id @default(auto()) @map("_id") @db.ObjectId
-  requesterId String
-  receiverId  String
-  status      FriendshipStatus @default(PENDING)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
-  @@unique([requesterId, receiverId])
-  @@index([requesterId])
-  @@index([receiverId])
-  @@index([status])
-}
-
-// Text content for games
-model TextContent {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  content     String
-  source      String?
-  difficulty  Difficulty @default(MEDIUM)
-  length      TextLength
-  language    String     @default("en")
-  category    String?
-  tags        String[]
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  
-  @@index([difficulty])
-  @@index([length])
-  @@index([language])
-  @@index([category])
-}
 
 // Enums
 enum RoomStatus {

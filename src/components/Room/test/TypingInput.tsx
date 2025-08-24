@@ -9,7 +9,7 @@ interface TypingInputProps {
     paragraph: string;
     overLimit?: boolean;
     onTypingStatusChange?: (isTyping: boolean) => void;
-}
+} 
 
 export default function TypingInput({ roomId, paragraph, overLimit, onTypingStatusChange }: TypingInputProps) {
     const [input, setInput] = useState("");
@@ -122,25 +122,36 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         const timeInMinutes = (Date.now() - startTime) / 60000;
         if (timeInMinutes <= 0) return;
         const speed = Math.round(correctWords / timeInMinutes);
-        if (speed >= 0 && speed <= 200) {
-            setWpm(speed);
-            fetch(`/api/room`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "user-id": session.user.id,
-                },
-                body: JSON.stringify({ 
-                    action: "speed", 
-                    roomId: roomId, 
-                    wpm: speed,
-                    correctword: correctWords,
-                    incorrectchar: getCurrentIncorrectCharsAndArray(debouncedInput, normalizedParagraph).incorrectChars
-                }),
-            }).catch(error => {
-                console.error("Failed to update WPM:", error);
-            });
+       if (speed >= 0 && speed <= 200) {
+    setWpm(speed);
+
+    fetch(`/api/room`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "user-id": session.user.id,
+        },
+        body: JSON.stringify({ 
+            action: "speed", 
+            roomId,
+            wpm: speed,
+            correctword: correctWords, // ✅ match schema exactly
+            incorrectchar: getCurrentIncorrectCharsAndArray(
+                debouncedInput,
+                normalizedParagraph
+            ).incorrectChars // ✅ must be string[]
+        }),
+    })
+    .then(res => {
+        if (!res.ok) {
+            console.error("Failed to update WPM:", res.statusText);
         }
+    })
+    .catch(error => {
+        console.error("Network error while updating WPM:", error);
+    });
+}
+
     }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, incorrectCharArray]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
