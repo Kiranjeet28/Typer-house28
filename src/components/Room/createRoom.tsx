@@ -24,7 +24,6 @@ export default function CreateRoomForm() {
         description: '',
         maxPlayers: 4,
         isPrivate: false,
-        gameMode: 'SPEED_TEST',
         textLength: 'MEDIUM',
         timeLimit: 60,
         customText: '',
@@ -111,29 +110,7 @@ export default function CreateRoomForm() {
                             </Select>
                         </div>
 
-                        {/* <div className="space-y-2">
-                            <Label htmlFor="gameMode">Game Mode</Label>
-                            <Select
-                                
-                                value={form.gameMode}
-                                onValueChange={(value) => setForm(prev => ({ ...prev, gameMode: value }))}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue
-                                        className="border-1 border-green-300"
-
-                                        placeholder="Select mode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="SPEED_TEST">Speed Test</SelectItem>
-                                    <SelectItem value="ACCURACY_TEST">Accuracy Test</SelectItem>
-                                    <SelectItem value="SURVIVAL">Survival</SelectItem>
-                                    <SelectItem value="CUSTOM_TEXT">Custom Text</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div> */}
-
-                        {/* <div className="space-y-2">
+                                            {/* <div className="space-y-2">
                            <Label htmlFor="textLength">Text Length</Label>
                              <Select
 
@@ -180,18 +157,7 @@ export default function CreateRoomForm() {
                     </div>
                     </div>
 
-                    {form.gameMode === 'CUSTOM_TEXT' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="customText">Custom Text</Label>
-                            <Textarea
-                                name="customText"
-                                rows={4}
-                                value={form.customText}
-                                onChange={handleChange}
-                                placeholder="Enter custom typing text..."
-                            />
-                        </div>
-                    )}
+                   
                    
                     <button
                         type="submit" disabled={loading}

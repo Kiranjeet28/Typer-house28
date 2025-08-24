@@ -11,7 +11,6 @@ export interface CreateRoomOptions {
     creatorId: string;
     maxPlayers?: number;
     isPrivate?: boolean;
-    gameMode?: 'SPEED_TEST' | 'ACCURACY_TEST' | 'SURVIVAL' | 'CUSTOM_TEXT';
     textLength?: 'SHORT' | 'MEDIUM' | 'LONG' | 'MARATHON';
     timeLimit?: number;
     customText?: string;
@@ -34,7 +33,6 @@ export class RoomManager {
             creatorId,
             maxPlayers = 4,
             isPrivate = false,
-            gameMode = 'SPEED_TEST',
             textLength = 'MEDIUM',
             timeLimit,
             customText,
@@ -76,7 +74,6 @@ export class RoomManager {
                     joinCode: joinCode!,
                     maxPlayers,
                     isPrivate,
-                    gameMode,
                     textLength,
                     timeLimit,
                     customText,

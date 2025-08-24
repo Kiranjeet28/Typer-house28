@@ -71,7 +71,6 @@ export async function createRoomHandler(request: Request) {
                     joinCode,
                     maxPlayers: data.maxPlayers,
                     isPrivate: data.isPrivate,
-                    gameMode: data.gameMode,
                     textLength: data.textLength,
                     timeLimit: data.timeLimit,
                     customText: data.customText,

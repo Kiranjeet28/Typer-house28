@@ -131,16 +131,16 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
             "Content-Type": "application/json",
             "user-id": session.user.id,
         },
-        body: JSON.stringify({ 
-            action: "speed", 
-            roomId,
-            wpm: speed,
-            correctword: correctWords, // ✅ match schema exactly
-            incorrectchar: getCurrentIncorrectCharsAndArray(
-                debouncedInput,
-                normalizedParagraph
-            ).incorrectChars // ✅ must be string[]
-        }),
+       body: JSON.stringify({ 
+    action: "speed", 
+    roomId,
+    wpm: speed ?? 0,
+    correctword: correctWords ?? 0,
+    incorrectchar: getCurrentIncorrectCharsAndArray(
+        debouncedInput,
+        normalizedParagraph
+    ).incorrectChars ?? []
+}),
     })
     .then(res => {
         if (!res.ok) {

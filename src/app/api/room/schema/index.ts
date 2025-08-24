@@ -15,7 +15,6 @@ export const createRoomSchema = z.object({
         .max(10, 'Room cannot have more than 10 players')
         .default(4),
     isPrivate: z.boolean().default(false),
-    gameMode: z.enum(['SPEED_TEST', 'ACCURACY_TEST', 'SURVIVAL', 'CUSTOM_TEXT']).default('SPEED_TEST'),
     textLength: z.enum(['SHORT', 'MEDIUM', 'LONG', 'MARATHON']).default('MEDIUM'),
     timeLimit: z.number()
         .int()
@@ -25,15 +24,6 @@ export const createRoomSchema = z.object({
     customText: z.string()
         .max(2000, 'Custom text must be less than 2000 characters')
         .optional(),
-}).refine((data) => {
-    // If game mode is CUSTOM_TEXT, customText is required
-    if (data.gameMode === 'CUSTOM_TEXT' && !data.customText) {
-        return false;
-    }
-    return true;
-}, {
-    message: 'Custom text is required when game mode is CUSTOM_TEXT',
-    path: ['customText']
 });
 
 // Response schemas
@@ -46,7 +36,6 @@ export const roomResponseSchema = z.object({
     maxPlayers: z.number(),
     isPrivate: z.boolean(),
     status: z.enum(['WAITING', 'IN_GAME', 'FINISHED', 'EXPIRED']),
-    gameMode: z.enum(['SPEED_TEST', 'ACCURACY_TEST', 'SURVIVAL', 'CUSTOM_TEXT']),
     textLength: z.enum(['SHORT', 'MEDIUM', 'LONG', 'MARATHON']),
     timeLimit: z.number().nullable(),
     customText: z.string().nullable(),

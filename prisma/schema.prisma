@@ -135,12 +135,7 @@ enum RoomStatus {
   EXPIRED
 }
 
-enum GameMode {
-  SPEED_TEST
-  ACCURACY_TEST
-  SURVIVAL
-  CUSTOM_TEXT
-}
+
 
 enum TextLength {
   SHORT      // ~50 words

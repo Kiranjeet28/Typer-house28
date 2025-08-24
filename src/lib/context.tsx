@@ -17,7 +17,6 @@ export type Room = {
     updatedAt: string;
     expiresAt: string;
     codeValid: boolean;
-    gameMode: $Enums.GameMode; // Use enum if available
     textLength: $Enums.TextLength; // Use enum if available
     timeLimit?: number;
     customText?: string;
