@@ -9,7 +9,7 @@ interface TypingInputProps {
     paragraph: string;
     overLimit?: boolean;
     onTypingStatusChange?: (isTyping: boolean) => void;
-} 
+}
 
 export default function TypingInput({ roomId, paragraph, overLimit, onTypingStatusChange }: TypingInputProps) {
     const [input, setInput] = useState("");
@@ -32,7 +32,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     // Auto-scroll paragraph box based on typing progress
     useEffect(() => {
         if (!paragraphRef.current) return;
-        
+
         // Find the current cursor position element
         const currentElement = paragraphRef.current.querySelector(`[data-index="${input.length}"]`);
         if (currentElement) {
@@ -80,24 +80,24 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
         let incorrectCount = 0;
         const incorrectChars: string[] = [];
-        
+
         for (let i = 0; i < typedText.length && i < normalizedOriginal.length; i++) {
             if (typedText[i] !== normalizedOriginal[i]) {
                 incorrectCount++;
                 incorrectChars.push(typedText[i]);
             }
         }
-        
+
         return { incorrectCount, incorrectChars };
     };
 
     // Track incorrect characters and update max
     useEffect(() => {
         if (!input || overLimit) return;
-        
+
         const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
         const { incorrectCount, incorrectChars } = getCurrentIncorrectCharsAndArray(input, normalizedParagraph);
-        
+
         // Update max incorrect chars if current is higher
         if (incorrectCount > maxIncorrectChars) {
             setMaxIncorrectChars(incorrectCount);
@@ -122,44 +122,44 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         const timeInMinutes = (Date.now() - startTime) / 60000;
         if (timeInMinutes <= 0) return;
         const speed = Math.round(correctWords / timeInMinutes);
-       if (speed >= 0 && speed <= 200) {
-    setWpm(speed);
+        if (speed >= 0 && speed <= 200) {
+            setWpm(speed);
 
-    fetch(`/api/room`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "user-id": session.user.id,
-        },
-       body: JSON.stringify({ 
-    action: "speed", 
-    roomId,
-    wpm: speed ?? 0,
-    correctword: correctWords ?? 0,
-    incorrectchar: getCurrentIncorrectCharsAndArray(
-        debouncedInput,
-        normalizedParagraph
-    ).incorrectChars ?? []
-}),
-    })
-    .then(res => {
-        if (!res.ok) {
-            console.error("Failed to update WPM:", res.statusText);
+            fetch(`/api/room`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action: "speed",
+                    roomId,
+                    userId: session.user.id,
+                    wpm: speed ?? 0,
+                    correctword: correctWords ?? 0,
+                    incorrectchar: getCurrentIncorrectCharsAndArray(
+                        debouncedInput,
+                        normalizedParagraph
+                    ).incorrectChars ?? []
+                }),
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        console.error("Failed to update WPM:", res.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error("Network error while updating WPM:", error);
+                });
         }
-    })
-    .catch(error => {
-        console.error("Network error while updating WPM:", error);
-    });
-}
 
     }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, incorrectCharArray]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         // Prevent input changes when overLimit is true
         if (overLimit) return;
-        
+
         const newValue = e.target.value;
-        
+
         if (!startTime && newValue.length > 0) {
             setStartTime(Date.now());
             onTypingStatusChange?.(true);
@@ -168,7 +168,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
             setWpm(0);
             onTypingStatusChange?.(false);
         }
-        
+
         setInput(newValue);
     };
 
@@ -211,46 +211,46 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
 
     return (
         <div className="space-y-4 bg-[#10151a] p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg border border-green-900/40 w-full ">
-            <div 
-            ref={paragraphRef}
-            className="p-3 sm:p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 sm:h-40 lg:h-48 xl:h-56 2xl:h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"
-            style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#15803d #1f2937'
-            }}
+            <div
+                ref={paragraphRef}
+                className="p-3 sm:p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 sm:h-40 lg:h-48 xl:h-56 2xl:h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"
+                style={{
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: '#15803d #1f2937'
+                }}
             >
-            {getColorizedParagraph()}
+                {getColorizedParagraph()}
             </div>
             <textarea
-            value={input}
-            onChange={handleChange}
-            disabled={overLimit}
-            className={clsx(
-                "w-full p-2 sm:p-3 lg:p-4 border border-green-900/40 rounded-md resize-none bg-[#181f26] text-green-200 placeholder:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600/70 font-mono text-base sm:text-lg lg:text-xl transition",
-                overLimit && "opacity-50 cursor-not-allowed bg-gray-800/50"
-            )}
-            placeholder={overLimit ? "Typing disabled - limit reached" : "Start typing..."}
-            rows={5}
-            spellCheck={false}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
+                value={input}
+                onChange={handleChange}
+                disabled={overLimit}
+                className={clsx(
+                    "w-full p-2 sm:p-3 lg:p-4 border border-green-900/40 rounded-md resize-none bg-[#181f26] text-green-200 placeholder:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600/70 font-mono text-base sm:text-lg lg:text-xl transition",
+                    overLimit && "opacity-50 cursor-not-allowed bg-gray-800/50"
+                )}
+                placeholder={overLimit ? "Typing disabled - limit reached" : "Start typing..."}
+                rows={5}
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
             />
             <div className="text-xs sm:text-sm flex flex-wrap items-center gap-4 sm:gap-6">
-            <span className="text-green-400 font-semibold">
-                Current WPM: <span className="font-mono text-xl sm:text-2xl lg:text-3xl text-green-500 drop-shadow-glow">{wpm}</span>
-            </span>
-            <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
-                Correct words: {correctWordsCount}
-            </span>
-            <span className="text-xs text-red-700 bg-red-900/30 px-2 py-1 rounded">
-                Current errors: {currentIncorrectChars} | Max errors: {maxIncorrectChars}
-            </span>
-            {overLimit && (
-                <span className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded font-semibold">
-                Limit reached
+                <span className="text-green-400 font-semibold">
+                    Current WPM: <span className="font-mono text-xl sm:text-2xl lg:text-3xl text-green-500 drop-shadow-glow">{wpm}</span>
                 </span>
-            )}
+                <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
+                    Correct words: {correctWordsCount}
+                </span>
+                <span className="text-xs text-red-700 bg-red-900/30 px-2 py-1 rounded">
+                    Current errors: {currentIncorrectChars} | Max errors: {maxIncorrectChars}
+                </span>
+                {overLimit && (
+                    <span className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded font-semibold">
+                        Limit reached
+                    </span>
+                )}
             </div>
         </div>
     );

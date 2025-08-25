@@ -7,37 +7,17 @@ import { z } from "zod";
 const speedRoomSchema = z.object({
   roomId: z.string().min(1, "Room ID is required"),
   wpm: z.number().min(0).max(300),
+  userId: z.string().min(1, "User ID is required"),
   correctword: z.number().min(0),
   incorrectchar: z.array(z.string()),
   action: z.literal("speed")
 });
 
-// Schema for GET requests (fetch speeds)
-const getRoomSpeedsSchema = z.object({
-  roomId: z.string().min(1, "Room ID is required"),
-  action: z.literal("getSpeed")
-});
 
-export async function SpeedRoomHandler(req: NextRequest, body: any) {
+export async function SpeedRoomHandler(body: any) {
   console.log("SpeedRoomHandler called with body:", body);
 
   try {
-    // Handle fetching speeds
-    if (body.action === "getSpeed") {
-      const parseResult = getRoomSpeedsSchema.safeParse(body);
-      if (!parseResult.success) {
-        console.error("GET Schema validation failed:", parseResult.error.errors);
-        return NextResponse.json(
-          {
-            error: "Invalid request body for fetching speeds",
-            details: parseResult.error.errors
-          },
-          { status: 400 }
-        );
-      }
-      return await getSpeedsForRoom(parseResult.data.roomId);
-    }
-
     // Handle updating speeds
     const parseResult = speedRoomSchema.safeParse(body);
     if (!parseResult.success) {
@@ -51,9 +31,7 @@ export async function SpeedRoomHandler(req: NextRequest, body: any) {
       );
     }
 
-    const { roomId, wpm, correctword, incorrectchar } = parseResult.data;
-
-    const userId = req.headers.get("user-id");
+    const { roomId, wpm, correctword, incorrectchar, userId } = parseResult.data;
     if (!userId) {
       console.error("No user ID in headers");
       return NextResponse.json({ error: "Unauthorized - missing user ID" }, { status: 401 });
@@ -85,7 +63,7 @@ export async function SpeedRoomHandler(req: NextRequest, body: any) {
   }
 }
 
-async function getSpeedsForRoom(roomId: string) {
+export async function getSpeedsForRoom(roomId: string) {
   console.log("Fetching speeds for room:", roomId);
 
   try {
