@@ -19,6 +19,37 @@ interface SpeedData {
 interface AITipsResponse {
   tips: string[];
 }
+// Add this helper function inside your ResultPage component
+const generateStaticTips = (userResult: SpeedData): string[] => {
+  const tips: string[] = [];
+
+  // Speed-based tips
+  if (userResult.wpm < 30) {
+    tips.push("Focus on accuracy first — speed will improve naturally over time.");
+  } else if (userResult.wpm < 60) {
+    tips.push("Good progress! Practice with short paragraphs to steadily increase speed.");
+  } else {
+    tips.push("Excellent speed! Try practicing with complex text to further refine your accuracy.");
+  }
+
+  // Accuracy-based tips
+  if (userResult.correctword < 50) {
+    tips.push("Work on recognizing and typing common words without hesitation.");
+  } else {
+    tips.push("Your word accuracy is solid! Keep building consistency.");
+  }
+
+  // Incorrect characters tips
+  if (userResult.incorrectchar > 10) {
+    tips.push("Reduce typing errors by practicing with accuracy-focused exercises.");
+  } else if (userResult.incorrectchar > 0) {
+    tips.push("Minor mistakes only — try maintaining this while increasing speed.");
+  } else {
+    tips.push("Perfect accuracy! Keep it up and aim for higher speed.");
+  }
+
+  return tips.slice(0, 3); // Return max 3 tips
+};
 
 export default function ResultPage({ params }: PageProps) {
   const [data, setData] = useState<SpeedData[]>([]);
@@ -71,7 +102,6 @@ export default function ResultPage({ params }: PageProps) {
     if (!session?.user?.name) return null;
     return data.find(user => user.name === session.user.name);
   };
-
   const fetchAITips = async () => {
     const userResult = getCurrentUserResult();
     if (!userResult) {
@@ -81,67 +111,54 @@ export default function ResultPage({ params }: PageProps) {
 
     setAiTipsLoading(true);
     setAiTipsError(null);
-    
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content: "You are a typing coach that gives clear, practical advice. Respond with exactly 3 short, actionable tips in an array format."
-            },
-            {
-              role: "user",
-              content: `
-                Here are my typing test results:
-                - WPM: ${userResult.wpm}
-                - Correct Words: ${userResult.correctword}
-                - Incorrect Characters: ${userResult.incorrectchar}
-                
-                Please give exactly 3 short personalized tips to improve my typing speed and accuracy. Each tip should be 1-2 sentences maximum.
-              `,
-            },
-          ],
+          prompt: `
+        You are a typing coach. 
+        Based on these results:
+        - WPM: ${userResult.wpm}
+        - Correct Words: ${userResult.correctword}
+        - Incorrect Characters: ${userResult.incorrectchar}
+        `,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Failed to fetch AI tips: ${res.status}`);
-      }
-
+      if (!res.ok) throw new Error(`Failed to fetch AI tips: ${res.status}`);
       const response = await res.json();
-      
-      // Extract tips from the response - adjust based on your API response format
+
       let tips: string[] = [];
-      if (response.content) {
-        // If the API returns tips as a string, we'll parse it
-        const content = response.content;
-        // Try to extract numbered tips or bullet points
-        const tipMatches = content.match(/(?:\d+\.|•|\-)\s*([^.\n]+(?:\.[^.\n]*)?)/g);
-        if (tipMatches) {
-          tips = tipMatches.map((tip: string) => tip.replace(/^\d+\.|^•|^-/, '').trim());
-        } else {
-          // Fallback: split by periods and take first 3 sentences
-          tips = content.split('.').filter((tip: string) => tip.trim()).slice(0, 3);
+
+      if (response.output) {
+        try {
+          tips = JSON.parse(response.output);
+        } catch {
+          tips = response.output
+            .split(/[\.\n]/)
+            .map((t: string) => t.trim())
+            .filter((t: string) => t.length > 0)
+            .slice(0, 3);
         }
-      } else if (response.tips) {
-        tips = response.tips;
       } else if (Array.isArray(response)) {
         tips = response;
-      } else {
-        throw new Error("Unexpected response format");
       }
 
-      setAiTips(tips.slice(0, 3)); // Ensure we only have 3 tips
+      if (tips.length === 0) {
+        tips = generateStaticTips(userResult); // fallback
+      }
+
+      setAiTips(tips.slice(0, 3));
     } catch (error) {
       console.error("Error fetching AI tips:", error);
-      setAiTipsError(error instanceof Error ? error.message : "Failed to fetch AI tips");
+      setAiTips(generateStaticTips(userResult)); // fallback to static tips on error
     } finally {
       setAiTipsLoading(false);
     }
   };
+
 
   const handleAITipsClick = () => {
     setShowAITips(true);
