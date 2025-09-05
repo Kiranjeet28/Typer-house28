@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { customAlphabet } from 'nanoid';
+import { prisma } from '../prisma';
 
-const prisma = new PrismaClient();
 
 const generateRoomCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 6);
 
@@ -186,7 +185,23 @@ export class RoomManager {
             }
 
             // Check if user is already in the room
-            const existingMember = room.members.find(member => member.userId === userId);
+            interface RoomMember {
+                id: string;
+                userId: string;
+                roomId: string;
+                role: string;
+                status: string;
+                user?: {
+                    id: string;
+                    name: string | null;
+                    username: string | null;
+                    image: string | null;
+                };
+            }
+
+            const existingMember: RoomMember | undefined = room.members.find(
+                (member: RoomMember) => member.userId === userId
+            );
             if (existingMember) {
                 return {
                     success: false,
@@ -424,14 +439,21 @@ export class RoomManager {
                 return { success: false, error: 'Room not found' };
             }
 
-            const member = room.members.find(m => m.userId === userId);
+            interface RoomMember {
+                id: string;
+                userId: string;
+                roomId: string;
+                role: string;
+                status: string;
+            }
+            const member: RoomMember | undefined = room.members.find((m: RoomMember) => m.userId === userId);
             if (!member) {
                 return { success: false, error: 'User not in room' };
             }
 
             // If user is the creator and there are other members, transfer ownership
             if (room.creatorId === userId && room.members.length > 1) {
-                const newCreator = room.members.find(m => m.userId !== userId);
+                const newCreator: RoomMember | undefined = room.members.find((m: RoomMember) => m.userId !== userId);
                 if (newCreator) {
                     await prisma.room.update({
                         where: { id: roomId },
