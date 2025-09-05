@@ -277,25 +277,7 @@ export class RoomManager {
                             image: true
                         }
                     },
-                    games: {
-                        orderBy: { gameNumber: 'desc' },
-                        take: 1,
-                        include: {
-                            results: {
-                                include: {
-                                    user: {
-                                        select: {
-                                            id: true,
-                                            name: true,
-                                            username: true,
-                                            image: true
-                                        }
-                                    }
-                                },
-                                orderBy: { position: 'asc' }
-                            }
-                        }
-                    }
+                   
                 }
             });
 
