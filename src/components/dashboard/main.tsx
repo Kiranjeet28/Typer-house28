@@ -13,6 +13,7 @@ import { signOut, useSession } from "next-auth/react";
 import { ArrowLeft } from "lucide-react";
 import Room from "./Rooms/room";
 import Analysis from "./Analysis/analysis";
+import DashboardPage from "./db/db";
 
 export function Sidebar() {
   const { data: session } = useSession();
@@ -185,19 +186,7 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
       case "Dashboard":
       default:
         return (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-white">🏆 Dashboard</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
-                <h3 className="text-lg font-semibold text-green-500 mb-2">Recent Results</h3>
-                <p className="text-neutral-300">Your latest typing competition results.</p>
-              </div>
-              <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
-                <h3 className="text-lg font-semibold text-blue-500 mb-2">Game Modes</h3>
-                <p className="text-neutral-300">Available typing games and challenges.</p>
-              </div>
-            </div>
-          </div>
+          <DashboardPage/>
         );
     }
   };
