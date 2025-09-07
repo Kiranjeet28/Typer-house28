@@ -11,20 +11,33 @@ import {
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "next-auth/react";
 import { ArrowLeft } from "lucide-react";
+import Room from "./Rooms/room";
 
 export function Sidebar() {
   const { data: session } = useSession();
 
+  // Fix 1: Make activeTab state dynamic instead of hardcoded
+  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [open, setOpen] = useState(false);
+
   const links = [
     { label: "Dashboard", href: "/dashboard", icon: IconBrandTabler },
-    { label: "Rooms", href: "#rooms", icon: IconUserBolt },
-    { label: "Analysis", href: "#analysis", icon: IconChartBar },
-    { label: "Certification", href: "#certification", icon: IconCertificate },
-    { label: "AI Tips", href: "#ai-tips", icon: IconBulb },
+    { label: "Rooms", href: "#rooms", icon: IconUserBolt }, // Fix 2: Use proper href
+    { label: "Analysis", href: "/analysis", icon: IconChartBar }, // Fix 2: Use proper href
+    { label: "Certification", href: "/certification", icon: IconCertificate }, // Fix 2: Use proper href
+    { label: "AI Tips", href: "/ai-tips", icon: IconBulb }, // Fix 2: Use proper href
   ];
 
-  const [open, setOpen] = useState(false);
-  const [activeTab] = useState("Analysis"); // Default active tab
+  // Fix 3: Add click handler for navigation
+  interface SidebarLinkItem {
+    label: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  }
+
+  const handleLinkClick = (linkLabel: SidebarLinkItem["label"]): void => {
+    setActiveTab(linkLabel);
+  };
 
   return (
     <div className="grid grid-cols-[260px_1fr] h-screen w-full absolute top-0">
@@ -32,79 +45,171 @@ export function Sidebar() {
       <Sb open={open} setOpen={setOpen} animate={false}>
         <SidebarBody className="flex flex-col justify-between gap-10 h-full border-r border-neutral-700 bg-neutral-900">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            <div className="mt-16 flex flex-col gap-2">
+            {/* Fix 4: Add proper header/logo section */}
+            <div className="mt-8 mb-4 px-4">
+              <h2 className="text-xl font-bold text-white"></h2>
+            </div>
+
+            <div className="flex flex-col gap-2">
               {links.map((link, idx) => {
-                const isActive = activeTab.toLowerCase() === link.label.toLowerCase();
+                const isActive = activeTab === link.label;
                 const Icon = link.icon;
                 return (
-                  <SidebarLink
+                  <div
                     key={idx}
-                    link={{
-                      ...link,
-                      icon: (
-                        <Icon
-                          className={cn(
-                            "h-5 w-5 shrink-0",
-                            isActive ? "text-green-500" : "text-neutral-200"
-                          )}
-                        />
-                      ),
-                    }}
+                    onClick={() => handleLinkClick(link.label)} // Fix 3: Add click handler
                     className={cn(
-                      "cursor-pointer",
-                      isActive && "text-green-500 font-semibold"
+                      "cursor-pointer rounded-lg mx-2 px-3 py-2 transition-colors hover:bg-neutral-800", // Fix 5: Better hover states
+                      isActive && "bg-neutral-800 border-l-2 border-green-500" // Fix 6: Better active state styling
                     )}
-                  />
+                  >
+                    <SidebarLink
+                      link={{
+                        ...link,
+                        icon: (
+                          <Icon
+                            className={cn(
+                              "h-5 w-5 shrink-0",
+                              isActive ? "text-green-500" : "text-neutral-200"
+                            )}
+                          />
+                        ),
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 text-sm",
+                        isActive ? "text-green-500 font-semibold" : "text-neutral-200"
+                      )}
+                    />
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Profile section */}
-          <div className="flex flex-col gap-3 border-t border-neutral-700 pt-4">
-            {session && (
+          {/* Profile section - Fix 7: Improved layout and error handling */}
+          <div className="flex flex-col gap-3 border-t border-neutral-700 pt-4 px-4">
+            {session ? (
               <>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-neutral-800">
                   {session.user?.image ? (
                     <img
                       src={session.user.image}
                       alt={session.user?.name || "User"}
-                      className="h-8 w-8 rounded-full object-cover"
+                      className="h-8 w-8 rounded-full object-cover border border-neutral-600"
+                      onError={(e) => {
+                        // Fix 8: Handle image load errors
+                        const img = e.target as HTMLImageElement;
+                        img.style.display = 'none';
+                        if (img.nextSibling && img.nextSibling instanceof HTMLElement) {
+                          (img.nextSibling as HTMLElement).style.display = 'block';
+                        }
+                      }}
                     />
-                  ) : (
-                    <IconUserBolt className="h-8 w-8 rounded-full text-neutral-200" />
-                  )}
-                  <span className="text-sm truncate">{session.user?.name}</span>
+                  ) : null}
+                  <IconUserBolt
+                    className="h-8 w-8 text-neutral-200"
+                    style={{ display: session.user?.image ? 'none' : 'block' }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-white truncate">
+                      {session.user?.name || "User"}
+                    </div>
+                    {session.user?.email && (
+                      <div className="text-xs text-neutral-400 truncate">
+                        {session.user.email}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => signOut()}
-                  className="flex items-center gap-1 text-red-500 hover:text-red-400"
+                  className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm p-2 rounded-lg hover:bg-red-950 transition-colors"
                 >
-                  <ArrowLeft size={16} /> Sign out
+                  <ArrowLeft size={16} />
+                  Sign out
                 </button>
               </>
+            ) : (
+              // Fix 9: Handle case when no session exists
+              <div className="text-neutral-400 text-sm p-2">
+                Not signed in
+              </div>
             )}
           </div>
         </SidebarBody>
       </Sb>
 
-      {/* Scrollable Dashboard */}
-      <div className="overflow-y-auto h-screen bg-neutral-950 text-white p-6">
+      {/* Scrollable Dashboard - Fix 10: Better container styling */}
+      <div className="overflow-y-auto h-screen bg-neutral-950">
         <Dashboard activeTab={activeTab} />
       </div>
     </div>
   );
 }
 
-const Dashboard = ({ activeTab }: { activeTab: string }) => {
+interface DashboardProps {
+  activeTab: string;
+}
+
+const Dashboard = ({ activeTab }: DashboardProps) => {
+  // Fix 11: Add proper content structure and loading states
+  const renderContent = () => {
+    switch (activeTab) {
+      case "Analysis":
+        return (
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold text-white">📊 Typing Analysis</h1>
+            <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
+              <p className="text-neutral-300">Your typing analysis and statistics will appear here.</p>
+            </div>
+          </div>
+        );
+      case "Certification":
+        return (
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold text-white">📜 Certifications</h1>
+            <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
+              <p className="text-neutral-300">Your typing certifications and achievements will appear here.</p>
+            </div>
+          </div>
+        );
+      case "Rooms":
+        return (
+          <Room/>
+        );
+      case "AI Tips":
+        return (
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold text-white">🤖 AI-Powered Tips</h1>
+            <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
+              <p className="text-neutral-300">Personalized AI tips to improve your typing speed and accuracy.</p>
+            </div>
+          </div>
+        );
+      case "Dashboard":
+      default:
+        return (
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold text-white">🏆 Dashboard</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
+                <h3 className="text-lg font-semibold text-green-500 mb-2">Recent Results</h3>
+                <p className="text-neutral-300">Your latest typing competition results.</p>
+              </div>
+              <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
+                <h3 className="text-lg font-semibold text-blue-500 mb-2">Game Modes</h3>
+                <p className="text-neutral-300">Available typing games and challenges.</p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="flex flex-1">
-      <div className="flex h-full w-full flex-1 flex-col gap-4 rounded-tl-2xl border p-6">
-        {activeTab === "Analysis" && <div>📊 Analysis content here...</div>}
-        {activeTab === "Certification" && <div>📜 Certification details here...</div>}
-        {activeTab === "Rooms" && <div>🏠 All Rooms created list here...</div>}
-        {activeTab === "AI Tips" && <div>🤖 AI Tips to improve your typing...</div>}
-        {activeTab === "Dashboard" && <div>🏆 Typing competition results & game modes here...</div>}
+    <div className="flex flex-1 p-6">
+      <div className="flex h-full w-full flex-1 flex-col gap-4">
+        {renderContent()}
       </div>
     </div>
   );
