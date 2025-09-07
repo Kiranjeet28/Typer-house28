@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { signOut, useSession } from "next-auth/react";
 import { ArrowLeft } from "lucide-react";
 import Room from "./Rooms/room";
+import Analysis from "./Analysis/analysis";
 
 export function Sidebar() {
   const { data: session } = useSession();
@@ -23,7 +24,7 @@ export function Sidebar() {
   const links = [
     { label: "Dashboard", href: "/dashboard", icon: IconBrandTabler },
     { label: "Rooms", href: "#rooms", icon: IconUserBolt }, // Fix 2: Use proper href
-    { label: "Analysis", href: "/analysis", icon: IconChartBar }, // Fix 2: Use proper href
+    { label: "Analysis", href: "#analysis", icon: IconChartBar }, // Fix 2: Use proper href
     { label: "Certification", href: "/certification", icon: IconCertificate }, // Fix 2: Use proper href
     { label: "AI Tips", href: "/ai-tips", icon: IconBulb }, // Fix 2: Use proper href
   ];
@@ -157,12 +158,7 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
     switch (activeTab) {
       case "Analysis":
         return (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-white">📊 Typing Analysis</h1>
-            <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
-              <p className="text-neutral-300">Your typing analysis and statistics will appear here.</p>
-            </div>
-          </div>
+          <Analysis/>
         );
       case "Certification":
         return (

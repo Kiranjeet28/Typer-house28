@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma"
-import { getRoomSchema } from "../schema"
+import { getAnalysisSchema } from "../schema"
+
+
 
 export async function getAnalysis(body: any) {
     try {
-        const result = getRoomSchema.safeParse(body)
+        const result = getAnalysisSchema.safeParse(body)
         if (!result.success) {
+            console.error("Schema validation failed:", result.error)
             throw new Error("Invalid data format")
         }
 
@@ -57,4 +60,4 @@ export async function getAnalysis(body: any) {
         console.error("getAnalysis error:", error)
         throw error
     }
-}
+} 
