@@ -5,6 +5,7 @@ import { PerspectiveCamera, OrbitControls } from '@react-three/drei'
 import { Leva, useControls } from 'leva'
 import Keyboard from './keyboard'
 import CanvasLoader from './CanvasLoader'
+import HoverMoveGroup from './camra'
 
 function KeyboardWrapper() {
     // Track scroll position
@@ -96,7 +97,7 @@ function KeyboardWrapper() {
     })
 
     return (
-        <div className="lg:w-[45vw] h-[30vh] z-10">
+        <div className="lg:w-[58vw] h-[30vh] z-10">
             {/* Leva panel hidden */}
             <Leva hidden />
             <Canvas>
@@ -116,12 +117,14 @@ function KeyboardWrapper() {
                         position={[-10, -10, -10]}
                         intensity={lightingProps.pointIntensity}
                     />
-
+                    <HoverMoveGroup>
                     <Keyboard
                         position={keyboardProps.position}
                         rotation={keyboardProps.rotation}
                         scale={keyboardProps.scale}
-                    />
+                        />
+                        </HoverMoveGroup>
+
                 </Suspense>
             </Canvas>
         </div>
