@@ -1,5 +1,6 @@
 import Section1 from '@/components/main/layout/Section1'
 import Section2 from '@/components/main/layout/Section2'
+import Section3 from '@/components/main/layout/Section3'
 import { Spotlight } from '@/components/ui/spotlight'
 import React from 'react'
 function page() {
@@ -10,8 +11,9 @@ function page() {
         fill="white"
       />
       <div className="mt-8"> 
-      <Section1 />
-      <Section2/> 
+        <Section1 />
+        <Section2 /> 
+        <Section3 />
     </div>
     </div>
   )
