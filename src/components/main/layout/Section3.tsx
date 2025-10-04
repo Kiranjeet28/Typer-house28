@@ -1,5 +1,8 @@
 "use client"
 
+import { MagicCard } from "@/components/magicui/magic-card"
+import { RainbowButton } from "@/components/magicui/rainbow-button"
+import { TextAnimate } from "@/components/ui/text-animate"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 // Keep everything self-contained and focused as a section.
@@ -18,8 +21,8 @@ const DUMMY_FEATURES: Feature[] = [
     { title: "Real-Time Stats", description: "Track speed, accuracy, and trends.", key: "S" },
     { title: "Custom Layouts", description: "Switch between popular keyboard layouts.", key: "D" },
     { title: "Coach Mode", description: "Hints and drills tailored to your skills.", key: "F" },
-    { title: "Themes", description: "Light, dark, and high-contrast themes.", key: "J" },
-    { title: "Shortcuts", description: "Power-user flows with hotkeys.", key: "K" },
+    // { title: "Themes", description: "Light, dark, and high-contrast themes.", key: "J" },
+    // { title: "Shortcuts", description: "Power-user flows with hotkeys.", key: "K" },
 ]
 
 export function Section3() {
@@ -28,7 +31,7 @@ export function Section3() {
     const keyboardRef = useRef<any>(null)
     const gsapRef = useRef<any>(null)
     const [hoveredKey, setHoveredKey] = useState<string | null>(null)
-   
+
 
     // Load Spline scene and wire up references
     useEffect(() => {
@@ -46,11 +49,17 @@ export function Section3() {
             try {
                 // Using the same scene URL as the original example
                 await app.load("https://prod.spline.design/ZZOWNi4tS7p8xxOs/scene.splinecode")
+
+                // Disable all mouse interactions including zoom
+                if (canvasRef.current) {
+                    canvasRef.current.style.pointerEvents = "none"
+                }
+
                 // The original file looked up "keyboard" by name
                 const keyboard = app.findObjectByName("keyboard")
                 keyboardRef.current = keyboard
 
-               
+
             } catch (err) {
                 console.error("[Typerhouse] Failed to load Spline scene:", err)
             }
@@ -91,43 +100,43 @@ export function Section3() {
 
     return (
         <section
-            aria-labelledby="typerhouse-features-heading"
-            className="relative w-full h-[100svh] bg-background text-foreground"
+            aria-labelledby="typerhouse-features-heading "
+            className="relative w-full  p-5 "
         >
-            <div className="grid h-full grid-cols-1 lg:grid-cols-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
                 {/* Left panel: features */}
-                <div className="h-[60vh] border-border border-r bg-card p-6 flex flex-col">
-                  
+                <div className="h-[60vh]  p-6 flex flex-col">
+
                     {/* Features list; allow internal scroll if content exceeds height */}
+                    <TextAnimate animation="blurIn" as="h1" className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">
+                        Let's Grow Together
+                    </TextAnimate>
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 overflow-y-auto">
                         {DUMMY_FEATURES.map((feature) => (
-                            <article
+                            <MagicCard
+                                gradientColor={"#262626"}
                                 key={feature.title}
-                                className="group rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/20"
+                                className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg  p-4 transition-colors hover:bg-accent/20"
                                 onMouseEnter={() => handleFeatureHover(feature.key)}
                                 onMouseLeave={() => handleFeatureHover(null)}
                             >
                                 <div className="mb-2 inline-flex items-center gap-2">
-                                    <span
-                                        className={[
-                                            "inline-flex h-7 min-w-7 px-2 items-center justify-center rounded",
-                                            "text-sm bg-muted text-foreground/80 border border-border",
-                                            hoveredKey === feature.key ? "pressing shadow-inner" : "shadow-sm",
-                                        ].join(" ")}
-                                    >
-                                        {feature.key}
-                                    </span>
+                                    <RainbowButton className={[
+                                        "inline-flex h-7 min-w-7 px-2 items-center justify-center rounded",
+                                        "text-sm bg-muted text-foreground/80 border border-border",
+                                        hoveredKey === feature.key ? "pressing shadow-inner" : "shadow-sm",
+                                    ].join(" ")} variant="outline">{feature.key}</RainbowButton>
                                     <h3 className="text-foreground font-medium">{feature.title}</h3>
                                 </div>
                                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-                            </article>
+                            </MagicCard>
                         ))}
                     </div>
                 </div>
 
                 {/* Right panel: fixed-size model container that fills the column */}
-                <div className="h-[60vh] bg-card">
-                    <div className="relative h-[60vh] w-full overflow-hidden">
+                <div className="h-[60vh]">
+                    <div className="relative h-[60vh] w-[40vw] overflow-hidden">
                         <canvas
                             ref={canvasRef}
                             id="typerhouse-keyboard"

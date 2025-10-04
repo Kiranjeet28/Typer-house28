@@ -13,7 +13,8 @@ const HoverMoveGroup = ({ children }: Props) => {
         if (group.current) {
             // Move freely in any direction based on pointer.x and pointer.y (-1 to 1)
             group.current.position.x = state.pointer.x * 2; // left/right
-            group.current.position.y = -state.pointer.y * 2; // up/down (invert y for natural feel)
+            group.current.position.y = -state.pointer.y * 2; // up/down 
+            // (invert y for natural feel)
         }
     });
 

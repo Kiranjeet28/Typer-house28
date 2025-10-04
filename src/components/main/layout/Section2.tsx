@@ -7,6 +7,7 @@ import { ShineBorder } from "@/components/magicui/shine-border";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { useSession } from "next-auth/react";
+import { TextAnimate } from "@/components/ui/text-animate";
 function Section2() {
     const { data: session } = useSession();
     if (session?.user) return null;
@@ -14,7 +15,9 @@ function Section2() {
         <div className=" min-h-screen py-12 px-4">
             <div className="containe</div>r mx-auto">
                 <div className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-slate-100 mb-4">How It Works</h2>
+                    <TextAnimate animation="slideLeft" by="character" className="text-4xl font-bold text-slate-100 mb-4">
+                        How It Works
+                    </TextAnimate>
                     <p className="text-slate-400 text-lg max-w-2xl mx-auto">
                         Get started with TypingTest Hub in just 5 simple steps
                     </p>
