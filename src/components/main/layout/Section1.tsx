@@ -23,7 +23,7 @@ function Section1() {
                 <div className="grid bg-gradient-to-br from-slate-800 to-slate-900 lg:grid-cols-3 gap-12 items-center p-10">
                         {/* Left side takes 1 column */}
                         <div className="lg:col-span-1">
-                                <h1 className="text-4xl lg:text-5xl font-bold text-slate-100 mb-6">
+                                <h1 className="text-4xl lg:text-5xl font-bold text-slate-100 ">
                                         Engage in real-time
                                         <span className="m-2 md:hidden block">Typing</span>
                                         <PointerHighlight
@@ -35,10 +35,10 @@ function Section1() {
                                         </PointerHighlight>
                                         tests, anytime!
                                 </h1>
-                                <p className="text-lg text-slate-300 mb-8">
+                                <p className="text-lg text-slate-300 ">
                                         Experience instant results and track your progress easily.
                                 </p>
-                                <div className="flex gap-4">
+                                {/* <div className="flex gap-4">
                                         <RainbowButton
                                                 variant="outline"
                                                 onClick={() => handleButtonClick("/createRoom")}
@@ -51,7 +51,7 @@ function Section1() {
                                         >
                                                 Join Typo&apos;s
                                         </RainbowButton>
-                                </div>
+                                </div> */}
                         </div>
 
                         {/* Right side takes 2 columns */}

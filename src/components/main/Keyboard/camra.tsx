@@ -11,15 +11,26 @@ const HoverMoveGroup = ({ children }: Props) => {
 
     useFrame((state) => {
         if (group.current) {
-            // Move freely in any direction based on pointer.x and pointer.y (-1 to 1)
-            group.current.position.x = state.pointer.x * 2; // left/right
-            group.current.position.y = -state.pointer.y * 2; // up/down 
-            // (invert y for natural feel)
+            // Add subtle floating animation
+            const time = state.clock.getElapsedTime();
+            const floatX = Math.sin(time * 0.5) * 0.1;
+            const floatY = Math.cos(time * 0.3) * 0.1;
+
+            // Mouse-based movement
+            const targetX = state.pointer.x * 2 + floatX;
+            const targetY = -state.pointer.y * 2 + floatY;
+
+            // Smooth interpolation (lerp) for natural movement
+            group.current.position.x += (targetX - group.current.position.x) * 0.05;
+            group.current.position.y += (targetY - group.current.position.y) * 0.05;
+
+            // Optional: Add subtle rotation based on position
+            group.current.rotation.y = group.current.position.x * 0.1;
+            group.current.rotation.x = group.current.position.y * 0.05;
         }
     });
 
     return <group ref={group}>{children}</group>;
 };
-
 
 export default HoverMoveGroup;
