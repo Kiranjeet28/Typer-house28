@@ -3,27 +3,8 @@
 import { MagicCard } from "@/components/magicui/magic-card"
 import { RainbowButton } from "@/components/magicui/rainbow-button"
 import { TextAnimate } from "@/components/ui/text-animate"
+import { DUMMY_FEATURES } from "@/resources/constant"
 import { useEffect, useMemo, useRef, useState } from "react"
-
-// Keep everything self-contained and focused as a section.
-// - Loads Spline keyboard model
-// - Shows dummy features
-// - On hover over a feature, "presses" a corresponding UI key and subtly animates the 3D keyboard
-
-type Feature = {
-    title: string
-    description: string
-    key: string // single-letter label to target UI key animation
-}
-
-const DUMMY_FEATURES: Feature[] = [
-    { title: "Fast Setup", description: "Spin up a typing space in seconds.", key: "A" },
-    { title: "Real-Time Stats", description: "Track speed, accuracy, and trends.", key: "S" },
-    { title: "Custom Layouts", description: "Switch between popular keyboard layouts.", key: "D" },
-    { title: "Coach Mode", description: "Hints and drills tailored to your skills.", key: "F" },
-    // { title: "Themes", description: "Light, dark, and high-contrast themes.", key: "J" },
-    // { title: "Shortcuts", description: "Power-user flows with hotkeys.", key: "K" },
-]
 
 export function Section3() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -146,17 +127,7 @@ export function Section3() {
                 </div>
             </div>
 
-            {/* Local styles for the "key press" effect */}
-            {/* <style jsx>{`
-        @keyframes pressDown {
-          0% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(1px) scale(0.98); }
-          100% { transform: translateY(0) scale(1); }
-        }
-        .pressing {
-          animation: pressDown 220ms ease-in-out;
-        }
-      `}</style> */}
+        
         </section>
     )
 }
