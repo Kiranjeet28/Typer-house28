@@ -1,4 +1,4 @@
-"use client" 
+"use client"
 import {
     Card,
     CardContent,
@@ -8,12 +8,14 @@ import { MagicCard } from "@/components/magicui/magic-card";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { useSession } from "next-auth/react";
 import { TextAnimate } from "@/components/ui/text-animate";
+import { LogIn, PlusCircle, Hash, Share2, Zap } from "lucide-react";
+
 function Section2() {
     const { data: session } = useSession();
     if (session?.user) return null;
     return (
         <div className=" min-h-screen py-12 px-4">
-            <div className="containe</div>r mx-auto">
+            <div className="container mx-auto">
                 <div className="text-center mb-12">
                     <TextAnimate animation="slideLeft" by="character" className="text-4xl font-bold text-slate-100 mb-4">
                         How It Works
@@ -24,14 +26,14 @@ function Section2() {
                 </div>
 
                 {/* Grid Layout */}
-            <div className=" flex flex-col md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto justify-center items-center">
+                <div className="flex flex-wrap gap-6 max-w-6xl mx-auto justify-center items-center">
 
                     {/* Step 1 - Login */}
-                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
+                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
                         <CardContent className="p-6 text-center">
                             <div className="w-16 h-16 bg-slate-700 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
-                                <span className="text-slate-100 font-bold text-2xl">1</span>
+                                <LogIn className="text-cyan-400 w-8 h-8" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">Login</h3>
                             <p className="text-slate-400 leading-relaxed">
@@ -41,11 +43,11 @@ function Section2() {
                     </Card>
 
                     {/* Step 2 - Create a Room */}
-                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
+                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
                         <CardContent className="p-6 text-center">
                             <div className="w-16 h-16 bg-slate-700 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
-                                <span className="text-slate-100 font-bold text-2xl">2</span>
+                                <PlusCircle className="text-green-400 w-8 h-8" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">Create a Room</h3>
                             <p className="text-slate-400 leading-relaxed">
@@ -55,12 +57,12 @@ function Section2() {
                     </Card>
 
                     {/* Step 3 - You Have a Code */}
-                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
+                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
-                        
+
                         <CardContent className="p-6 text-center">
                             <div className="w-16 h-16 bg-slate-700 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
-                                <span className="text-slate-100 font-bold text-2xl">3</span>
+                                <Hash className="text-blue-400 w-8 h-8" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">You Have a Code</h3>
                             <p className="text-slate-400 leading-relaxed">
@@ -68,13 +70,13 @@ function Section2() {
                             </p>
                         </CardContent>
                     </Card>
-                    
+
                     {/* Step 4 - Share with Friends */}
-                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
+                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
                         <CardContent className="p-6 text-center">
                             <div className="w-16 h-16 bg-slate-700 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
-                                <span className="text-slate-100 font-bold text-2xl">4</span>
+                                <Share2 className="text-purple-400 w-8 h-8" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">Share with Friends</h3>
                             <p className="text-slate-400 leading-relaxed">
@@ -84,41 +86,41 @@ function Section2() {
                     </Card>
 
                     {/* Step 5 - Start Typing */}
-                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group md:col-start-2 lg:col-start-2">
+                    <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
                         <CardContent className="p-6 text-center">
                             <div className="w-16 h-16 bg-slate-700 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
-                                <span className="text-slate-100 font-bold text-2xl">5</span>
+                                <Zap className="text-yellow-400 w-8 h-8" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-100 mb-4">Start Typing</h3>
                             <p className="text-slate-400 leading-relaxed">
                                 Once everyone has joined, click &quot;Start&quot; and begin your competitive typing test together!
                             </p>
                             <div className="mt-6">
-                             
+
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Additional CTA Section */}
-            {(!session?.user) && (
-                <div className="text-center mt-12">
-                    <div>
-                        <MagicCard
-                            gradientColor={"#262626"}
-                            className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 max-w-2xl mx-auto"
-                        >
-                            <h3 className="text-2xl font-bold text-slate-100 mb-4">Ready to Test Your Speed?</h3>
-                            <p className="text-slate-400 mb-6">
-                                Join thousands of users improving their typing skills with competitive multiplayer tests
-                            </p>
-                            <RainbowButton variant="outline">Get Started Now</RainbowButton>
-                        </MagicCard>
+                {(!session?.user) && (
+                    <div className="text-center mt-12">
+                        <div>
+                            <MagicCard
+                                gradientColor={"#262626"}
+                                className="bg-gradient-to-br from-slate-800 to-slate-900  border border-slate-700 rounded-2xl p-6 max-w-2xl mx-auto"
+                            >
+                                <h3 className="text-2xl font-bold text-slate-100 mb-4">Ready to Test Your Speed?</h3>
+                                <p className="text-slate-400 mb-6">
+                                    Join thousands of users improving their typing skills with competitive multiplayer tests
+                                </p>
+                                <RainbowButton variant="outline">Get Started Now</RainbowButton>
+                            </MagicCard>
+                        </div>
                     </div>
-                </div>
-            )}
-                
+                )}
+
             </div>
         </div>
     )
