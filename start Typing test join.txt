@@ -1,0 +1,15 @@
+start Typing test
+join page margin 
+if refresh button is click remove person from the it 
+at the page of the test cursor should be at the input box only, disable arrow keys , backspace keys  
+
+Dashboard page :
+1. fix color pattern 
+2. Image of profile 
+3. Analysis page graphs correct 
+4. slidebar invisible
+
+
+AI Improvement list : 
+1. make datesets for each set where i can generate the paragraph  with that world and make pratice on that paragrapers 
+
