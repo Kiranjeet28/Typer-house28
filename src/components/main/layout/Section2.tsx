@@ -12,7 +12,6 @@ import { LogIn, PlusCircle, Hash, Share2, Zap } from "lucide-react";
 
 function Section2() {
     const { data: session } = useSession();
-    if (session?.user) return null;
     return (
         <div className=" min-h-screen py-12 px-4">
             <div className="container mx-auto">
@@ -27,7 +26,8 @@ function Section2() {
 
                 {/* Grid Layout */}
                 <div className="flex flex-wrap gap-6 max-w-6xl mx-auto justify-center items-center">
-
+                    {(!session?.user) && (
+                    <>
                     {/* Step 1 - Login */}
                     <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
@@ -39,10 +39,11 @@ function Section2() {
                             <p className="text-slate-400 leading-relaxed">
                                 Sign in to your account or create a new one to get started with TypingTest Hub
                             </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Step 2 - Create a Room */}
+    </CardContent>
+</Card>
+</>
+)}
+{/* Step 2 - Create a Room */}
                     <Card className="relative overflow-hidden max-w-[350px] w-full bg-gradient-to-br from-slate-800 to-slate-900  border-slate-700 hover:bg-slate-750 transition-all duration-300 hover:scale-105 group">
                         <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
                         <CardContent className="p-6 text-center">
