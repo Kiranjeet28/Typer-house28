@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import TypingInput from "./test/TypingInput";
 import SpeedBoard from "./test/SpeedBoard";
-import { mediumText, alternativeTexts, customParagraphs, largeText, tenMinuteText, smallText } from "@/resources/text";
+import { mediumText, customParagraphs, largeText, tenMinuteText, smallText } from "@/resources/text";
 import { useRoomContext, Room } from "@/lib/context";
 import TypingClock from "./test/TypingClock";
+import { useSession } from "next-auth/react";
 
 export default function TypingTestPage() {
     const { id } = useParams();
@@ -18,7 +19,43 @@ export default function TypingTestPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [overLimit, setOverLimit] = useState(false);
-    
+    const { data: session } = useSession();
+
+    useEffect(() => {
+        if (!id || !session?.user?.id) return;
+
+        const markUserLeft = () => {
+            const payload = JSON.stringify({
+                action: "speed",
+                roomId: id,
+                userId: session.user.id,
+                wpm: 0,
+                correctword: 0,
+                incorrectchar: [],
+                status: "LEFT",
+            });
+
+            navigator.sendBeacon("/api/room", payload);
+        };
+
+        // Reload / close / back
+        window.addEventListener("beforeunload", markUserLeft);
+
+        // Tab switch / minimize
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") {
+                markUserLeft();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener("beforeunload", markUserLeft);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [, session?.user?.id]);
+
     const handleTypingStatusChange = (typing: boolean) => {
         setIsTyping(typing);
     };

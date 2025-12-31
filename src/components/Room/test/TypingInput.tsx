@@ -15,11 +15,19 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     const [input, setInput] = useState("");
     const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
-    const [maxIncorrectChars, setMaxIncorrectChars] = useState(0); // Track max incorrect chars
-    const [incorrectCharArray, setIncorrectCharArray] = useState<string[]>([]); // Track incorrect characters as array
+    const [maxIncorrectChars, setMaxIncorrectChars] = useState(0);
+    const [incorrectCharArray, setIncorrectCharArray] = useState<string[]>([]);
     const debouncedInput = useDebounce(input, 1000);
-    const { data: session } = useSession();
     const paragraphRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { data: session } = useSession();
+
+    // Auto-focus textarea when component mounts
+    useEffect(() => {
+        if (textareaRef.current && !overLimit) {
+            textareaRef.current.focus();
+        }
+    }, [overLimit]);
 
     // Stop typing when overLimit becomes true
     useEffect(() => {
@@ -33,7 +41,6 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     useEffect(() => {
         if (!paragraphRef.current) return;
 
-        // Find the current cursor position element
         const currentElement = paragraphRef.current.querySelector(`[data-index="${input.length}"]`);
         if (currentElement) {
             currentElement.scrollIntoView({
@@ -47,17 +54,13 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     useEffect(() => {
         if (!startTime || overLimit) return;
         const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-        // Check if all characters are correct and input matches paragraph
         if (input === normalizedParagraph) {
             const elapsedMs = Date.now() - startTime;
             const elapsedSec = Math.round(elapsedMs / 1000);
-            // Do something with elapsedSec, e.g., show or send to API
             console.log("Max time for correct characters:", elapsedSec, "seconds");
-            // Optionally reset startTime or handle completion
         }
     }, [input, startTime, paragraph, overLimit]);
 
-    // Count correctly typed words - more flexible approach
     const getCorrectWordsCount = (typedText: string, originalText: string) => {
         if (!typedText.trim()) return 0;
         const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
@@ -75,7 +78,6 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         return correctWords;
     };
 
-    // Count current incorrect characters and track them
     const getCurrentIncorrectCharsAndArray = (typedText: string, originalText: string) => {
         const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
         let incorrectCount = 0;
@@ -91,21 +93,18 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         return { incorrectCount, incorrectChars };
     };
 
-    // Track incorrect characters and update max
     useEffect(() => {
         if (!input || overLimit) return;
 
         const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
         const { incorrectCount, incorrectChars } = getCurrentIncorrectCharsAndArray(input, normalizedParagraph);
 
-        // Update max incorrect chars if current is higher
         if (incorrectCount > maxIncorrectChars) {
             setMaxIncorrectChars(incorrectCount);
             setIncorrectCharArray(incorrectChars);
         }
     }, [input, paragraph, overLimit, maxIncorrectChars]);
 
-    // Reset max incorrect chars when typing starts fresh
     useEffect(() => {
         if (!startTime) {
             setMaxIncorrectChars(0);
@@ -114,7 +113,6 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     }, [startTime]);
 
     useEffect(() => {
-        // Don't update WPM if overLimit is true
         if (overLimit || !debouncedInput || !session?.user?.id || !startTime) return;
         const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
         const correctWords = getCorrectWordsCount(debouncedInput, normalizedParagraph);
@@ -155,7 +153,6 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
     }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, incorrectCharArray]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        // Prevent input changes when overLimit is true
         if (overLimit) return;
 
         const newValue = e.target.value;
@@ -222,6 +219,7 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
                 {getColorizedParagraph()}
             </div>
             <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={handleChange}
                 disabled={overLimit}
