@@ -13,42 +13,39 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  username      String?   
+  username      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  createdRooms  Room[]    @relation("RoomCreator")
-  roomMembers   RoomMember[]
-  typingSpeeds  TypingSpeed[] // Added relation for TypingSpeed
+  accounts     Account[]
+  sessions     Session[]
+  createdRooms Room[]        @relation("RoomCreator")
+  roomMembers  RoomMember[]
+  typingSpeeds TypingSpeed[] // Added relation for TypingSpeed
 }
 
 model Account {
-  id                 String @id @default(auto()) @map("_id") @db.ObjectId
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  
-  access_token       String?  
-  expires_at         Int?     
-  token_type         String?  
-  scope              String?  
-  id_token           String?  
-  session_state      String?  
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
-  createdAt          DateTime @default(now()) // ✅ Add this line or modify if already present
-  updatedAt          DateTime @updatedAt      // ✅ Optional but recommended
+  createdAt DateTime @default(now()) // ✅ Add this line or modify if already present
+  updatedAt DateTime @updatedAt // ✅ Optional but recommended
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
-
-
-
 
 model Session {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -80,16 +77,17 @@ model Room {
   status      RoomStatus @default(WAITING)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  expiresAt   DateTime   // Room expiration time
-  codeValid  Boolean          @default(true) 
-  textLength   TextLength  @default(MEDIUM)
-  timeLimit    Int?        // in seconds
-  customText   String?     // for custom text mode
-  
+  expiresAt   DateTime // Room expiration time
+  codeValid   Boolean    @default(true)
+  textLength  TextLength @default(MEDIUM)
+  timeLimit   Int? // in seconds
+  customText  String? // for custom text mode
+
   // Relations
-  creator      User         @relation("RoomCreator", fields: [creatorId], references: [id])
+  creator      User          @relation("RoomCreator", fields: [creatorId], references: [id])
   members      RoomMember[]
   typingSpeeds TypingSpeed[]
+
   @@index([status])
   @@index([expiresAt])
 }
@@ -105,20 +103,21 @@ model RoomMember {
   // Relations
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
-  
+
   @@unique([roomId, userId])
   @@index([roomId])
   @@index([userId])
 }
 
 model TypingSpeed {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String   @db.ObjectId
-  roomId        String   @db.ObjectId
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @db.ObjectId
+  roomId        String     @db.ObjectId
   wpm           Int
   correctword   Int
+  status        UserStatus @default(ACTIVE)
   incorrectchar String[]
-  createdAt     DateTime @default(now())
+  createdAt     DateTime   @default(now())
 
   user User @relation(fields: [userId], references: [id])
   room Room @relation(fields: [roomId], references: [id])
@@ -126,8 +125,11 @@ model TypingSpeed {
   @@unique([userId, roomId])
 }
 
+enum UserStatus {
+  ACTIVE
+  LEFT
+}
 
-// Enums
 enum RoomStatus {
   WAITING
   IN_GAME
@@ -135,13 +137,11 @@ enum RoomStatus {
   EXPIRED
 }
 
-
-
 enum TextLength {
-  SHORT      // ~50 words
-  MEDIUM     // ~100 words
-  LONG       // ~200 words
-  MARATHON   // ~500+ words
+  SHORT // ~50 words
+  MEDIUM // ~100 words
+  LONG // ~200 words
+  MARATHON // ~500+ words
 }
 
 enum RoomMemberRole {
