@@ -46,24 +46,24 @@ export default function JoinRoom() {
 
     const startPolling = (roomId: string) => {
         console.log('Starting polling for room:', roomId);
-        
+
         pollingIntervalRef.current = setInterval(async () => {
             try {
                 const isReady = await checkRoomStatus(roomId);
-                
+
                 if (isReady) {
                     console.log('Room is ready, navigating to test route');
-                    
+
                     // Clear polling
                     if (pollingIntervalRef.current) {
                         clearInterval(pollingIntervalRef.current);
                         pollingIntervalRef.current = null;
                     }
-                    
+
                     // Reset states
                     setWaiting(false);
                     setLoading(false);
-                    
+
                     // Navigate to test route
                     toast.success('Game is starting!');
                     router.push(`/room/${roomId}/test`);
@@ -111,9 +111,9 @@ export default function JoinRoom() {
             setRoomId(joinedRoomId);
             setLoading(false);
             setWaiting(true);
-            
+
             toast.success('Joined room successfully! Waiting for game to start...');
-            
+
             // Start polling for room status
             startPolling(joinedRoomId);
 
@@ -138,7 +138,7 @@ export default function JoinRoom() {
     const isButtonDisabled = loading || waiting;
 
     return (
-        <Card className="relative overflow-hidden md:m-0 m-2 max-w-[350px] w-full">
+        <Card className="relative overflow-hidden mx-auto w-[calc(100%-1rem)] sm:w-full sm:max-w-md md:max-w-lg lg:max-w-xl max-w-[95vw]">
             <ShineBorder shineColor={["#22D3EE", "#22C55E", "#2563EB"]} />
             <CardHeader>
                 <CardTitle className="text-center text-2xl text-green-300">Join a Room</CardTitle>
@@ -159,21 +159,20 @@ export default function JoinRoom() {
                             className="uppercase tracking-widest"
                         />
                     </div>
-                    
+
                     <div className="space-y-3">
                         <button
                             type="submit"
                             disabled={isButtonDisabled}
-                            className={`group/btn relative block h-10 w-full rounded-md font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] ${
-                                isButtonDisabled 
-                                    ? 'bg-gray-600 cursor-not-allowed opacity-70' 
+                            className={`group/btn relative block h-10 w-full rounded-md font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] ${isButtonDisabled
+                                    ? 'bg-gray-600 cursor-not-allowed opacity-70'
                                     : 'bg-black hover:bg-gray-900'
-                            }`}
+                                }`}
                         >
                             {getButtonText()}
                             {!isButtonDisabled && <BottomGradient />}
                         </button>
-                        
+
                         {waiting && (
                             <button
                                 type="button"
