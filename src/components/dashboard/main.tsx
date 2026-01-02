@@ -143,9 +143,8 @@ export function Sidebar() {
       </Sb>
 
       {/* Scrollable Dashboard - Fix 10: Better container styling */}
-      <div className="overflow-y-auto h-screen bg-neutral-950">
         <Dashboard activeTab={activeTab} />
-      </div>
+     
     </div>
   );
 }
@@ -182,7 +181,9 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
       case "Dashboard":
       default:
         return (
+          <div className= "h-screen overflow-hidden scrollbar-hide flex ">
           <DashboardPage/>
+          </div>
         );
     }
   };

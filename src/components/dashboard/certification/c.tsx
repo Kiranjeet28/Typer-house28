@@ -152,7 +152,7 @@ export default function CertificationPage() {
 
     if (!session) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+            <div className="min-h-screen  flex items-center justify-center">
                 <Card className="w-full max-w-md bg-gray-900 border-gray-800">
                     <CardContent className="pt-6">
                         <p className="text-center text-gray-400">Please sign in to access certification</p>
@@ -164,7 +164,7 @@ export default function CertificationPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+            <div className="min-h-screen  flex items-center justify-center">
                 <div className="flex items-center gap-2 text-white">
                     <Loader2 className="h-6 w-6 animate-spin text-green-500" />
                     <span>Loading your typing data...</span>
@@ -174,7 +174,7 @@ export default function CertificationPage() {
     }
 
     return (
-        <div className="min-h-screen mt-8 bg-gray-950 p-4">
+        <div className="min-h-screen mt-8  p-4">
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="text-left space-y-2">

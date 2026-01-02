@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { RoomCard } from "./room-card" 
+import { RoomCard } from "./room-card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Loader2 } from "lucide-react"
 
@@ -85,7 +85,7 @@ export default function Room() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-950 text-white">
+            <div className="min-h-screen  text-white">
                 <div className="container mx-auto px-4 py-8">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-green-500" />
@@ -98,7 +98,7 @@ export default function Room() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-950 text-white">
+            <div className="min-h-screen  text-white">
                 <div className="container mx-auto px-4 py-8">
                     <div className="text-center">
                         <div className="text-red-500 mb-4">Error: {error}</div>
@@ -117,12 +117,12 @@ export default function Room() {
     }
 
     return (
-        <div className="min-h-screen mt-5 bg-gray-950 text-white">
+        <div className="min-h-screen mt-5  text-white">
             <div className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-green-400 mb-2">Rooms</h1>
-                        <p className="text-gray-400">Welcome back, { session?.user?.name || "User"}! Here are all your Rooms </p>
+                        <p className="text-gray-400">Welcome back, {session?.user?.name || "User"}! Here are all your Rooms </p>
                     </div>
                     <Button
                         onClick={fetchRooms}
@@ -135,7 +135,7 @@ export default function Room() {
                     </Button>
                 </div>
 
-               
+
 
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold text-green-400 mb-4">Your Rooms ({totalRooms})</h2>
