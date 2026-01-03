@@ -1,8 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 const Footer: React.FC = () => {
+  const pathname = usePathname();
+
+  if (pathname?.includes('/dashboard')) {
+    return null;
+  }
+
   return (
     <footer className="w-full pt-7 pb-3 border-t border-border flex justify-between items-center flex-wrap gap-5">
       <div className="text-muted-foreground flex gap-2">
