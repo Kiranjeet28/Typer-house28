@@ -7,8 +7,7 @@ import { WpmChart } from "./wpm-chart"
 import { AccuracyChart } from "./accuracy-chart"
 import { LevelProgress } from "./level-progress"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, Loader2, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { RefreshCw, Loader2, TrendingUp, Target, Award, Clock } from "lucide-react"
 
 interface TypingSpeedData {
     id: string
@@ -36,9 +35,8 @@ export default function Analysis() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    // Redirect to sign in if not authenticated
     useEffect(() => {
-        if (status === "loading") return // Still loading
+        if (status === "loading") return
         if (!session) {
             router.push("/auth/signin")
             return
@@ -87,10 +85,9 @@ export default function Analysis() {
         }
     }, [session?.user?.email])
 
-    // Show loading while checking authentication
     if (status === "loading") {
         return (
-            <div className="min-h-screen  text-white">
+            <div className="min-h-screen text-white">
                 <div className="container mx-auto px-4 py-8">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-green-500" />
@@ -101,14 +98,13 @@ export default function Analysis() {
         )
     }
 
-    // Don't render if not authenticated (will redirect)
     if (!session) {
         return null
     }
 
     if (loading) {
         return (
-            <div className="min-h-screen  text-white">
+            <div className="min-h-screen text-white">
                 <div className="container mx-auto px-4 py-8">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-green-500" />
@@ -121,7 +117,7 @@ export default function Analysis() {
 
     if (error) {
         return (
-            <div className="min-h-screen  text-white">
+            <div className="min-h-screen text-white">
                 <div className="container mx-auto px-4 py-8">
                     <div className="text-center">
                         <div className="text-red-500 mb-4">Error: {error}</div>
@@ -140,66 +136,88 @@ export default function Analysis() {
     }
 
     return (
-        <div className="min-h-screen mt-5  text-white">
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
-
-                        <div>
-                            <h1 className="text-3xl font-bold text-green-400 mb-2">Typing Analysis</h1>
-                            <p className="text-gray-400">Track your progress and improve your skills</p>
-                        </div>
+        <div className="h-[100vh]">
+            <div className="container mx-auto px-4 lg:px-12 xl:px-16 py-6 lg:py-10 max-w-[1600px]">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 lg:mb-12">
+                    <div className="mb-4 md:mb-0">
+                        <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent mb-2">
+                            Typing Analysis
+                        </h1>
+                        <p className="text-gray-400 text-sm lg:text-base">Track your progress and master your typing skills</p>
                     </div>
                     <Button
                         onClick={fetchAnalysis}
                         variant="outline"
-                        className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white bg-transparent"
+                        size="lg"
+                        className="border-green-500/50 text-green-500 hover:bg-green-500 hover:text-white bg-gray-900/50 backdrop-blur-sm transition-all duration-200 hover:border-green-400"
                         disabled={loading}
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                        Refresh
+                        Refresh Data
                     </Button>
                 </div>
 
                 {!analysisData?.typingSpeeds.length ? (
-                    <div className="text-center py-12">
-                        <div className="text-gray-400 mb-4">No typing data found</div>
+                    <div className="text-center py-20 bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl">
+                        <div className="text-gray-400 text-lg mb-4">No typing data found</div>
                         <p className="text-gray-500">Complete some typing sessions to see your analysis!</p>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        {/* Level Progress */}
-                        <LevelProgress
-                            averageWpm={analysisData.averageWpm}
-                            averageAccuracy={analysisData.averageAccuracy}
-                            totalSessions={analysisData.totalSessions}
-                        />
+                    <div className="space-y-6 lg:space-y-8">
+                        {/* Stats Grid - Responsive for all screens */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700/50 rounded-xl p-4 lg:p-6 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10">
+                                <div className="flex items-center justify-between mb-2">
+                                    <Clock className="h-5 w-5 lg:h-6 lg:w-6 text-green-400" />
+                                </div>
+                                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-500 mb-1">
+                                    {analysisData.totalSessions}
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-400">Total Sessions</div>
+                            </div>
 
-                        {/* Charts Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <WpmChart data={analysisData.typingSpeeds} />
-                            <AccuracyChart data={analysisData.typingSpeeds} />
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700/50 rounded-xl p-4 lg:p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
+                                <div className="flex items-center justify-between mb-2">
+                                    <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-blue-400" />
+                                </div>
+                                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-500 mb-1">
+                                    {analysisData.averageWpm}
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-400">Average WPM</div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700/50 rounded-xl p-4 lg:p-6 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
+                                <div className="flex items-center justify-between mb-2">
+                                    <Award className="h-5 w-5 lg:h-6 lg:w-6 text-emerald-400" />
+                                </div>
+                                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-emerald-500 mb-1">
+                                    {analysisData.bestWpm}
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-400">Best WPM</div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700/50 rounded-xl p-4 lg:p-6 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
+                                <div className="flex items-center justify-between mb-2">
+                                    <Target className="h-5 w-5 lg:h-6 lg:w-6 text-purple-400" />
+                                </div>
+                                <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-purple-500 mb-1">
+                                    {Math.round(analysisData.averageAccuracy)}%
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-400">Avg Accuracy</div>
+                            </div>
                         </div>
 
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-500">{analysisData.totalSessions}</div>
-                                <div className="text-sm text-gray-400">Total Sessions</div>
-                            </div>
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-500">{analysisData.averageWpm}</div>
-                                <div className="text-sm text-gray-400">Average WPM</div>
-                            </div>
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-600">{analysisData.bestWpm}</div>
-                                <div className="text-sm text-gray-400">Best WPM</div>
-                            </div>
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-500">{Math.round(analysisData.averageAccuracy)}%</div>
-                                <div className="text-sm text-gray-400">Average Accuracy</div>
-                            </div>
+                        {/* Level Progress - Full Width on Medium+ */}
+                        <div className="w-full">
+                            <LevelProgress
+                                averageWpm={analysisData.averageWpm}
+                                averageAccuracy={analysisData.averageAccuracy}
+                                totalSessions={analysisData.totalSessions}
+                            />
                         </div>
+
+                        
                     </div>
                 )}
             </div>

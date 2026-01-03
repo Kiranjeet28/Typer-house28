@@ -50,21 +50,6 @@ export function LevelProgress({ averageWpm, averageAccuracy, totalSessions }: Le
                         <Progress value={progressToNextLevel} className="h-3 bg-gray-700" />
                         <div className="text-xs text-gray-500 mt-1">Need {nextLevelWpm} WPM for next level</div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4 pt-4">
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-green-500">{averageWpm}</div>
-                            <div className="text-sm text-gray-400">Avg WPM</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">{Math.round(averageAccuracy)}%</div>
-                            <div className="text-sm text-gray-400">Accuracy</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-green-500">{totalSessions}</div>
-                            <div className="text-sm text-gray-400">Sessions</div>
-                        </div>
-                    </div>
                 </div>
             </CardContent>
         </Card>

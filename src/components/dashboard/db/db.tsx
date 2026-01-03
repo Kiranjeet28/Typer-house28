@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className=" text-white">
+            <div className="min-h-screen bg-gray-950 text-white">
                 <div className="">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-green-500" />

@@ -42,7 +42,7 @@ export function Sidebar() {
     setActiveTab(linkLabel);
   };
   return (
-    <div className="flex mt-[-4vw] bg-neutral-950">
+    <div className="flex md:mt-[-5vw] mt-[-4vw] bg-neutral-950">
       {/* Sidebar */}
       <Sb open={open} setOpen={setOpen} animate={false}>
         <SidebarBody className="flex w-[260px] flex-col justify-between border-r border-neutral-700 bg-neutral-900">
@@ -129,7 +129,7 @@ export function Sidebar() {
       </Sb>
 
       {/* Main Dashboard Content */}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto">
         <Dashboard activeTab={activeTab} />
       </main>
     </div>
@@ -177,7 +177,7 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
 
   return (
     <div className="flex flex-1">
-      <div className="flex h-full w-full flex-1 flex-col gap-4">
+      <div className="flex h-full w-full flex-1 flex-col mt-10 gap-4">
         {renderContent()}
       </div>
     </div>
