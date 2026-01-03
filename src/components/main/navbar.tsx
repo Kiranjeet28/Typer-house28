@@ -121,7 +121,7 @@ export function NavbarMain() {
                                 </NavbarButton>
                             </div>
                         ) : (
-                            <>
+                            <div className="flex flex-col gap-2">
                                 <RainbowButton
                                     variant="outline"
                                     className="bg-green-600 hover:bg-green-700 text-white"
@@ -143,7 +143,7 @@ export function NavbarMain() {
                                 >
                                     Login
                                 </NavbarButton>
-                            </>
+                            </div>
                         )}
                     </div>
                 </MobileNavMenu>
