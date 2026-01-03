@@ -41,29 +41,28 @@ export function Sidebar() {
   const handleLinkClick = (linkLabel: SidebarLinkItem["label"]): void => {
     setActiveTab(linkLabel);
   };
-
   return (
-    <div className="grid grid-cols-[260px_1fr] h-screen w-full absolute top-0">
+    <div className="flex mt-[-4vw] bg-neutral-950">
       {/* Sidebar */}
       <Sb open={open} setOpen={setOpen} animate={false}>
-        <SidebarBody className="flex flex-col justify-between gap-10 h-full border-r border-neutral-700 bg-neutral-900">
-          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            {/* Fix 4: Add proper header/logo section */}
+        <SidebarBody className="flex w-[260px] flex-col justify-between border-r border-neutral-700 bg-neutral-900">
+          <div className="flex flex-1 flex-col overflow-y-auto">
             <div className="mt-8 mb-4 px-4">
-              <h2 className="text-xl font-bold text-white"></h2>
+              <h2 className="text-xl font-bold text-white invisible">Your App</h2>
             </div>
 
             <div className="flex flex-col gap-2">
               {links.map((link, idx) => {
                 const isActive = activeTab === link.label;
                 const Icon = link.icon;
+
                 return (
                   <div
                     key={idx}
-                    onClick={() => handleLinkClick(link.label)} // Fix 3: Add click handler
+                    onClick={() => handleLinkClick(link.label)}
                     className={cn(
-                      "cursor-pointer rounded-lg mx-2 px-3 py-2 transition-colors hover:bg-neutral-800", // Fix 5: Better hover states
-                      isActive && "bg-neutral-800 border-l-2 border-green-500" // Fix 6: Better active state styling
+                      "cursor-pointer rounded-lg mx-2 px-3 py-2 transition hover:bg-neutral-800",
+                      isActive && "bg-neutral-800 border-l-2 border-green-500"
                     )}
                   >
                     <SidebarLink
@@ -72,8 +71,8 @@ export function Sidebar() {
                         icon: (
                           <Icon
                             className={cn(
-                              "h-5 w-5 shrink-0",
-                              isActive ? "text-green-500" : "text-neutral-200"
+                              "h-5 w-5",
+                              isActive ? "text-green-500" : "text-neutral-300"
                             )}
                           />
                         ),
@@ -89,62 +88,50 @@ export function Sidebar() {
             </div>
           </div>
 
-          {/* Profile section - Fix 7: Improved layout and error handling */}
-          <div className="flex flex-col gap-3 border-t border-neutral-700 pt-4 px-4">
+          {/* Profile */}
+          <div className="border-t border-neutral-700 px-4 py-4">
             {session ? (
               <>
-                <div className="flex items-center gap-3 p-2 rounded-lg bg-neutral-800">
+                <div className="flex items-center gap-3 rounded-lg bg-neutral-800 p-2">
                   {session.user?.image ? (
                     <img
                       src={session.user.image}
-                      alt={session.user?.name || "User"}
-                      className="h-8 w-8 rounded-full object-cover border border-neutral-600"
-                      onError={(e) => {
-                        // Fix 8: Handle image load errors
-                        const img = e.target as HTMLImageElement;
-                        img.style.display = 'none';
-                        if (img.nextSibling && img.nextSibling instanceof HTMLElement) {
-                          (img.nextSibling as HTMLElement).style.display = 'block';
-                        }
-                      }}
+                      className="h-8 w-8 rounded-full object-cover"
+                      alt="User"
                     />
-                  ) : null}
-                  <IconUserBolt
-                    className="h-8 w-8 text-neutral-200"
-                    style={{ display: session.user?.image ? 'none' : 'block' }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">
-                      {session.user?.name || "User"}
+                  ) : (
+                    <IconUserBolt className="h-8 w-8 text-neutral-200" />
+                  )}
+
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-white">
+                      {session.user?.name}
                     </div>
-                    {session.user?.email && (
-                      <div className="text-xs text-neutral-400 truncate">
-                        {session.user.email}
-                      </div>
-                    )}
+                    <div className="truncate text-xs text-neutral-400">
+                      {session.user?.email}
+                    </div>
                   </div>
                 </div>
+
                 <button
                   onClick={() => signOut()}
-                  className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm p-2 rounded-lg hover:bg-red-950 transition-colors"
+                  className="mt-3 flex items-center gap-2 rounded-lg p-2 text-sm text-red-400 hover:bg-red-950"
                 >
                   <ArrowLeft size={16} />
                   Sign out
                 </button>
               </>
             ) : (
-              // Fix 9: Handle case when no session exists
-              <div className="text-neutral-400 text-sm p-2">
-                Not signed in
-              </div>
+              <div className="text-sm text-neutral-400">Not signed in</div>
             )}
           </div>
         </SidebarBody>
       </Sb>
 
-      {/* Scrollable Dashboard - Fix 10: Better container styling */}
+      {/* Main Dashboard Content */}
+      <main className="flex-1 overflow-y-auto p-6">
         <Dashboard activeTab={activeTab} />
-     
+      </main>
     </div>
   );
 }
@@ -181,7 +168,7 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
       case "Dashboard":
       default:
         return (
-          <div className= "h-screen overflow-hidden scrollbar-hide flex ">
+          <div className= "">
           <DashboardPage/>
           </div>
         );
@@ -189,7 +176,7 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
   };
 
   return (
-    <div className="flex flex-1 p-6">
+    <div className="flex flex-1">
       <div className="flex h-full w-full flex-1 flex-col gap-4">
         {renderContent()}
       </div>
