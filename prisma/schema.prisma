@@ -109,22 +109,44 @@ model RoomMember {
   @@index([userId])
 }
 
-model TypingSpeed {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String     @db.ObjectId
-  roomId        String     @db.ObjectId
-  wpm           Int
-  correctword   Int
-  status        UserStatus @default(ACTIVE)
-  incorrectchar String[]
-  createdAt     DateTime   @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  room Room @relation(fields: [roomId], references: [id])
+model TypingSpeed {
+  id              String                 @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String                 @db.ObjectId
+  roomId          String                 @db.ObjectId
+  wpm             Int
+  correctword     Int
+  duration        Int                    // Total typing duration per session
+  createdAt       DateTime               @default(now())
+
+  // Relations
+  user            User                   @relation(fields: [userId], references: [id])
+  room            Room                   @relation(fields: [roomId], references: [id])
+  
+  charPerformance CharacterPerformance[] 
 
   @@unique([userId, roomId])
 }
 
+model CharacterPerformance {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  char            String      // The character (e.g., "k")
+  
+  // Metrics for THIS specific session
+  avgTimePerChar  Float       // Average time (latency) in ms
+  maxTimePerChar  Float       // Maximum time taken for this char
+  errorFrequency  Int         @default(0) // How many times missed in this session
+  
+  // Relations
+  typingSpeedId   String      @db.ObjectId
+  typingSpeed     TypingSpeed @relation(fields: [typingSpeedId], references: [id], onDelete: Cascade)
+  
+  // Optional: Link to User for global queries
+  userId          String      @db.ObjectId
+
+  @@index([typingSpeedId])
+  @@index([userId])
+}
 enum UserStatus {
   ACTIVE
   LEFT
