@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState, useRef } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useSession } from "next-auth/react";
@@ -11,25 +12,65 @@ interface TypingInputProps {
     onTypingStatusChange?: (isTyping: boolean) => void;
 }
 
-export default function TypingInput({ roomId, paragraph, overLimit, onTypingStatusChange }: TypingInputProps) {
+type CharStat = {
+    totalTime: number;
+    maxTime: number;
+    count: number;
+    errors: number;
+};
+
+export default function TypingInput({
+    roomId,
+    paragraph,
+    overLimit,
+    onTypingStatusChange,
+}: TypingInputProps) {
     const [input, setInput] = useState("");
     const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
-    const [maxIncorrectChars, setMaxIncorrectChars] = useState(0);
-    const [incorrectCharArray, setIncorrectCharArray] = useState<string[]>([]);
+    const [charStats, setCharStats] = useState<Record<string, CharStat>>({});
+
     const debouncedInput = useDebounce(input, 1000);
     const paragraphRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lastKeyTimeRef = useRef<number | null>(null);
+
     const { data: session } = useSession();
 
-    // Auto-focus textarea when component mounts
-    useEffect(() => {
-        if (textareaRef.current && !overLimit) {
-            textareaRef.current.focus();
+    const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
+
+    /* -------------------- Helpers -------------------- */
+
+    const getDurationSeconds = () =>
+        startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+
+    const getCorrectWordsCount = (typed: string) => {
+        if (!typed.trim()) return 0;
+        const typedWords = typed.trim().replace(/\s+/g, " ").split(" ");
+        const originalWords = normalizedParagraph.split(" ");
+
+        let count = 0;
+        for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
+            if (typedWords[i] === originalWords[i]) count++;
+            else break;
         }
+        return count;
+    };
+
+    const buildCharacterPerformance = () =>
+        Object.entries(charStats).map(([char, stat]) => ({
+            char,
+            avgTimePerChar: stat.totalTime / stat.count,
+            maxTimePerChar: stat.maxTime,
+            errorFrequency: stat.errors,
+        }));
+
+    /* -------------------- Effects -------------------- */
+
+    useEffect(() => {
+        if (textareaRef.current && !overLimit) textareaRef.current.focus();
     }, [overLimit]);
 
-    // Stop typing when overLimit becomes true
     useEffect(() => {
         if (overLimit && startTime) {
             setStartTime(null);
@@ -37,218 +78,161 @@ export default function TypingInput({ roomId, paragraph, overLimit, onTypingStat
         }
     }, [overLimit, startTime, onTypingStatusChange]);
 
-    // Auto-scroll paragraph box based on typing progress
     useEffect(() => {
         if (!paragraphRef.current) return;
-
-        const currentElement = paragraphRef.current.querySelector(`[data-index="${input.length}"]`);
-        if (currentElement) {
-            currentElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-            });
-        }
+        const el = paragraphRef.current.querySelector(
+            `[data-index="${input.length}"]`
+        );
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [input.length]);
 
-    useEffect(() => {
-        if (!startTime || overLimit) return;
-        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-        if (input === normalizedParagraph) {
-            const elapsedMs = Date.now() - startTime;
-            const elapsedSec = Math.round(elapsedMs / 1000);
-            console.log("Max time for correct characters:", elapsedSec, "seconds");
-        }
-    }, [input, startTime, paragraph, overLimit]);
-
-    const getCorrectWordsCount = (typedText: string, originalText: string) => {
-        if (!typedText.trim()) return 0;
-        const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
-        const normalizedTyped = typedText.trim().replace(/\s+/g, ' ');
-        const typedWords = normalizedTyped.split(' ');
-        const originalWords = normalizedOriginal.split(' ');
-        let correctWords = 0;
-        for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
-            if (typedWords[i] === originalWords[i]) {
-                correctWords++;
-            } else {
-                break;
-            }
-        }
-        return correctWords;
-    };
-
-    const getCurrentIncorrectCharsAndArray = (typedText: string, originalText: string) => {
-        const normalizedOriginal = originalText.trim().replace(/\s+/g, ' ');
-        let incorrectCount = 0;
-        const incorrectChars: string[] = [];
-
-        for (let i = 0; i < typedText.length && i < normalizedOriginal.length; i++) {
-            if (typedText[i] !== normalizedOriginal[i]) {
-                incorrectCount++;
-                incorrectChars.push(typedText[i]);
-            }
-        }
-
-        return { incorrectCount, incorrectChars };
-    };
+    /* -------------------- WPM + API -------------------- */
 
     useEffect(() => {
-        if (!input || overLimit) return;
+        if (!debouncedInput || !startTime || !session?.user?.id || overLimit) return;
 
-        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-        const { incorrectCount, incorrectChars } = getCurrentIncorrectCharsAndArray(input, normalizedParagraph);
-
-        if (incorrectCount > maxIncorrectChars) {
-            setMaxIncorrectChars(incorrectCount);
-            setIncorrectCharArray(incorrectChars);
-        }
-    }, [input, paragraph, overLimit, maxIncorrectChars]);
-
-    useEffect(() => {
-        if (!startTime) {
-            setMaxIncorrectChars(0);
-            setIncorrectCharArray([]);
-        }
-    }, [startTime]);
-
-    useEffect(() => {
-        if (overLimit || !debouncedInput || !session?.user?.id || !startTime) return;
-        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-        const correctWords = getCorrectWordsCount(debouncedInput, normalizedParagraph);
+        const correctWords = getCorrectWordsCount(debouncedInput);
         if (correctWords === 0) return;
-        const timeInMinutes = (Date.now() - startTime) / 60000;
-        if (timeInMinutes <= 0) return;
-        const speed = Math.round(correctWords / timeInMinutes);
-        if (speed >= 0 && speed <= 200) {
-            setWpm(speed);
 
-            fetch(`/api/room`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    action: "speed",
-                    roomId,
-                    userId: session.user.id,
-                    wpm: speed ?? 0,
-                    correctword: correctWords ?? 0,
-                    incorrectchar: getCurrentIncorrectCharsAndArray(
-                        debouncedInput,
-                        normalizedParagraph
-                    ).incorrectChars ?? []
-                }),
-            })
-                .then(res => {
-                    if (!res.ok) {
-                        console.error("Failed to update WPM:", res.statusText);
-                    }
-                })
-                .catch(error => {
-                    console.error("Network error while updating WPM:", error);
-                });
-        }
+        const minutes = (Date.now() - startTime) / 60000;
+        if (minutes <= 0) return;
 
-    }, [debouncedInput, session?.user?.id, roomId, startTime, paragraph, overLimit, incorrectCharArray]);
+        const speed = Math.round(correctWords / minutes);
+        if (speed < 0 || speed > 200) return;
+
+        setWpm(speed);
+
+        fetch("/api/room", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                action: "speed",
+                roomId,
+                userId: session.user.id,
+                wpm: speed,
+                correctword: correctWords,
+                duration: getDurationSeconds(),
+                charPerformance: buildCharacterPerformance(),
+            }),
+        }).catch(console.error);
+    }, [debouncedInput]);
+
+    /* -------------------- Input Handling -------------------- */
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (overLimit) return;
 
-        const newValue = e.target.value;
+        const value = e.target.value;
+        const now = Date.now();
 
-        if (!startTime && newValue.length > 0) {
-            setStartTime(Date.now());
+        if (!startTime && value.length > 0) {
+            setStartTime(now);
+            lastKeyTimeRef.current = now;
             onTypingStatusChange?.(true);
-        } else if (startTime && newValue.length === 0) {
+        }
+
+        if (
+            startTime &&
+            lastKeyTimeRef.current &&
+            value.length > input.length
+        ) {
+            const index = value.length - 1;
+            const char = value[index];
+            const latency = now - lastKeyTimeRef.current;
+            const isError = char !== normalizedParagraph[index];
+
+            setCharStats(prev => {
+                const stat = prev[char] ?? {
+                    totalTime: 0,
+                    maxTime: 0,
+                    count: 0,
+                    errors: 0,
+                };
+
+                return {
+                    ...prev,
+                    [char]: {
+                        totalTime: stat.totalTime + latency,
+                        maxTime: Math.max(stat.maxTime, latency),
+                        count: stat.count + 1,
+                        errors: stat.errors + (isError ? 1 : 0),
+                    },
+                };
+            });
+
+            lastKeyTimeRef.current = now;
+        }
+
+        if (startTime && value.length === 0) {
             setStartTime(null);
             setWpm(0);
+            setCharStats({});
             onTypingStatusChange?.(false);
         }
 
-        setInput(newValue);
+        setInput(value);
     };
 
-    const getColorizedParagraph = () => {
-        const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-        return normalizedParagraph.split("").map((char, idx) => {
-            let colorClass = "text-gray-500";
-            let bgClass = "";
+    /* -------------------- UI -------------------- */
+
+    const getColorizedParagraph = () =>
+        normalizedParagraph.split("").map((char, idx) => {
+            let color = "text-gray-500";
+            let bg = "";
+
             if (idx < input.length) {
                 if (input[idx] === char) {
-                    colorClass = "text-green-400 font-bold drop-shadow-glow";
-                    bgClass = "bg-green-900/30 rounded";
+                    color = "text-green-400 font-bold";
+                    bg = "bg-green-900/30 rounded";
                 } else {
-                    colorClass = "text-red-400 font-semibold";
-                    bgClass = "bg-red-900/30 rounded";
+                    color = "text-red-400 font-semibold";
+                    bg = "bg-red-900/30 rounded";
                 }
             } else if (idx === input.length && !overLimit) {
-                colorClass = "text-green-300 font-bold animate-pulse";
-                bgClass = "bg-green-800/60 rounded";
+                color = "text-green-300 font-bold animate-pulse";
+                bg = "bg-green-800/60 rounded";
             }
+
             return (
                 <span
                     key={idx}
                     data-index={idx}
-                    className={clsx(
-                        "transition-colors duration-150 px-0.5",
-                        colorClass,
-                        bgClass
-                    )}
+                    className={clsx("px-0.5 transition-colors", color, bg)}
                 >
                     {char}
                 </span>
             );
         });
-    };
 
-    const normalizedParagraph = paragraph.trim().replace(/\s+/g, ' ');
-    const correctWordsCount = getCorrectWordsCount(input, normalizedParagraph);
-    const { incorrectCount: currentIncorrectChars } = getCurrentIncorrectCharsAndArray(input, normalizedParagraph);
+    const correctWordsCount = getCorrectWordsCount(input);
 
     return (
-        <div className="space-y-4 bg-[#10151a] p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg border border-green-900/40 w-full ">
+        <div className="space-y-4 bg-[#10151a] p-6 rounded-xl border border-green-900/40">
             <div
                 ref={paragraphRef}
-                className="p-3 sm:p-4 border border-green-900/40 rounded-md leading-7 bg-[#181f26] shadow-inner h-32 sm:h-40 lg:h-48 xl:h-56 2xl:h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-green-900/20"
-                style={{
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#15803d #1f2937'
-                }}
+                className="p-4 bg-[#181f26] rounded-md h-48 overflow-y-auto"
             >
                 {getColorizedParagraph()}
             </div>
+
             <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={handleChange}
                 disabled={overLimit}
-                className={clsx(
-                    "w-full p-2 sm:p-3 lg:p-4 border border-green-900/40 rounded-md resize-none bg-[#181f26] text-green-200 placeholder:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600/70 font-mono text-base sm:text-lg lg:text-xl transition",
-                    overLimit && "opacity-50 cursor-not-allowed bg-gray-800/50"
-                )}
-                placeholder={overLimit ? "Typing disabled - limit reached" : "Start typing..."}
                 rows={5}
+                className="w-full p-4 bg-[#181f26] border border-green-900/40 rounded-md text-green-200 font-mono focus:ring-2 focus:ring-green-600"
+                placeholder={overLimit ? "Limit reached" : "Start typing..."}
                 spellCheck={false}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
             />
-            <div className="text-xs sm:text-sm flex flex-wrap items-center gap-4 sm:gap-6">
+
+            <div className="flex gap-6 text-sm">
                 <span className="text-green-400 font-semibold">
-                    Current WPM: <span className="font-mono text-xl sm:text-2xl lg:text-3xl text-green-500 drop-shadow-glow">{wpm}</span>
+                    WPM: <span className="text-2xl">{wpm}</span>
                 </span>
-                <span className="text-xs text-green-700 bg-green-900/30 px-2 py-1 rounded">
+                <span className="text-green-700">
                     Correct words: {correctWordsCount}
                 </span>
-                <span className="text-xs text-red-700 bg-red-900/30 px-2 py-1 rounded">
-                    Current errors: {currentIncorrectChars} | Max errors: {maxIncorrectChars}
-                </span>
-                {overLimit && (
-                    <span className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded font-semibold">
-                        Limit reached
-                    </span>
-                )}
             </div>
         </div>
     );
