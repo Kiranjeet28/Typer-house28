@@ -3,65 +3,102 @@ import { prisma } from "@/lib/prisma";
 import type { TypingSpeed, User } from "@prisma/client";
 import { z } from "zod";
 
-/**
- * Schema for speed updates
- */
-const speedRoomSchema = z.object({
-  roomId: z.string().min(1, "Room ID is required"),
-  userId: z.string().min(1, "User ID is required"),
-  wpm: z.number().int().min(0).max(300),
-  correctword: z.number().int().min(0),
-  incorrectchar: z.array(z.string()),
-  action: z.literal("speed"),
-  status: z.enum(["ACTIVE", "LEFT"]).optional(),
+/* ----------------------------------
+   Zod Schemas
+---------------------------------- */
+
+const characterPerformanceSchema = z.object({
+  char: z.string().min(1).max(2),
+  avgTimePerChar: z.number().positive(),
+  maxTimePerChar: z.number().positive(),
+  errorFrequency: z.number().int().min(0),
 });
 
+const speedRoomSchema = z.object({
+  action: z.literal("speed"),
+  roomId: z.string().min(1),
+  userId: z.string().min(1),
+  wpm: z.number().int().min(0).max(300),
+  correctword: z.number().int().min(0),
+  duration: z.number().int().min(0),
+  charPerformance: z.array(characterPerformanceSchema),
+});
+
+/* ----------------------------------
+   Speed Update Handler
+---------------------------------- */
+
 export async function SpeedRoomHandler(body: unknown) {
-  console.log("SpeedRoomHandler called with body:", body);
+  console.log("SpeedRoomHandler called:", body);
 
   try {
-    const parseResult = speedRoomSchema.safeParse(body);
+    const parsed = speedRoomSchema.safeParse(body);
 
-    if (!parseResult.success) {
+    if (!parsed.success) {
       return NextResponse.json(
         {
-          error: "Invalid request body for speed update",
-          details: parseResult.error.format(),
+          error: "Invalid speed payload",
+          details: parsed.error.format(),
         },
         { status: 400 }
       );
     }
 
-    const { roomId, userId, wpm, correctword, incorrectchar } = parseResult.data;
+    const {
+      roomId,
+      userId,
+      wpm,
+      correctword,
+      duration,
+      charPerformance,
+    } = parsed.data;
 
-    await prisma.typingSpeed.upsert({
-      where: {
-        userId_roomId: {
+    const result = await prisma.$transaction(async (tx) => {
+      const typingSpeed = await tx.typingSpeed.upsert({
+        where: {
+          userId_roomId: { userId, roomId },
+        },
+        update: {
+          wpm,
+          correctword,
+          duration,
+        },
+        create: {
           userId,
           roomId,
+          wpm,
+          correctword,
+          duration,
         },
-      },
-      update: {
-        wpm,
-        correctword,
-        incorrectchar,
-        status : parseResult.data.status || "ACTIVE",
-      },
-      create: {
-        userId,
-        roomId,
-        wpm,
-        correctword,
-        incorrectchar,
-        status : parseResult.data.status || "ACTIVE"
-      },
+      });
+
+      // Replace old character stats for this session
+      await tx.characterPerformance.deleteMany({
+        where: { typingSpeedId: typingSpeed.id },
+      });
+
+      if (charPerformance.length > 0) {
+        await tx.characterPerformance.createMany({
+          data: charPerformance.map((c) => ({
+            char: c.char,
+            avgTimePerChar: c.avgTimePerChar,
+            maxTimePerChar: c.maxTimePerChar,
+            errorFrequency: c.errorFrequency,
+            typingSpeedId: typingSpeed.id,
+            userId,
+          })),
+        });
+      }
+
+      return typingSpeed;
     });
 
     return NextResponse.json({
       success: true,
+      typingSpeedId: result.id,
       wpm,
       correctword,
-      status: parseResult.data.status || "ACTIVE",
+      duration,
     });
 
   } catch (error) {
@@ -77,12 +114,11 @@ export async function SpeedRoomHandler(body: unknown) {
   }
 }
 
-/**
- * Get leaderboard for a room
- */
-export async function getSpeedsForRoom(roomId: string) {
-  console.log("Fetching speeds for room:", roomId);
+/* ----------------------------------
+   Leaderboard
+---------------------------------- */
 
+export async function getSpeedsForRoom(roomId: string) {
   try {
     const data: (TypingSpeed & { user: User })[] =
       await prisma.typingSpeed.findMany({
@@ -91,18 +127,17 @@ export async function getSpeedsForRoom(roomId: string) {
         orderBy: { wpm: "desc" },
       });
 
-    const result = data.map((entry) => ({
-      name: entry.user?.name ?? "Anonymous",
-      wpm: entry.wpm,
-      correctWords: entry.correctword,
-      incorrectChars: entry.incorrectchar.length,
-      status: entry.status, // now matches schema
-    }));
-
-    return NextResponse.json(result);
+    return NextResponse.json(
+      data.map((entry) => ({
+        name: entry.user?.name ?? "Anonymous",
+        wpm: entry.wpm,
+        correctWords: entry.correctword,
+        duration: entry.duration,
+      }))
+    );
 
   } catch (error) {
-    console.error("Database error in getSpeedsForRoom:", error);
+    console.error("Leaderboard error:", error);
 
     return NextResponse.json(
       {
