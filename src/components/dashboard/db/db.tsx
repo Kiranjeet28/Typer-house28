@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { RoomCard } from "../Rooms/room-card" 
 import { DashboardStats } from "./dashboard-stats" 
 import { UserProfileCard } from "./user-profile-card"
@@ -40,6 +40,7 @@ interface UserData {
 export default function DashboardPage() {
     const { data: session, status } = useSession()
     const router = useRouter()
+    const pathname = usePathname()
     const [userData, setUserData] = useState<UserData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -173,14 +174,18 @@ export default function DashboardPage() {
                             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                             Refresh
                         </Button>
-                        <Button
-                            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-                            variant="outline"
-                            className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent"
-                        >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Sign Out
-                        </Button>
+                        {!pathname.endsWith("/room") && 
+                            (
+                            <Button
+                                onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                                variant="outline"
+                                className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent"
+                            >
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Sign Out
+                            </Button>
+                        )}
+                       
                     </div>
                 </div>
 

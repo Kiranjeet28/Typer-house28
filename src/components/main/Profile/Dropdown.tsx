@@ -5,6 +5,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import { Keyboard } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import {
     DropdownMenu,
@@ -35,6 +36,7 @@ const dropdownAfterLogin = [
 
 function Dropdown() {
     const { data: session } = useSession();
+    const pathname = usePathname();
 
     return (
         <div>
@@ -72,12 +74,12 @@ function Dropdown() {
                                     {session.user.name || 'User'}
                                 </DropdownMenuLabel>
                             </div>
-                            
+
                             <DropdownMenuSeparator />
-                            
+
                             {dropdownAfterLogin.map((item, index) => (
                                 <DropdownMenuItem key={index} asChild>
-                                    <Link 
+                                    <Link
                                         href={item.link}
                                         className="cursor-pointer flex items-center w-full"
                                     >
@@ -85,15 +87,18 @@ function Dropdown() {
                                     </Link>
                                 </DropdownMenuItem>
                             ))}
-                            
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem 
-                                onClick={() => signOut()} 
-                                className="cursor-pointer border-1 border-red-500 hover:text-red-500 hover:bg-red-100 flex items-center"
-                            >
-                                Logout
-                            </DropdownMenuItem>
+                            {pathname !== '/room' && (
+                                <>
+                                    <DropdownMenuSeparator />
+
+                                    <DropdownMenuItem
+                                        onClick={() => signOut()}
+                                        className="cursor-pointer border-1 border-red-500 hover:text-red-500 hover:bg-red-100 flex items-center"
+                                    >
+                                        Logout
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
