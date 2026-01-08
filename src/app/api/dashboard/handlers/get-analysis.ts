@@ -38,7 +38,7 @@ export async function getAnalysis(body: any) {
                 ...ts,
                 roomName: room.name,
                 date: new Date(ts.createdAt).toLocaleDateString(),
-                accuracy: ts.correctword > 0 ? (ts.correctword / (ts.correctword + ts.incorrectchar.length)) * 100 : 0,
+             
             })),
         )
 
@@ -51,10 +51,6 @@ export async function getAnalysis(body: any) {
                     ? Math.round(allTypingSpeeds.reduce((sum, ts) => sum + ts.wpm, 0) / allTypingSpeeds.length)
                     : 0,
             bestWpm: allTypingSpeeds.length > 0 ? Math.max(...allTypingSpeeds.map((ts) => ts.wpm)) : 0,
-            averageAccuracy:
-                allTypingSpeeds.length > 0
-                    ? Math.round(allTypingSpeeds.reduce((sum, ts) => sum + ts.accuracy, 0) / allTypingSpeeds.length)
-                    : 0,
         }
     } catch (error) {
         console.error("getAnalysis error:", error)
