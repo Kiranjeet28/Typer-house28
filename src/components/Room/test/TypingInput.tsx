@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useSession } from "next-auth/react";
 import clsx from "clsx";
+import RestrictedTextarea from "./textarea";
 
 interface TypingInputProps {
     roomId: string;
@@ -215,15 +216,12 @@ export default function TypingInput({
                 {getColorizedParagraph()}
             </div>
 
-            <textarea
+            <RestrictedTextarea
                 ref={textareaRef}
                 value={input}
                 onChange={handleChange}
-                disabled={overLimit}
-                rows={5}
-                className="w-full p-4 bg-[#181f26] border border-green-900/40 rounded-md text-green-200 font-mono focus:ring-2 focus:ring-green-600"
-                placeholder={overLimit ? "Limit reached" : "Start typing..."}
-                spellCheck={false}
+                overLimit={overLimit}
+               
             />
 
             <div className="flex gap-6 text-sm">
