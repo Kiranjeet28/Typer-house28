@@ -1,5 +1,2 @@
-Keyboard problem 
-Keys should not worked : arrow keys, backspace, delete, home, end, page up, page down, tab, caps lock, shift, ctrl, alt, win key, esc, fn key
-Keys should work : a to z, A to Z, 0 to 9, space
 
 Add leave button at the end of test
