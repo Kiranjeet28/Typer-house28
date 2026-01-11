@@ -1,28 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { TypingSpeed, User } from "@prisma/client";
-import { z } from "zod";
-
-/* ----------------------------------
-   Zod Schemas
----------------------------------- */
-
-const characterPerformanceSchema = z.object({
-  char: z.string().min(1).max(2),
-  avgTimePerChar: z.number().positive(),
-  maxTimePerChar: z.number().positive(),
-  errorFrequency: z.number().int().min(0),
-});
-
-const speedRoomSchema = z.object({
-  action: z.literal("speed"),
-  roomId: z.string().min(1),
-  userId: z.string().min(1),
-  wpm: z.number().int().min(0).max(300),
-  correctword: z.number().int().min(0),
-  duration: z.number().int().min(0),
-  charPerformance: z.array(characterPerformanceSchema),
-});
+import { speedRoomSchema } from '../schema';
 
 /* ----------------------------------
    Speed Update Handler
@@ -49,6 +28,7 @@ export async function SpeedRoomHandler(body: unknown) {
       userId,
       wpm,
       correctword,
+      userStatus,
       duration,
       charPerformance,
     } = parsed.data;
@@ -61,6 +41,7 @@ export async function SpeedRoomHandler(body: unknown) {
         update: {
           wpm,
           correctword,
+          userStatus,
           duration,
         },
         create: {
@@ -131,6 +112,7 @@ export async function getSpeedsForRoom(roomId: string) {
       data.map((entry) => ({
         name: entry.user?.name ?? "Anonymous",
         wpm: entry.wpm,
+        status: entry.userStatus,
         correctWords: entry.correctword,
         duration: entry.duration,
       }))

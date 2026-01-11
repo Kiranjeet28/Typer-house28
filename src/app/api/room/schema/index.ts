@@ -96,3 +96,20 @@ export const get = z.object({
     action: z.literal('get'),
     roomId: z.string(),
 });
+export const characterPerformanceSchema = z.object({
+  char: z.string().min(1).max(2),
+  avgTimePerChar: z.number().positive(),
+  maxTimePerChar: z.number().positive(),
+  errorFrequency: z.number().int().min(0),
+});
+
+export const speedRoomSchema = z.object({
+  action: z.literal("speed"),
+  roomId: z.string().min(1),
+  userId: z.string().min(1),
+  wpm: z.number().int().min(0).max(300),
+  correctword: z.number().int().min(0),
+  duration: z.number().int().min(0),
+  userStatus: z.enum(["ACTIVE", "LEFT"]).optional(),
+  charPerformance: z.array(characterPerformanceSchema),
+});

@@ -38,9 +38,8 @@ export default function TypingTestPage() {
             const payload = JSON.stringify({
                 action: "speed",
                 roomId: id,
+                userStatus: "LEFT",
                 userId: session.user.id,
-                wpm: 0,
-                correctword: 0,
                 duration: 0,
                 charPerformance: [],
             });
