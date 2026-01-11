@@ -14,9 +14,12 @@ import {
 import { useRoomContext, Room } from "@/lib/context";
 import TypingClock from "./test/TypingClock";
 import { useSession } from "next-auth/react";
+import { getTextByTimeLimit, sendLeaveBeacon } from "@/lib/room/helpers";
+import { LeaveRoomButton } from "./test/LeaveButton";
 
 export default function TypingTestPage() {
-    const { id } = useParams();
+    const { id: rawId } = useParams();
+    const id = Array.isArray(rawId) ? rawId[0] : rawId;
     const router = useRouter();
     const { state, dispatch } = useRoomContext();
     const { data: session } = useSession();
@@ -30,38 +33,27 @@ export default function TypingTestPage() {
     /* ----------------------------------
        Leave / Tab Close Handling
     ---------------------------------- */
-
     useEffect(() => {
         if (!id || !session?.user?.id) return;
 
-        const markUserLeft = () => {
-            const payload = JSON.stringify({
-                action: "speed",
-                roomId: id,
-                userStatus: "LEFT",
-                userId: session.user.id,
-                duration: 0,
-                charPerformance: [],
-            });
-
-            navigator.sendBeacon("/api/room", payload);
+        const handleUnload = () => {
+            sendLeaveBeacon(id, session);
         };
-
-        window.addEventListener("beforeunload", markUserLeft);
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === "hidden") {
-                markUserLeft();
+                sendLeaveBeacon(id, session);
             }
         };
 
+        window.addEventListener("beforeunload", handleUnload);
         document.addEventListener("visibilitychange", handleVisibilityChange);
 
         return () => {
-            window.removeEventListener("beforeunload", markUserLeft);
+            window.removeEventListener("beforeunload", handleUnload);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [id, session?.user?.id]);
+    }, [id, session]);
 
     /* ----------------------------------
        Typing / Clock Callbacks
@@ -153,18 +145,7 @@ export default function TypingTestPage() {
         };
     }, [dispatch]);
 
-    /* ----------------------------------
-       Text Selector
-    ---------------------------------- */
-
-    const getTextByTimeLimit = (seconds: number, customText?: string) => {
-        if (customText?.trim()) return customText;
-
-        if (seconds <= 60) return smallText;
-        if (seconds <= 180) return mediumText;
-        if (seconds <= 300) return largeText;
-        return tenMinuteText || customParagraphs.join(" ");
-    };
+   
 
     /* ----------------------------------
        Render States
@@ -213,6 +194,7 @@ export default function TypingTestPage() {
             />
 
             <div className="flex gap-2 flex-col items-center">
+                {id && <LeaveRoomButton id={id} />}
                 <TypingClock
                     isTyping={isTyping}
                     roomId={id as string}
