@@ -113,3 +113,30 @@ export const speedRoomSchema = z.object({
   userStatus: z.enum(["ACTIVE", "LEFT"]).optional(),
   charPerformance: z.array(characterPerformanceSchema),
 });
+
+export const characterPerformanceItemSchema = z.object({
+    action: z.literal("charPerformance"),
+       typingSpeedId: z.string().min(1, "Typing Speed ID is required"),
+       userId: z.string().min(1, "User ID is required"),
+       characters: z.array(characterPerformanceSchema).min(1, "At least one character performance is required"),
+});
+
+export const characterPerformanceEntrySchema = z.object({
+        char: z
+            .string()
+            .min(1, "Character is required")
+            .max(1, "Only single character allowed"),
+
+        avgTimePerChar: z
+            .number()
+            .positive("Average time must be positive"),
+
+        maxTimePerChar: z
+            .number()
+            .positive("Max time must be positive"),
+
+        errorFrequency: z
+            .number()
+            .int()
+            .min(0, "Error frequency cannot be negative"),
+    })

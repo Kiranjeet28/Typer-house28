@@ -7,6 +7,7 @@ import { EndrollRoomHandler } from './handlers/endroll';
 import { SpeedRoomHandler,getSpeedsForRoom } from './handlers/speed';
 import { joinRoomCheckHandler } from './handlers/checkJoin';
 import { getHandler } from './handlers/get';
+import characterPushHandler from './handlers/characterPush';
 
 // Handle POST requests (your existing logic)
 export async function POST(request: NextRequest) {
@@ -26,7 +27,8 @@ export async function POST(request: NextRequest) {
                 return StartRoomHandler(body);
             case "endroll":
                 return EndrollRoomHandler(body);
-            
+            case "charPerformance":
+                return characterPushHandler(body);
             case "speed":
                 return SpeedRoomHandler(body);
             default:
