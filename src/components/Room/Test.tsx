@@ -4,22 +4,17 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import TypingInput from "./test/TypingInput";
 import SpeedBoard from "./test/SpeedBoard";
-import {
-    mediumText,
-    customParagraphs,
-    largeText,
-    tenMinuteText,
-    smallText,
-} from "@/resources/text";
 import { useRoomContext, Room } from "@/lib/context";
 import TypingClock from "./test/TypingClock";
 import { useSession } from "next-auth/react";
 import { getTextByTimeLimit, sendLeaveBeacon } from "@/lib/room/helpers";
 import { LeaveRoomButton } from "./test/LeaveButton";
+import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 
 export default function TypingTestPage() {
     const { id: rawId } = useParams();
-    const id = Array.isArray(rawId) ? rawId[0] : rawId;
+    const roomId = Array.isArray(rawId) ? rawId[0] : rawId;
+
     const router = useRouter();
     const { state, dispatch } = useRoomContext();
     const { data: session } = useSession();
@@ -31,29 +26,28 @@ export default function TypingTestPage() {
     const [overLimit, setOverLimit] = useState(false);
 
     /* ----------------------------------
-       Leave / Tab Close Handling
+       TAB CLOSE / RELOAD (sendBeacon)
     ---------------------------------- */
     useEffect(() => {
-        if (!id || !session?.user?.id) return;
+        if (!roomId || !session?.user?.id) return;
 
         const handleUnload = () => {
-            sendLeaveBeacon(id, session);
-        };
+            // push character performance safely
+            navigator.sendBeacon(
+                "/api/room",
+                JSON.stringify({
+                    action: "charPerformance",
+                    roomId,
+                    userId: session.user.id,
+                })
+            );
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "hidden") {
-                sendLeaveBeacon(id, session);
-            }
+            sendLeaveBeacon(roomId, session);
         };
 
         window.addEventListener("beforeunload", handleUnload);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
-        return () => {
-            window.removeEventListener("beforeunload", handleUnload);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [id, session]);
+        return () => window.removeEventListener("beforeunload", handleUnload);
+    }, [roomId, session]);
 
     /* ----------------------------------
        Typing / Clock Callbacks
@@ -63,9 +57,13 @@ export default function TypingTestPage() {
         setIsTyping(typing);
     };
 
-    const handleTimeUp = () => {
+    const handleTimeUp = async () => {
+        if (roomId && session?.user?.id) {
+            await pushCharacterPerformance(roomId, session.user.id);
+        }
+
         setOverLimit(true);
-        router.push(`/room/${id}/result`);
+        router.push(`/room/${roomId}/result`);
     };
 
     /* ----------------------------------
@@ -73,7 +71,7 @@ export default function TypingTestPage() {
     ---------------------------------- */
 
     useEffect(() => {
-        if (!id) {
+        if (!roomId) {
             setError("Room ID is missing");
             setIsLoading(false);
             return;
@@ -84,15 +82,18 @@ export default function TypingTestPage() {
                 setIsLoading(true);
                 setError(null);
 
-                const res = await fetch(`/api/room?action=get&id=${id}`);
+                const res = await fetch(`/api/room?action=get&id=${roomId}`);
                 if (!res.ok) throw new Error("Room not found");
 
                 const roomData: Room = await res.json();
                 dispatch({ type: "SET_ROOM", payload: roomData });
                 setTimeLimit(roomData.timeLimit || 60);
 
-                if (roomData.status === "FINISHED" || roomData.status === "EXPIRED") {
-                    router.push(`/room/${id}/result`);
+                if (
+                    roomData.status === "FINISHED" ||
+                    roomData.status === "EXPIRED"
+                ) {
+                    router.push(`/room/${roomId}/result`);
                 }
             } catch (err) {
                 console.error(err);
@@ -103,28 +104,29 @@ export default function TypingTestPage() {
         };
 
         fetchRoomData();
-    }, [id, dispatch, router]);
+    }, [roomId, dispatch, router]);
 
     /* ----------------------------------
        Poll Room Status
     ---------------------------------- */
 
     useEffect(() => {
-        if (!id || !state.room || isLoading) return;
+        if (!roomId || !state.room || isLoading) return;
 
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(`/api/room?action=get&id=${id}`);
+                const res = await fetch(`/api/room?action=get&id=${roomId}`);
                 if (!res.ok) return;
 
                 const roomData: Room = await res.json();
                 if (roomData.status !== state.room?.status) {
                     dispatch({ type: "SET_ROOM", payload: roomData });
+
                     if (
                         roomData.status === "FINISHED" ||
                         roomData.status === "EXPIRED"
                     ) {
-                        router.push(`/room/${id}/result`);
+                        router.push(`/room/${roomId}/result`);
                     }
                 }
             } catch (e) {
@@ -133,7 +135,7 @@ export default function TypingTestPage() {
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [id, state.room, isLoading, dispatch, router]);
+    }, [roomId, state.room, isLoading, dispatch, router]);
 
     /* ----------------------------------
        Cleanup
@@ -144,8 +146,6 @@ export default function TypingTestPage() {
             dispatch({ type: "CLEAR_ROOM" });
         };
     }, [dispatch]);
-
-   
 
     /* ----------------------------------
        Render States
@@ -171,7 +171,7 @@ export default function TypingTestPage() {
         state.room.status === "FINISHED" ||
         state.room.status === "EXPIRED"
     ) {
-        router.push(`/room/${id}/result`);
+        router.push(`/room/${roomId}/result`);
         return null;
     }
 
@@ -188,20 +188,20 @@ export default function TypingTestPage() {
         <div className="flex gap-2 md:flex-row flex-col mx-4 md:mx-10 my-10">
             <TypingInput
                 paragraph={paragraphText}
-                roomId={id as string}
+                roomId={roomId as string}
                 onTypingStatusChange={handleTypingStatusChange}
                 overLimit={overLimit}
             />
 
             <div className="flex gap-2 flex-col items-center">
-                {id && <LeaveRoomButton id={id} />}
+                {roomId && <LeaveRoomButton id={roomId} />}
                 <TypingClock
                     isTyping={isTyping}
-                    roomId={id as string}
+                    roomId={roomId as string}
                     timeLimit={timeLimit}
                     onTimeUp={handleTimeUp}
                 />
-                <SpeedBoard roomId={id as string} />
+                <SpeedBoard roomId={roomId as string} />
             </div>
         </div>
     );

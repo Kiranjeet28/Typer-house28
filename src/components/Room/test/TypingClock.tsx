@@ -1,92 +1,101 @@
 "use client";
+
+import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 interface TypingClockProps {
     isTyping: boolean;
     onTimeUpdate?: (seconds: number) => void;
     roomId: string;
-    timeLimit?: number; // Time limit in seconds (default: 60 seconds)
-    onTimeUp?: () => void; // Callback when time is up
+    timeLimit?: number;
+    onTimeUp?: () => void;
 }
 
-export default function TypingClock({ 
-    isTyping, 
-    onTimeUpdate, 
-    roomId, 
+export default function TypingClock({
+    isTyping,
+    onTimeUpdate,
+    roomId,
     timeLimit = 60,
-    onTimeUp 
+    onTimeUp,
 }: TypingClockProps) {
+    const { data: session } = useSession();
+
     const [elapsedTime, setElapsedTime] = useState(0);
-    const [isActive, setIsActive] = useState(true); // Start immediately
+    const [isActive, setIsActive] = useState(true);
     const [gameFinished, setGameFinished] = useState(false);
+
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number | null>(null);
 
-    // API call to finish the game
+    /* ----------------------------------
+       FINISH GAME (SINGLE FLUSH)
+    ---------------------------------- */
     const finishGame = async () => {
-        if (gameFinished) return; // Prevent multiple calls
-        
+        if (gameFinished) return;
+        if (!session?.user?.id) return;
+
         try {
             setGameFinished(true);
-            console.log('Time is up, finishing game...');
-            
-            const requestBody = { 
-                action: 'start', 
-                id: roomId, 
-                status: 'FINISHED' 
-            };
-            
+
+            // ✅ PUSH CHARACTER PERFORMANCE ONCE
+            await pushCharacterPerformance(roomId, session.user.id);
+
+            // ✅ Mark room finished
             const res = await fetch(`/api/room`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody),
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "start",
+                    id: roomId,
+                    status: "FINISHED",
+                }),
             });
-            
-            const data = await res.json();
-            
+
             if (!res.ok) {
-                throw new Error(data.error || `HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                throw new Error(data.error || "Failed to finish game");
             }
-            
-            console.log('Game finished successfully');
-            onTimeUp?.(); // Call the callback if provided
-            
-        } catch (err: any) {
-            console.error('Failed to finish game:', err);
-            setGameFinished(false); // Reset on error to allow retry
+
+            onTimeUp?.();
+        } catch (err) {
+            console.error("Failed to finish game:", err);
+            setGameFinished(false); // allow retry only if needed
         }
     };
 
-    // Start timer immediately when component mounts
+    /* ----------------------------------
+       START TIMER ON MOUNT
+    ---------------------------------- */
     useEffect(() => {
-        if (!gameFinished && !startTimeRef.current) {
-            setIsActive(true);
+        if (!startTimeRef.current) {
             startTimeRef.current = Date.now();
-            console.log('Timer started automatically on component mount');
+            setIsActive(true);
         }
-    }, []); // Empty dependency array means this runs once on mount
+    }, []);
 
-    // Main timer effect - starts immediately, no dependency on isTyping
+    /* ----------------------------------
+       MAIN TIMER LOOP
+    ---------------------------------- */
     useEffect(() => {
-        if (isActive && !gameFinished && startTimeRef.current) {
-            intervalRef.current = setInterval(() => {
-                const now = Date.now();
-                const elapsed = Math.floor((now - startTimeRef.current!) / 1000);
-                
-                if (elapsed >= timeLimit) {
-                    // Time is up
-                    setElapsedTime(timeLimit);
-                    setIsActive(false);
-                    onTimeUpdate?.(timeLimit);
-                    finishGame();
-                } else {
-                    setElapsedTime(elapsed);
-                    onTimeUpdate?.(elapsed);
-                }
-            }, 100); // Update every 100ms for smooth display
-        }
+        if (!isActive || gameFinished || !startTimeRef.current) return;
+
+        intervalRef.current = setInterval(() => {
+            const now = Date.now();
+            const elapsed = Math.floor(
+                (now - startTimeRef.current!) / 1000
+            );
+
+            if (elapsed >= timeLimit) {
+                setElapsedTime(timeLimit);
+                onTimeUpdate?.(timeLimit);
+                setIsActive(false);
+                finishGame();
+            } else {
+                setElapsedTime(elapsed);
+                onTimeUpdate?.(elapsed);
+            }
+        }, 100);
 
         return () => {
             if (intervalRef.current) {
@@ -94,9 +103,11 @@ export default function TypingClock({
                 intervalRef.current = null;
             }
         };
-    }, [isActive, timeLimit, onTimeUpdate, gameFinished]);
+    }, [isActive, timeLimit, gameFinished]);
 
-    // Cleanup on unmount
+    /* ----------------------------------
+       CLEANUP
+    ---------------------------------- */
     useEffect(() => {
         return () => {
             if (intervalRef.current) {
@@ -105,65 +116,77 @@ export default function TypingClock({
         };
     }, []);
 
-    // Format time as MM:SS
+    /* ----------------------------------
+       UI HELPERS
+    ---------------------------------- */
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        return `${mins.toString().padStart(2, "0")}:${secs
+            .toString()
+            .padStart(2, "0")}`;
     };
 
-    // Calculate remaining time
     const remainingTime = Math.max(0, timeLimit - elapsedTime);
     const isTimeRunningOut = remainingTime <= 10 && remainingTime > 0;
     const isTimeUp = remainingTime === 0;
 
+    /* ----------------------------------
+       UI
+    ---------------------------------- */
     return (
         <div className="bg-[#10151a] p-6 rounded-xl shadow-lg border border-green-900/40 w-full max-w-sm">
             <div className="flex items-center justify-center gap-3">
                 <div className="relative">
-                    <svg 
-                        className={`w-8 h-8 transition-colors ${
-                            isTimeUp ? 'text-red-500' : 
-                            isTimeRunningOut ? 'text-yellow-500 animate-pulse' : 
-                            'text-green-500'
-                        }`} 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth={2} 
+                    <svg
+                        className={`w-8 h-8 transition-colors ${isTimeUp
+                                ? "text-red-500"
+                                : isTimeRunningOut
+                                    ? "text-yellow-500 animate-pulse"
+                                    : "text-green-500"
+                            }`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
                         viewBox="0 0 24 24"
                     >
-                        <circle cx="12" cy="12" r="10" className="opacity-30"/>
-                        <polyline points="12,6 12,12 16,14" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="12" cy="12" r="10" className="opacity-30" />
+                        <polyline
+                            points="12,6 12,12 16,14"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
                     </svg>
-                    {isActive && !isTimeUp && (
-                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full animate-ping ${
-                            isTimeRunningOut ? 'bg-yellow-500' : 'bg-green-500'
-                        }`}></div>
-                    )}
                 </div>
+
                 <div className="text-center">
-                    <div className={`text-sm font-semibold mb-1 ${
-                        isTimeUp ? 'text-red-400' : 
-                        isTimeRunningOut ? 'text-yellow-400' : 
-                        'text-green-400'
-                    }`}>
-                        {isTimeUp ? 'TIME UP!' : 'TIME LEFT'}
+                    <div
+                        className={`text-sm font-semibold mb-1 ${isTimeUp
+                                ? "text-red-400"
+                                : isTimeRunningOut
+                                    ? "text-yellow-400"
+                                    : "text-green-400"
+                            }`}
+                    >
+                        {isTimeUp ? "TIME UP!" : "TIME LEFT"}
                     </div>
-                    <div className={`font-mono text-3xl font-bold drop-shadow-glow ${
-                        isTimeUp ? 'text-red-500' : 
-                        isTimeRunningOut ? 'text-yellow-500' : 
-                        'text-green-500'
-                    }`}>
+
+                    <div
+                        className={`font-mono text-3xl font-bold ${isTimeUp
+                                ? "text-red-500"
+                                : isTimeRunningOut
+                                    ? "text-yellow-500"
+                                    : "text-green-500"
+                            }`}
+                    >
                         {formatTime(remainingTime)}
                     </div>
+
                     <div className="text-xs text-gray-400 mt-1">
                         Elapsed: {formatTime(elapsedTime)}
                     </div>
                 </div>
             </div>
-            
-          
-         
         </div>
     );
 }

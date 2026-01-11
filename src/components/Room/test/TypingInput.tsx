@@ -5,6 +5,7 @@ import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useSession } from "next-auth/react";
 import clsx from "clsx";
 import RestrictedTextarea from "./textarea";
+import { recordCharacter } from "@/lib/store/characterStore";
 
 interface TypingInputProps {
     roomId: string;
@@ -12,13 +13,6 @@ interface TypingInputProps {
     overLimit?: boolean;
     onTypingStatusChange?: (isTyping: boolean) => void;
 }
-
-type CharStat = {
-    totalTime: number;
-    maxTime: number;
-    count: number;
-    errors: number;
-};
 
 export default function TypingInput({
     roomId,
@@ -29,7 +23,6 @@ export default function TypingInput({
     const [input, setInput] = useState("");
     const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
-    const [charStats, setCharStats] = useState<Record<string, CharStat>>({});
 
     const debouncedInput = useDebounce(input, 1000);
     const paragraphRef = useRef<HTMLDivElement>(null);
@@ -37,7 +30,6 @@ export default function TypingInput({
     const lastKeyTimeRef = useRef<number | null>(null);
 
     const { data: session } = useSession();
-
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
 
     /* -------------------- Helpers -------------------- */
@@ -58,26 +50,11 @@ export default function TypingInput({
         return count;
     };
 
-    const buildCharacterPerformance = () =>
-        Object.entries(charStats).map(([char, stat]) => ({
-            char,
-            avgTimePerChar: stat.totalTime / stat.count,
-            maxTimePerChar: stat.maxTime,
-            errorFrequency: stat.errors,
-        }));
-
-    /* -------------------- Effects -------------------- */
+    /* -------------------- Focus & Scroll -------------------- */
 
     useEffect(() => {
         if (textareaRef.current && !overLimit) textareaRef.current.focus();
     }, [overLimit]);
-
-    useEffect(() => {
-        if (overLimit && startTime) {
-            setStartTime(null);
-            onTypingStatusChange?.(false);
-        }
-    }, [overLimit, startTime, onTypingStatusChange]);
 
     useEffect(() => {
         if (!paragraphRef.current) return;
@@ -87,7 +64,7 @@ export default function TypingInput({
         el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [input.length]);
 
-    /* -------------------- WPM + API -------------------- */
+    /* -------------------- WPM API (UNCHANGED) -------------------- */
 
     useEffect(() => {
         if (!debouncedInput || !startTime || !session?.user?.id || overLimit) return;
@@ -113,7 +90,6 @@ export default function TypingInput({
                 wpm: speed,
                 correctword: correctWords,
                 duration: getDurationSeconds(),
-                charPerformance: buildCharacterPerformance(),
             }),
         }).catch(console.error);
     }, [debouncedInput]);
@@ -132,42 +108,20 @@ export default function TypingInput({
             onTypingStatusChange?.(true);
         }
 
-        if (
-            startTime &&
-            lastKeyTimeRef.current &&
-            value.length > input.length
-        ) {
+        // ✅ RECORD CHARACTER (WRITE-ONLY)
+        if (startTime && lastKeyTimeRef.current && value.length > input.length) {
             const index = value.length - 1;
             const char = value[index];
             const latency = now - lastKeyTimeRef.current;
             const isError = char !== normalizedParagraph[index];
 
-            setCharStats(prev => {
-                const stat = prev[char] ?? {
-                    totalTime: 0,
-                    maxTime: 0,
-                    count: 0,
-                    errors: 0,
-                };
-
-                return {
-                    ...prev,
-                    [char]: {
-                        totalTime: stat.totalTime + latency,
-                        maxTime: Math.max(stat.maxTime, latency),
-                        count: stat.count + 1,
-                        errors: stat.errors + (isError ? 1 : 0),
-                    },
-                };
-            });
-
+            recordCharacter(char, latency, isError);
             lastKeyTimeRef.current = now;
         }
 
         if (startTime && value.length === 0) {
             setStartTime(null);
             setWpm(0);
-            setCharStats({});
             onTypingStatusChange?.(false);
         }
 
@@ -205,8 +159,6 @@ export default function TypingInput({
             );
         });
 
-    const correctWordsCount = getCorrectWordsCount(input);
-
     return (
         <div className="space-y-4 bg-[#10151a] p-6 rounded-xl border border-green-900/40">
             <div
@@ -221,7 +173,6 @@ export default function TypingInput({
                 value={input}
                 onChange={handleChange}
                 overLimit={overLimit}
-               
             />
 
             <div className="flex gap-6 text-sm">
@@ -229,7 +180,7 @@ export default function TypingInput({
                     WPM: <span className="text-2xl">{wpm}</span>
                 </span>
                 <span className="text-green-700">
-                    Correct words: {correctWordsCount}
+                    Correct words: {getCorrectWordsCount(input)}
                 </span>
             </div>
         </div>
