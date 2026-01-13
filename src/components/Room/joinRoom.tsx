@@ -89,6 +89,7 @@ export default function JoinRoom() {
             toast.warning('Please enter a room code.');
             return;
         }
+        setWaiting(true);
 
         setLoading(true);
         try {
@@ -110,7 +111,6 @@ export default function JoinRoom() {
             // Successfully joined, now start waiting and polling
             setRoomId(joinedRoomId);
             setLoading(false);
-            setWaiting(true);
 
             toast.success('Joined room successfully! Waiting for game to start...');
 
