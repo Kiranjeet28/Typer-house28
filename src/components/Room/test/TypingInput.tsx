@@ -87,7 +87,7 @@ export default function TypingInput({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                action: "speed",
+                action: "speedWpm",
                 roomId,
                 userId: session.user.id,
                 wpm: speed,

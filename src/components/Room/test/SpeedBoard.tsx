@@ -41,9 +41,7 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
         }
     };
 
-    useEffect(() => {
-        fetchSpeeds();
-    }, [roomId]);
+
 
     useInterval(fetchSpeeds, 1000);
 

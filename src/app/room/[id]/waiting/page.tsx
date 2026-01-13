@@ -258,7 +258,7 @@ export default function WaitingRoomPage() {
         }
 
         return (
-        <Card className=" max-w-2xl mx-auto mt-16 bg-background">
+        <Card className=" max-w-2xl my-[20vh] bg-background">
             <CardHeader>
             <p className="text-md text-muted-foreground text-center flex items-center justify-center gap-2">
                 {/* Copy button with icon switching */}
