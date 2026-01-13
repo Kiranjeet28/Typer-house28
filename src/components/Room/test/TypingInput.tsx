@@ -39,6 +39,7 @@ export default function TypingInput({
 
     const getCorrectWordsCount = (typed: string) => {
         if (!typed.trim()) return 0;
+
         const typedWords = typed.trim().replace(/\s+/g, " ").split(" ");
         const originalWords = normalizedParagraph.split(" ");
 
@@ -53,7 +54,9 @@ export default function TypingInput({
     /* -------------------- Focus & Scroll -------------------- */
 
     useEffect(() => {
-        if (textareaRef.current && !overLimit) textareaRef.current.focus();
+        if (textareaRef.current && !overLimit) {
+            textareaRef.current.focus();
+        }
     }, [overLimit]);
 
     useEffect(() => {
@@ -102,14 +105,19 @@ export default function TypingInput({
         const value = e.target.value;
         const now = Date.now();
 
+        // start typing
         if (!startTime && value.length > 0) {
             setStartTime(now);
             lastKeyTimeRef.current = now;
             onTypingStatusChange?.(true);
         }
 
-        // ✅ RECORD CHARACTER (WRITE-ONLY)
-        if (startTime && lastKeyTimeRef.current && value.length > input.length) {
+        // ✅ record ONLY forward typing (ignore backspace)
+        if (
+            startTime &&
+            lastKeyTimeRef.current &&
+            value.length === input.length + 1
+        ) {
             const index = value.length - 1;
             const char = value[index];
             const latency = now - lastKeyTimeRef.current;
@@ -119,9 +127,11 @@ export default function TypingInput({
             lastKeyTimeRef.current = now;
         }
 
+        // reset when cleared
         if (startTime && value.length === 0) {
             setStartTime(null);
             setWpm(0);
+            lastKeyTimeRef.current = null;
             onTypingStatusChange?.(false);
         }
 
