@@ -114,6 +114,16 @@ export const speedRoomSchema = z.object({
   charPerformance: z.array(characterPerformanceSchema),
 });
 
+export const speedWpmSchema = z.object({
+    action: z.literal("speedWpm"),
+    roomId: z.string().min(1),
+    userId: z.string().min(1),
+    wpm: z.number().int().min(0).max(300),
+    correctword: z.number().int().min(0),
+    duration: z.number().int().min(0),
+    userStatus: z.enum(["ACTIVE", "LEFT"]).optional(),
+});
+
 export const characterPerformanceItemSchema = z.object({
     action: z.literal("charPerformance"),
        typingSpeedId: z.string().min(1, "Typing Speed ID is required"),
