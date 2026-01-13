@@ -1,2 +1,46 @@
 
 Add leave button at the end of test
+{action: "speed", roomId: "696618ac670fd3f9000f2d6d", userId: "695fbc477cb67ae8c1b95201", wpm: 2,…}
+action
+: 
+"speed"
+correctword
+: 
+4
+duration
+: 
+135
+roomId
+: 
+"696618ac670fd3f9000f2d6d"
+userId
+: 
+"695fbc477cb67ae8c1b95201"
+wpm
+: 
+2
+
+{error: "Invalid speed payload", details: {_errors: [], charPerformance: {_errors: ["Required"]}}}
+details
+: 
+{_errors: [], charPerformance: {_errors: ["Required"]}}
+error
+: 
+"Invalid speed payload"
+
+////multiple calls 
+    let t = await fetch(`/api/room?id=${e}`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    });
+                    if (t.ok) {
+                        let e = await t.json();
+                        r(e)
+                    } else
+                        console.error("Failed to fetch speeds:", t.status)
+                } catch (e) {
+                    console.error("Error fetching speeds:", e)
+                }
+            }
