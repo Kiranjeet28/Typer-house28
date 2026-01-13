@@ -187,12 +187,6 @@ enum GameStatus {
   CANCELLED
 }
 
-enum LeaderboardType {
-  SPEED
-  ACCURACY
-  GAMES_WON
-  EXPERIENCE
-}
 
 enum TimePeriod {
   DAILY
@@ -201,12 +195,6 @@ enum TimePeriod {
   ALL_TIME
 }
 
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  BLOCKED
-}
 
 enum Difficulty {
   EASY
