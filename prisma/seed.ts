@@ -5,90 +5,138 @@ const prisma = new PrismaClient();
 
 /* ================= CONFIG ================= */
 
-const USERS = 10_000;
+const USERS = 10000;
 const ROOMS_PER_USER = 5;
-const BATCH_SIZE = 25;
-
-// a–z + space
 const CHARS = [..."abcdefghijklmnopqrstuvwxyz", " "];
 
-// global counter to guarantee uniqueness
-let USER_COUNTER = 0;
+/* ================= UTILS ================= */
 
-/* ================= CLEAN DATABASE ================= */
+const clamp = (v: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, v));
+
+/* ================= CLEAN ================= */
 
 async function cleanDatabase() {
-    console.log("🧹 Cleaning database...");
-
     await prisma.characterPerformance.deleteMany();
     await prisma.typingSpeed.deleteMany();
     await prisma.roomMember.deleteMany();
     await prisma.room.deleteMany();
     await prisma.user.deleteMany();
-
-    console.log("🧹 Database cleaned");
 }
 
-/* ================= SEED LOGIC ================= */
+/* ================= CORE ================= */
 
-async function createUserWithRooms() {
-    const id = USER_COUNTER++;
+async function createUserWithRooms(userIndex: number) {
+
+    // user starts mostly beginner
+    let skill = faker.number.int({ min: 20, max: 40 });
+
+    // timeline start
+    let currentDate = faker.date.past({ years: 1 });
 
     const user = await prisma.user.create({
         data: {
             name: faker.person.fullName(),
-            email: `user_${id}@seed.dev`,
-            username: `user_${id}_${faker.string.alphanumeric(4)}`,
+            email: `user_${userIndex}@seed.dev`,
+            username: `user_${userIndex}_${faker.string.alphanumeric(4)}`,
+            createdAt: currentDate,
         },
     });
 
-    await Promise.all(
-        Array.from({ length: ROOMS_PER_USER }).map(async () => {
-            const room = await prisma.room.create({
-                data: {
-                    name: faker.word.words(2),
-                    description: faker.lorem.sentence(),
-                    creatorId: user.id,
-                    joinCode: faker.string.alphanumeric(6),
-                    maxPlayers: faker.number.int({ min: 2, max: 6 }),
-                    expiresAt: faker.date.soon({ days: 2 }),
-                    textLength: faker.helpers.enumValue(TextLength),
-                    timeLimit: faker.number.int({ min: 30, max: 300 }),
-                },
+    for (let r = 0; r < ROOMS_PER_USER; r++) {
+
+        // advance time
+        currentDate = faker.date.soon({
+            days: faker.number.int({ min: 1, max: 4 }),
+            refDate: currentDate,
+        });
+
+        // skill progression
+        skill = clamp(skill + faker.number.int({ min: -2, max: 5 }), 10, 100);
+
+        const duration = faker.number.int({ min: 60, max: 180 });
+
+        const room = await prisma.room.create({
+            data: {
+                name: `Room ${r + 1}`,
+                creatorId: user.id,
+                joinCode: faker.string.alphanumeric(6),
+                maxPlayers: 1,
+                expiresAt: faker.date.soon({ days: 1 }),
+                textLength: faker.helpers.enumValue(TextLength),
+                timeLimit: duration,
+                createdAt: currentDate,
+            },
+        });
+
+        await prisma.roomMember.create({
+            data: {
+                roomId: room.id,
+                userId: user.id,
+                role: "CREATOR",
+                status: "FINISHED",
+            },
+        });
+
+        /* ================= CHARACTER PERFORMANCE FIRST ================= */
+
+        let totalChars = 0;
+        let totalErrors = 0;
+        let totalTimeMs = 0;
+
+        const charPerfData = CHARS.map((char) => {
+
+            // better skill = faster + fewer errors
+            const avgTime = faker.number.float({
+                min: 700 - skill * 4,
+                max: 900 - skill * 3,
             });
 
-            await prisma.roomMember.create({
-                data: {
-                    roomId: room.id,
-                    userId: user.id,
-                    role: "CREATOR",
-                    status: "FINISHED",
-                },
+            const errors = faker.number.int({
+                min: 0,
+                max: Math.max(1, 6 - Math.floor(skill / 20)),
             });
 
-            const typingSpeed = await prisma.typingSpeed.create({
-                data: {
-                    userId: user.id,
-                    roomId: room.id,
-                    wpm: faker.number.int({ min: 30, max: 140 }),
-                    correctword: faker.number.int({ min: 20, max: 120 }),
-                    duration: faker.number.int({ min: 30, max: 300 }),
-                    userStatus: "ACTIVE",
-                },
-            });
+            const count = faker.number.int({ min: 20, max: 80 });
 
-            await prisma.characterPerformance.createMany({
-                data: CHARS.map((char) => ({
-                    char,
-                    avgTimePerChar: faker.number.float({ min: 80, max: 350 }),
-                    maxTimePerChar: faker.number.float({ min: 200, max: 800 }),
-                    errorFrequency: faker.number.int({ min: 0, max: 5 }),
-                    typingSpeedId: typingSpeed.id,
-                    userId: user.id,
-                })),
-            });
-        })
-    );
+            totalChars += count;
+            totalErrors += errors;
+            totalTimeMs += avgTime * count;
+
+            return {
+                char,
+                avgTimePerChar: avgTime,
+                maxTimePerChar: avgTime * faker.number.float({ min: 1.3, max: 1.8 }),
+                errorFrequency: errors,
+                userId: user.id,
+                typingSpeedId: room.id,
+
+            };
+        });
+
+        await prisma.characterPerformance.createMany({
+            data: charPerfData,
+        });
+
+        /* ================= CALCULATE WPM FROM CHAR DATA ================= */
+
+        const effectiveChars = Math.max(0, totalChars - totalErrors);
+        const words = effectiveChars / 5;
+        const durationSeconds = duration;
+        const wpm = Math.round((words / durationSeconds) * 60);
+
+        await prisma.typingSpeed.create({
+            data: {
+                userId: user.id,
+                roomId: room.id,
+                wpm,
+                correctword: Math.round(words),
+                duration,
+                userStatus: "ACTIVE",
+                createdAt: currentDate,
+            },
+        });
+    }
 }
 
 /* ================= MAIN ================= */
@@ -98,24 +146,20 @@ async function main() {
 
     await cleanDatabase();
 
-    for (let i = 0; i < USERS; i += BATCH_SIZE) {
-        await Promise.all(
-            Array.from({ length: BATCH_SIZE }).map(() =>
-                createUserWithRooms()
-            )
-        );
+    for (let i = 0; i < USERS; i++) {
+        await createUserWithRooms(i);
 
-        console.log(
-            `✅ Users created: ${Math.min(i + BATCH_SIZE, USERS)}/${USERS}`
-        );
+        if (i % 50 === 0) {
+            console.log(`✅ Users created: ${i}/${USERS}`);
+        }
     }
 
-    console.log("🌱 Seeding completed successfully 🎉");
+    console.log("🎉 Seeding completed");
 }
 
 main()
     .catch((e) => {
-        console.error("❌ Seed failed", e);
+        console.error(e);
         process.exit(1);
     })
     .finally(async () => {
