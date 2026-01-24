@@ -53,7 +53,7 @@ export default function RoomDashboard() {
     if (status === "loading") {
         return <p className="p-4" > Checking session...</p>;
     }
-
+ 
     if (!session) {
         return <p className="p-4" > Please log in to view your dashboard.</p>;
     }
