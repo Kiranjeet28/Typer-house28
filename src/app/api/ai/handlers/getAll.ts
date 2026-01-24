@@ -3,8 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { getAllSchema } from "../schema";
 
 const ML_URL = process.env.ML_SERVICE_URL as string;
-export async function getAllUserData(body: Object) {
+
+export async function POST(req: Request) {
     try {
+        const body = await req.json();
         const data = getAllSchema.parse(body);
 
         // 1️⃣ Find user
@@ -19,7 +21,7 @@ export async function getAllUserData(body: Object) {
             );
         }
 
-        // 2️⃣ Fetch character performance (latest data)
+        // 2️⃣ Fetch character performance
         const characters = await prisma.characterPerformance.findMany({
             where: {
                 typingSpeed: {
@@ -46,17 +48,17 @@ export async function getAllUserData(body: Object) {
                     createdAt: "desc",
                 },
             },
-            take: 200, // real-time safe
+            take: 200,
         });
 
-        if (characters.length === 0) {
+        if (!characters.length) {
             return NextResponse.json({
                 userId: user.id,
                 riskyKeys: [],
             });
         }
 
-        // 3️⃣ Map DB data → ML features
+        // 3️⃣ Feature mapping
         const lengthMap: Record<string, number> = {
             short: 1,
             medium: 2,
@@ -64,7 +66,7 @@ export async function getAllUserData(body: Object) {
             MARATHON: 4,
         };
 
-        const rows = characters.map((cp: any) => ({
+        const rows = characters.map((cp) => ({
             userId: user.id,
             char: cp.char,
             accuracy: cp.errorFrequency === 0 ? 1 : 0.8,
@@ -89,7 +91,7 @@ export async function getAllUserData(body: Object) {
 
         const predictions = await mlResponse.json();
 
-        // 5️⃣ Post-process (top risky keys)
+        // 5️⃣ Top risky keys
         const riskyKeys = predictions
             .sort((a: any, b: any) => b.risk_probability - a.risk_probability)
             .slice(0, 5)

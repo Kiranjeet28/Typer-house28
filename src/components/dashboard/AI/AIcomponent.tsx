@@ -22,12 +22,12 @@ export default function RoomDashboard() {
                 setLoading(true);
                 setError(null);
 
-                const res = await fetch("/api/AI", {
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        action: "getAll",
-                        email: session.user.email,
-                    }),
+                const res = await fetch("/api/ai", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ action: "getAll", email: session.user.email }),
                 });
 
                 const raw = await res.text();
