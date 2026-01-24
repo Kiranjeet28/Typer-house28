@@ -4,9 +4,9 @@ import { getAllSchema } from "../schema";
 
 const ML_URL = process.env.ML_SERVICE_URL as string;
 
-export async function POST(req: Request) {
+export async function getAll(body: Object) {
     try {
-        const body = await req.json();
+       
         const data = getAllSchema.parse(body);
 
         // 1️⃣ Find user
