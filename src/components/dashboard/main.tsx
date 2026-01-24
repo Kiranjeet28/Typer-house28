@@ -29,7 +29,7 @@ export function Sidebar() {
     { label: "Rooms", href: "#rooms", icon: IconUserBolt }, // Fix 2: Use proper href
     { label: "Analysis", href: "#analysis", icon: IconChartBar }, // Fix 2: Use proper href
     { label: "Certification", href: "#certification", icon: IconCertificate }, // Fix 2: Use proper href
-    { label: "AI", href: "/ai-tips", icon: IconBulb }, // Fix 2: Use proper href
+    { label: "AI", href: "#ai-tips", icon: IconBulb }, // Fix 2: Use proper href
   ];
 
   // Fix 3: Add click handler for navigation
