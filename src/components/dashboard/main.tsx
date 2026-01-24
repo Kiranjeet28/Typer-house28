@@ -15,6 +15,7 @@ import Room from "./Rooms/room";
 import Analysis from "./Analysis/analysis";
 import DashboardPage from "./db/db";
 import CertificationPage from "./certification/c";
+import RoomDashboard from "./AI/AIcomponent";
 
 export function Sidebar() {
   const { data: session } = useSession();
@@ -156,14 +157,9 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
         return (
           <Room/>
         );
-      case "AI Tips":
+      case "AI ":
         return (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-white">🤖 AI-Powered Tips</h1>
-            <div className="bg-neutral-900 p-6 rounded-lg border border-neutral-700">
-              <p className="text-neutral-300">Personalized AI tips to improve your typing speed and accuracy.</p>
-            </div>
-          </div>
+          <RoomDashboard/>
         );
       case "Dashboard":
       default:
