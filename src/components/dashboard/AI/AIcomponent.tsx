@@ -31,15 +31,13 @@ export default function RoomDashboard() {
                     }),
                 });
 
-                const text = await res.text();
-                const result = text ? JSON.parse(text) : null;
+                const raw = await res.text();
+                console.log("STATUS:", res.status);
+                console.log("RAW RESPONSE:", raw);
 
-                if (!res.ok || !result?.riskyKeys) {
-                    throw new Error(result?.error || "Failed to load dashboard data");
-                }
+                const result = raw ? JSON.parse(raw) : null;
 
-
-                if (!res.ok || !result?.riskyKeys) {
+                if (!res.ok) {
                     throw new Error(result?.error || "Failed to load dashboard data");
                 }
 
