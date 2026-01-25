@@ -112,6 +112,7 @@ export default function TypingInput({
         if (!startTime && value.length > 0) {
             setStartTime(now);
             lastKeyTimeRef.current = now;
+            onTypingStatusChange?.(true);
         }
         useEffect(() => {
             if (!input) return;
