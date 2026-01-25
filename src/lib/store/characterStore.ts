@@ -24,24 +24,33 @@ export function recordCharacter(
         errors: 0,
     };
 
-    stat.totalTime += latency;
-    stat.maxTime = Math.max(stat.maxTime, latency);
-    stat.count += 1;
-    if (isError) stat.errors += 1;
+    if (isError) {
+        stat.errors += 1;
+    } else {
+        stat.totalTime += latency;
+        stat.maxTime = Math.max(stat.maxTime, latency);
+        stat.count += 1;
+    }
 
     buffer[char] = stat;
 }
+
 
 /* ===================== READ API (OTHER FILES) ===================== */
 
 export function getFinalCharacterPerformance() {
     return Object.freeze(
-        Object.entries(buffer).map(([char, s]) => ({
-            char,
-            avgTimePerChar: s.totalTime / s.count,
-            maxTimePerChar: s.maxTime,
-            errorFrequency: s.errors,
-        }))
+        Object.entries(buffer)
+            .filter(([, s]) => s.count > 0 || s.errors > 0)
+            .map(([char, s]) => ({
+                char,
+                avgTimePerChar: s.count > 0 ? s.totalTime / s.count : null,
+                maxTimePerChar: s.maxTime,
+                errorRate:
+                    s.errors + s.count > 0
+                        ? s.errors / (s.errors + s.count)
+                        : 0,
+            }))
     );
 }
 
