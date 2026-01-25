@@ -24,7 +24,6 @@ export default function TypingInput({
     const [wpm, setWpm] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
 
-    const debouncedInput = useDebounce(input, 1000);
     const paragraphRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastKeyTimeRef = useRef<number | null>(null);
@@ -44,12 +43,15 @@ export default function TypingInput({
         const originalWords = normalizedParagraph.split(" ");
 
         let count = 0;
+
         for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
-            if (typedWords[i] === originalWords[i]) count++;
-            else break;
+            if (typedWords[i] === originalWords[i]) {
+                count++;
+            }
         }
         return count;
     };
+
 
     /* -------------------- Focus & Scroll -------------------- */
 
@@ -70,16 +72,16 @@ export default function TypingInput({
     /* -------------------- WPM API (UNCHANGED) -------------------- */
 
     useEffect(() => {
-        if (!debouncedInput || !startTime || !session?.user?.id || overLimit) return;
+        if (!input || !startTime || !session?.user?.id || overLimit) return;
 
-        const correctWords = getCorrectWordsCount(debouncedInput);
+        const correctWords = getCorrectWordsCount(input);
         if (correctWords === 0) return;
 
         const minutes = (Date.now() - startTime) / 60000;
         if (minutes <= 0) return;
 
         const speed = Math.round(correctWords / minutes);
-        if (speed < 0 || speed > 200) return;
+        if (speed <= 0 || speed > 250) return;
 
         setWpm(speed);
 
@@ -95,7 +97,8 @@ export default function TypingInput({
                 duration: getDurationSeconds(),
             }),
         }).catch(console.error);
-    }, [debouncedInput]);
+    }, [input]);
+
 
     /* -------------------- Input Handling -------------------- */
 
@@ -109,8 +112,16 @@ export default function TypingInput({
         if (!startTime && value.length > 0) {
             setStartTime(now);
             lastKeyTimeRef.current = now;
-            onTypingStatusChange?.(true);
         }
+        useEffect(() => {
+            if (!input) return;
+
+            const timeout = setTimeout(() => {
+                onTypingStatusChange?.(false);
+            }, 2000);
+
+            return () => clearTimeout(timeout);
+        }, [input]);
 
         // ✅ record ONLY forward typing (ignore backspace)
         if (

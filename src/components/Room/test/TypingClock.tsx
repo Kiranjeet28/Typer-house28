@@ -1,5 +1,6 @@
 "use client";
 
+import { hasCharacterData } from "@/lib/store/characterStore";
 import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -31,38 +32,29 @@ export default function TypingClock({
     /* ----------------------------------
        FINISH GAME (SINGLE FLUSH)
     ---------------------------------- */
+
     const finishGame = async () => {
-        if (gameFinished) return;
-        if (!session?.user?.id) return;
+        if (gameFinished || !session?.user?.id) return;
 
-        try {
-            setGameFinished(true);
+        setGameFinished(true);
 
-            // ✅ PUSH CHARACTER PERFORMANCE ONCE
+        if (hasCharacterData()) {
             await pushCharacterPerformance(roomId, session.user.id);
-
-            // ✅ Mark room finished
-            const res = await fetch(`/api/room`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "start",
-                    id: roomId,
-                    status: "FINISHED",
-                }),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || "Failed to finish game");
-            }
-
-            onTimeUp?.();
-        } catch (err) {
-            console.error("Failed to finish game:", err);
-            setGameFinished(false); // allow retry only if needed
         }
+
+        await fetch(`/api/room`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                action: "start",
+                id: roomId,
+                status: "FINISHED",
+            }),
+        });
+
+        onTimeUp?.();
     };
+
 
     /* ----------------------------------
        START TIMER ON MOUNT

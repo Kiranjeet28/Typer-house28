@@ -16,7 +16,7 @@ const RestrictedTextarea: React.FC<RestrictedTextareaProps> = ({
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     // Allow only: a-z, A-Z, 0-9, space
-    const allowedKeyRegex = /^[a-zA-Z0-9 ]$/;
+    const allowedKeyRegex = /^[a-zA-Z0-9 ,.\(\)\{\}"';:]$/;
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         // Block everything except allowed single-character keys
