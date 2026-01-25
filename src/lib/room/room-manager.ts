@@ -196,11 +196,11 @@ export class RoomManager {
                     name: string | null;
                     username: string | null;
                     image: string | null;
-                };
+                } | null;
             }
 
             const existingMember: RoomMember | undefined = room.members.find(
-                (member: RoomMember) => member.userId === userId
+                (member) => member.userId === userId
             );
             if (existingMember) {
                 return {
@@ -292,7 +292,7 @@ export class RoomManager {
                             image: true
                         }
                     },
-                   
+
                 }
             });
 
