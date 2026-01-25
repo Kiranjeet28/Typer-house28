@@ -23,7 +23,23 @@ export function LeaveRoomButton({ id: roomId }: { id: string }) {
         } catch (err) {
             console.error("Failed to push character performance", err);
         }
+        const requestBody = { action: 'start', id: roomId, status: 'FINISHED' };
+        console.log('Start game request body:', requestBody);
 
+        const sendStart = async () => {
+            try {
+                await fetch(`/api/room`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+            } catch (e) {
+                console.error('Failed to send start request', e);
+            }
+        };
+        sendStart();
         // ✅ notify backend user left (beacon-safe)
         sendLeaveBeacon(roomId, session);
 

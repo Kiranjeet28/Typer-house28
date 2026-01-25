@@ -146,12 +146,47 @@ export default function WaitingRoomPage() {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        if (!roomId) return;
+
+        const expireGame = async () => {
+            try {
+                const requestBody = {
+                    action: 'start',
+                    id: roomId,
+                    status: 'EXPIRED',
+                };
+
+                console.log('Game expired, sending request:', requestBody);
+
+                await fetch('/api/room', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+            } catch (e) {
+                console.error('Failed to expire game', e);
+            }
+        };
+
+        // 5 minutes = 300000 ms
+        const timeout = setTimeout(() => {
+            // Only expire if game has NOT started
+            if (room?.status !== 'IN_GAME') {
+                expireGame();
+            }
+        }, 300000);
+
+        return () => clearTimeout(timeout);
+    }, [roomId, room?.status]);
 
     // Poll every 3 seconds, but only if we have a valid roomId
     useEffect(() => {
         if (roomId) {
             fetchRoom();
-            const interval = setInterval(fetchRoom, 3000);
+            const interval = setInterval(fetchRoom, 30000);
             return () => clearInterval(interval);
         } else {
             setLoading(false);
