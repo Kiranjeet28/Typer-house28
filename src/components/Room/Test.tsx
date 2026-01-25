@@ -60,7 +60,7 @@ export default function TypingTestPage() {
                 console.error('Failed to send start request', e);
             }
         };
-        sendStart();
+        // sendStart();
 
         window.addEventListener("beforeunload", handleUnload);
         return () => window.removeEventListener("beforeunload", handleUnload);
