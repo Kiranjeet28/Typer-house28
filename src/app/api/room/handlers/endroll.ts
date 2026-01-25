@@ -39,16 +39,10 @@ export async function EndrollRoomHandler(body: any) {
         // Now perform the original query
         let room;
         try {
+            // Fetch room without including creator to avoid Prisma inconsistent relation errors
             room = await prisma.room.findUniqueOrThrow({
                 where: { id: roomId },
                 include: {
-                    creator: {
-                        select: {
-                            id: true,
-                            name: true,
-                            username: true,
-                        },
-                    },
                     members: {
                         where: {
                             // Only include members where the user exists
@@ -68,6 +62,18 @@ export async function EndrollRoomHandler(body: any) {
                     }
                 },
             });
+
+            // Fetch creator separately (may be null in DB) and attach it to the room object
+            const creator = await prisma.user.findUnique({
+                where: { id: (room as any).creatorId },
+                select: {
+                    id: true,
+                    name: true,
+                    username: true,
+                },
+            });
+
+            room = { ...room, creator: creator ?? null };
         } catch (prismaError: any) {
             if (prismaError.name === 'NotFoundError') {
                 throw new RoomError('Room not found', 'ROOM_NOT_FOUND', 404);

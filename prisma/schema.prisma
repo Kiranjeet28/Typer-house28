@@ -102,7 +102,7 @@ model RoomMember {
 
   // Relations
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@unique([roomId, userId])
   @@index([roomId])
