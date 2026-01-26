@@ -6,7 +6,7 @@ import React from 'react'
 function page() {
   return (
     <div className="">
-      <Spotlight
+      {/* <Spotlight
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="white"
       />
@@ -14,7 +14,9 @@ function page() {
         <Section1 />
         <Section3 />
         <Section2 /> 
-    </div>
+    </div> */}
+
+    
     </div>
   )
 }
