@@ -12,8 +12,19 @@ const RestrictedTextarea = forwardRef<HTMLTextAreaElement, RestrictedTextareaPro
         const allowedKeyRegex = /^[a-zA-Z0-9 ,.{}[\]()]$/;
 
         const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        
+            // Block special keys you don't want
+            const blockedKeys = [
+                'Tab', 'Escape', 'Home', 'End',
+                'PageUp', 'PageDown', 'Insert', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight',
+                'ArrowUp', 'ArrowDown', 'Enter'
+            ];
 
+            if (blockedKeys.includes(e.key)) {
+                e.preventDefault();
+                return;
+            }
+
+          
             // Block everything except allowed single-character keys
             if (e.key.length === 1 && !allowedKeyRegex.test(e.key)) {
                 e.preventDefault();
