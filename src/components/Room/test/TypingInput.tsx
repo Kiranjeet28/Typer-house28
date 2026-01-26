@@ -70,7 +70,18 @@ export default function TypingInput({
         el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [input.length]);
 
-    /* -------------------- WPM API (UNCHANGED) -------------------- */
+    /* -------------------- Typing Status Detection -------------------- */
+    useEffect(() => {
+        if (!input) return;
+
+        const timeout = setTimeout(() => {
+            onTypingStatusChange?.(false);
+        }, 2000);
+
+        return () => clearTimeout(timeout);
+    }, [input, onTypingStatusChange]);
+
+    /* -------------------- WPM API -------------------- */
 
     useEffect(() => {
         if (!input || !startTime || !session?.user?.id || overLimit) return;
@@ -98,7 +109,7 @@ export default function TypingInput({
                 duration: getDurationSeconds(),
             }),
         }).catch(console.error);
-    }, [input]);
+    }, [input, startTime, session?.user?.id, overLimit, roomId]);
 
 
     /* -------------------- Input Handling -------------------- */
@@ -115,15 +126,6 @@ export default function TypingInput({
             lastKeyTimeRef.current = now;
             onTypingStatusChange?.(true);
         }
-        useEffect(() => {
-            if (!input) return;
-
-            const timeout = setTimeout(() => {
-                onTypingStatusChange?.(false);
-            }, 2000);
-
-            return () => clearTimeout(timeout);
-        }, [input]);
 
         // ✅ record ONLY forward typing (ignore backspace)
         if (
