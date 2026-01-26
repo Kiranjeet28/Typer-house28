@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import clsx from "clsx";
 import RestrictedTextarea from "./textarea";
 import { recordCharacter } from "@/lib/store/characterStore";
+import { getColorizedParagraph } from "./getColorizedParagraph";
 
 interface TypingInputProps {
     roomId: string;
@@ -152,42 +153,13 @@ export default function TypingInput({
 
     /* -------------------- UI -------------------- */
 
-    const getColorizedParagraph = () =>
-        normalizedParagraph.split("").map((char, idx) => {
-            let color = "text-gray-500";
-            let bg = "";
-
-            if (idx < input.length) {
-                if (input[idx] === char) {
-                    color = "text-green-400 font-bold";
-                    bg = "bg-green-900/30 rounded";
-                } else {
-                    color = "text-red-400 font-semibold";
-                    bg = "bg-red-900/30 rounded";
-                }
-            } else if (idx === input.length && !overLimit) {
-                color = "text-green-300 font-bold animate-pulse";
-                bg = "bg-green-800/60 rounded";
-            }
-
-            return (
-                <span
-                    key={idx}
-                    data-index={idx}
-                    className={clsx("px-0.5 transition-colors", color, bg)}
-                >
-                    {char}
-                </span>
-            );
-        });
-
     return (
         <div className="space-y-4 bg-[#10151a] p-6 rounded-xl border border-green-900/40">
             <div
                 ref={paragraphRef}
                 className="p-4 bg-[#181f26] rounded-md h-48 overflow-y-auto"
             >
-                {getColorizedParagraph()}
+                {getColorizedParagraph(normalizedParagraph, input, overLimit || false)}
             </div>
 
             <RestrictedTextarea

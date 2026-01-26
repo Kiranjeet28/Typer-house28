@@ -210,7 +210,7 @@ export default function TypingTestPage() {
                 overLimit={overLimit}
             />
 
-            <div className="flex gap-2 flex-col items-center">
+            {/* <div className="flex gap-2 flex-col items-center">
                 {roomId && <LeaveRoomButton id={roomId} />}
                 <TypingClock
                     isTyping={isTyping}
@@ -219,7 +219,7 @@ export default function TypingTestPage() {
                     onTimeUp={handleTimeUp}
                 />
                 <SpeedBoard roomId={roomId as string} />
-            </div>
+            </div> */}
         </div>
     );
 }

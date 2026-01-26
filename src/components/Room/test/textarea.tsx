@@ -37,7 +37,7 @@ const RestrictedTextarea: React.FC<RestrictedTextareaProps> = ({
         <textarea
             ref={ref}
             value={value}
-            onChange={onChange}
+            onChange={(e) => onChange(e)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onDrop={handleDrop}
