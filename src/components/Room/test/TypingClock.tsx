@@ -1,7 +1,5 @@
 "use client";
 
-import { hasCharacterData } from "@/lib/store/characterStore";
-import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 
@@ -38,9 +36,6 @@ export default function TypingClock({
 
         setGameFinished(true);
 
-        if (hasCharacterData()) {
-            await pushCharacterPerformance(roomId, session.user.id);
-        }
 
         await fetch(`/api/room`, {
             method: "POST",
