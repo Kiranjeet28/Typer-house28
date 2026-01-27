@@ -23,6 +23,7 @@ export default function TypingInput({
 }: TypingInputProps) {
     const [input, setInput] = useState("");
     const [wpm, setWpm] = useState(0);
+    const [correctWordsCount, setCorrectWordsCount] = useState(0);
     const [startTime, setStartTime] = useState<number | null>(null);
 
     const paragraphRef = useRef<HTMLDivElement>(null);
@@ -81,35 +82,62 @@ export default function TypingInput({
         return () => clearTimeout(timeout);
     }, [input, onTypingStatusChange]);
 
-    /* -------------------- WPM API -------------------- */
+    /* -------------------- Calculate Correct Words Count -------------------- */
+    useEffect(() => {
+        const count = getCorrectWordsCount(input);
+        setCorrectWordsCount(count);
+    }, [input]);
+
+    /* -------------------- WPM Calculation (Fast UI Update) -------------------- */
 
     useEffect(() => {
-        if (!input || !startTime || !session?.user?.id || overLimit) return;
-
-        const correctWords = getCorrectWordsCount(input);
-        if (correctWords === 0) return;
+        if (!input || !startTime || overLimit || correctWordsCount === 0) return;
 
         const minutes = (Date.now() - startTime) / 60000;
         if (minutes <= 0) return;
 
-        const speed = Math.round(correctWords / minutes);
+        const speed = Math.round(correctWordsCount / minutes);
         if (speed <= 0 || speed > 250) return;
 
         setWpm(speed);
+    }, [correctWordsCount, startTime, overLimit, input]);
 
-        fetch("/api/room", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                action: "speedWpm",
-                roomId,
-                userId: session.user.id,
-                wpm: speed,
-                correctword: correctWords,
-                duration: getDurationSeconds(),
-            }),
-        }).catch(console.error);
-    }, [input, startTime, session?.user?.id, overLimit, roomId]);
+    /* -------------------- WPM API Call (Every 30 seconds) -------------------- */
+
+    useEffect(() => {
+        if (!input || !startTime || !session?.user?.id || overLimit) return;
+
+        const sendWpmData = () => {
+            if (correctWordsCount === 0) return;
+
+            const minutes = (Date.now() - startTime) / 60000;
+            if (minutes <= 0) return;
+
+            const speed = Math.round(correctWordsCount / minutes);
+            if (speed <= 0 || speed > 250) return;
+
+            fetch("/api/room", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "speedWpm",
+                    roomId,
+                    userId: session.user.id,
+                    wpm: speed,
+                    correctword: correctWordsCount,
+                    duration: getDurationSeconds(),
+                }),
+            }).catch(console.error);
+        };
+
+        // Send immediately on first keystroke
+        sendWpmData();
+
+        // Then send every 30 seconds
+        const interval = setInterval(sendWpmData, 30000);
+
+        return () => clearInterval(interval);
+    }, [startTime, session?.user?.id, overLimit, roomId]);
 
 
     /* -------------------- Input Handling -------------------- */
@@ -146,6 +174,7 @@ export default function TypingInput({
         if (startTime && value.length === 0) {
             setStartTime(null);
             setWpm(0);
+            setCorrectWordsCount(0);
             lastKeyTimeRef.current = null;
             onTypingStatusChange?.(false);
         }
@@ -176,7 +205,7 @@ export default function TypingInput({
                     WPM: <span className="text-2xl">{wpm}</span>
                 </span>
                 <span className="text-green-700">
-                    Correct words: {getCorrectWordsCount(input)}
+                    Correct words: {correctWordsCount}
                 </span>
             </div>
         </div>
