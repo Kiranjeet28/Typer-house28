@@ -11,24 +11,18 @@ interface PDFOptions {
 }
 
 export async function generatePDF(element: HTMLElement, options: PDFOptions) {
-    console.log('Starting PDF generation...', options)
 
     try {
         // Dynamic import to avoid SSR issues
         const html2canvas = (await import("html2canvas")).default
         const jsPDF = (await import("jspdf")).default
 
-        console.log('Libraries loaded successfully')
 
         // Ensure element is visible and has dimensions
         if (!element || element.offsetWidth === 0 || element.offsetHeight === 0) {
             throw new Error('Element is not visible or has no dimensions')
         }
 
-        console.log('Element dimensions:', {
-            width: element.offsetWidth,
-            height: element.offsetHeight
-        })
 
         // Convert HTML element to canvas with better options
         const canvas = await html2canvas(element, {
@@ -44,7 +38,6 @@ export async function generatePDF(element: HTMLElement, options: PDFOptions) {
             windowHeight: element.scrollHeight,
             // Add logging and fix for modern CSS colors
             onclone: (clonedDoc) => {
-                console.log('Document cloned for canvas')
 
                 // Fix for modern CSS color functions (oklch, etc.)
                 const style = clonedDoc.createElement('style')
@@ -76,14 +69,9 @@ export async function generatePDF(element: HTMLElement, options: PDFOptions) {
             }
         })
 
-        console.log('Canvas created:', {
-            width: canvas.width,
-            height: canvas.height
-        })
 
         // Create PDF
         const imgData = canvas.toDataURL("image/png")
-        console.log('Image data created, length:', imgData.length)
 
         const pdf = new jsPDF({
             orientation: "landscape",

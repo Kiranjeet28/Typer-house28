@@ -8,9 +8,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
 
         // Add some logging to debug
-        console.log('API Request body:', body);
-        console.log('Action:', body.action);
-
         switch (body.action) {
             case 'get-room':
                 const userData = await getRoom(body);

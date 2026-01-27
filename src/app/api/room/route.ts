@@ -15,9 +15,6 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         
-        // Add some logging to debug
-        console.log('API Request body:', body);
-        console.log('Action:', body.action);
         
         switch (body.action) {
             case 'create':
@@ -51,7 +48,6 @@ export async function GET(request: NextRequest) {
         const roomId = searchParams.get("id");
         const action = searchParams.get("action") || "speed"; // Default to speed for backward compatibility
         
-        console.log('GET Request - roomId:', roomId, 'action:', action);
         
         if (!roomId) {
             throw new AppError(400, 'Missing room ID');

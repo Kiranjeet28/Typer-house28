@@ -45,14 +45,13 @@ export default function JoinRoom() {
     };
 
     const startPolling = (roomId: string) => {
-        console.log('Starting polling for room:', roomId);
 
         pollingIntervalRef.current = setInterval(async () => {
             try {
                 const isReady = await checkRoomStatus(roomId);
 
                 if (isReady) {
-                    console.log('Room is ready, navigating to test route');
+                    ('Room is ready, navigating to test route');
 
                     // Clear polling
                     if (pollingIntervalRef.current) {

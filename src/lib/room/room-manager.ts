@@ -336,7 +336,6 @@ export class RoomManager {
                 }
             });
 
-            console.log(`Marked ${expiredRooms.count} rooms as expired`);
             return expiredRooms.count;
         } catch (error) {
             console.error('Error cleaning up expired rooms:', error);
