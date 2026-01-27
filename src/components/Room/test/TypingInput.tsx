@@ -94,15 +94,18 @@ export default function TypingInput({
 
     /* -------------------- WPM Calculation (Fast UI Update) -------------------- */
     useEffect(() => {
-        if (!input || !startTime || overLimit || correctWordsCount === 0) return;
+        if (!input || !startTime || overLimit) return;
 
         const minutes = (Date.now() - startTime) / 60000;
         if (minutes <= 0) return;
 
-        const speed = Math.round(correctWordsCount / minutes);
-        if (speed <= 0 || speed > 250) return;
+        const speed = correctWordsCount > 0
+            ? Math.round(correctWordsCount / minutes)
+            : 0;
 
-        setWpm(speed);
+        // Cap at reasonable maximum, but allow 0 WPM
+        const finalSpeed = speed > 250 ? 250 : speed;
+        setWpm(finalSpeed);
     }, [correctWordsCount, startTime, overLimit, input]);
 
     /* -------------------- WPM API Call (Every 10 seconds) -------------------- */
