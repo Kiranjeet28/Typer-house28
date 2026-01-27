@@ -1,65 +1,78 @@
+// @/lib/store/characterStore.ts
 
-export type CharStat = {
+interface CharacterData {
+    char: string;
     totalTime: number;
     maxTime: number;
     count: number;
     errors: number;
-};
+}
 
-type CharMap = Record<string, CharStat>;
+// ✅ In-memory store for character performance
+const characterMap = new Map<string, CharacterData>();
 
-let buffer: CharMap = {};
+/**
+ * Record a character keystroke with its timing and error status
+ */
+export function recordCharacter(char: string, latency: number, isError: boolean): void {
+    console.log(`📊 Recording: "${char}" | ${latency}ms | Error: ${isError}`);
 
-/* ===================== WRITE API (ONLY TypingInput uses this) ===================== */
+    const existing = characterMap.get(char);
 
-export function recordCharacter(
-    char: string,
-    latency: number,
-    isError: boolean
-) {
-    const stat = buffer[char] ?? {
-        totalTime: 0,
-        maxTime: 0,
-        count: 0,
-        errors: 0,
-    };
-
-    if (isError) {
-        stat.errors += 1;
+    if (existing) {
+        existing.totalTime += latency;
+        existing.maxTime = Math.max(existing.maxTime, latency);
+        existing.count += 1;
+        existing.errors += isError ? 1 : 0;
     } else {
-        stat.totalTime += latency;
-        stat.maxTime = Math.max(stat.maxTime, latency);
-        stat.count += 1;
+        characterMap.set(char, {
+            char,
+            totalTime: latency,
+            maxTime: latency,
+            count: 1,
+            errors: isError ? 1 : 0,
+        });
     }
 
-    buffer[char] = stat;
+    console.log(`📈 Updated stats for "${char}":`, characterMap.get(char));
 }
 
+/**
+ * Check if we have any character data recorded
+ */
+export function hasCharacterData(): boolean {
+    return characterMap.size > 0;
+}
 
-/* ===================== READ API (OTHER FILES) ===================== */
-
+/**
+ * Get final character performance data formatted for API
+ */
 export function getFinalCharacterPerformance() {
-    return Object.freeze(
-        Object.entries(buffer)
-            .filter(([, s]) => s.count > 0 || s.errors > 0)
-            .map(([char, s]) => ({
-                char,
-                avgTimePerChar: s.count > 0 ? s.totalTime / s.count : null,
-                maxTimePerChar: s.maxTime,
-                errorRate:
-                    s.errors + s.count > 0
-                        ? s.errors / (s.errors + s.count)
-                        : 0,
-            }))
-    );
+    const characters = Array.from(characterMap.values()).map((data) => ({
+        char: data.char,
+        avgTimePerChar: data.count > 0 ? Math.round(data.totalTime / data.count) : 0,
+        maxTimePerChar: data.maxTime,
+        errorFrequency: data.count > 0 ? Math.round((data.errors / data.count) * 100) : 0,
+    }));
+
+    console.log('📤 Final character performance:', characters);
+    return characters;
 }
 
-/* ===================== LIFECYCLE ===================== */
-
-export function resetCharacterStore() {
-    buffer = {};
+/**
+ * Reset the character store (call after successful push)
+ */
+export function resetCharacterStore(): void {
+    console.log('🗑️ Resetting character store');
+    characterMap.clear();
 }
 
-export function hasCharacterData() {
-    return Object.keys(buffer).length > 0;
+/**
+ * Debug: Get current store state
+ */
+export function getCharacterStoreDebug() {
+    return {
+        size: characterMap.size,
+        data: Array.from(characterMap.entries()),
+    };
 }
