@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useSession } from "next-auth/react";
-import clsx from "clsx";
 import RestrictedTextarea from "./textarea";
 import { recordCharacter } from "@/lib/store/characterStore";
 import { getColorizedParagraph } from "./getColorizedParagraph";
@@ -29,6 +27,7 @@ export default function TypingInput({
     const paragraphRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastKeyTimeRef = useRef<number | null>(null);
+    const correctWordsRef = useRef(0);
 
     const { data: session } = useSession();
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
@@ -86,7 +85,8 @@ export default function TypingInput({
     useEffect(() => {
         const count = getCorrectWordsCount(input);
         setCorrectWordsCount(count);
-    }, [input]);
+        correctWordsRef.current = count; // Keep ref in sync
+    }, [input, normalizedParagraph]); // Add normalizedParagraph dependency
 
     /* -------------------- WPM Calculation (Fast UI Update) -------------------- */
 
@@ -102,19 +102,29 @@ export default function TypingInput({
         setWpm(speed);
     }, [correctWordsCount, startTime, overLimit, input]);
 
-    /* -------------------- WPM API Call (Every 30 seconds) -------------------- */
+    /* -------------------- WPM API Call (Every 10 seconds on change) -------------------- */
 
     useEffect(() => {
-        if (!input || !startTime || !session?.user?.id || overLimit) return;
+        if (!startTime || !session?.user?.id || overLimit) return;
 
         const sendWpmData = () => {
-            if (correctWordsCount === 0) return;
-
+            // Always send current values (including 0s at start)
+            const currentCorrectWords = correctWordsRef.current;
             const minutes = (Date.now() - startTime) / 60000;
-            if (minutes <= 0) return;
 
-            const speed = Math.round(correctWordsCount / minutes);
-            if (speed <= 0 || speed > 250) return;
+            // Calculate speed (0 if no time has passed or no words)
+            const speed = minutes > 0 && currentCorrectWords > 0
+                ? Math.round(currentCorrectWords / minutes)
+                : 0;
+
+            // Cap at reasonable maximum
+            const finalSpeed = speed > 250 ? 250 : speed;
+
+            console.log('📤 Sending WPM data:', {
+                wpm: finalSpeed,
+                correctWords: currentCorrectWords,
+                duration: getDurationSeconds()
+            });
 
             fetch("/api/room", {
                 method: "POST",
@@ -123,18 +133,20 @@ export default function TypingInput({
                     action: "speedWpm",
                     roomId,
                     userId: session.user.id,
-                    wpm: speed,
-                    correctword: correctWordsCount,
+                    wpm: finalSpeed,
+                    correctword: currentCorrectWords,
                     duration: getDurationSeconds(),
                 }),
-            }).catch(console.error);
+            }).catch(err => {
+                console.error('❌ Failed to send WPM data:', err);
+            });
         };
 
-        // Send immediately on first keystroke
+        // Send immediately on start (will send 0 WPM, 0 correct words)
         sendWpmData();
 
-        // Then send every 30 seconds
-        const interval = setInterval(sendWpmData, 30000);
+        // Then send every 10 seconds
+        const interval = setInterval(sendWpmData, 10000);
 
         return () => clearInterval(interval);
     }, [startTime, session?.user?.id, overLimit, roomId]);
@@ -175,6 +187,7 @@ export default function TypingInput({
             setStartTime(null);
             setWpm(0);
             setCorrectWordsCount(0);
+            correctWordsRef.current = 0;
             lastKeyTimeRef.current = null;
             onTypingStatusChange?.(false);
         }
