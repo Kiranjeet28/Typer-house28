@@ -24,6 +24,6 @@ export async function pushCharacterPerformance(
             characters,
         }),
     });
-
+    console.log("character performance data pushed successfully.");
     resetCharacterStore();
 }

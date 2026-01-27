@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import RestrictedTextarea from "./textarea";
-import { recordCharacter,getFinalCharacterPerformance} from "@/lib/store/characterStore";
+import { recordCharacter, getFinalCharacterPerformance } from "@/lib/store/characterStore";
 import { getColorizedParagraph } from "./getColorizedParagraph";
+import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 
 interface TypingInputProps {
     roomId: string;
@@ -28,6 +29,7 @@ export default function TypingInput({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastKeyTimeRef = useRef<number | null>(null);
     const correctWordsRef = useRef(0);
+    const lastInputLengthRef = useRef(0); // ✅ Track previous input length
 
     const { data: session } = useSession();
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
@@ -53,8 +55,9 @@ export default function TypingInput({
         return count;
     };
 
-    /*** */
+    /* -------------------- Debug Log -------------------- */
     console.log('Character Performance:', getFinalCharacterPerformance());
+
     /* -------------------- Focus & Scroll -------------------- */
 
     useEffect(() => {
@@ -86,11 +89,10 @@ export default function TypingInput({
     useEffect(() => {
         const count = getCorrectWordsCount(input);
         setCorrectWordsCount(count);
-        correctWordsRef.current = count; // Keep ref in sync
-    }, [input, normalizedParagraph]); // Add normalizedParagraph dependency
+        correctWordsRef.current = count;
+    }, [input, normalizedParagraph]);
 
     /* -------------------- WPM Calculation (Fast UI Update) -------------------- */
-
     useEffect(() => {
         if (!input || !startTime || overLimit || correctWordsCount === 0) return;
 
@@ -103,22 +105,18 @@ export default function TypingInput({
         setWpm(speed);
     }, [correctWordsCount, startTime, overLimit, input]);
 
-    /* -------------------- WPM API Call (Every 10 seconds on change) -------------------- */
-
+    /* -------------------- WPM API Call (Every 10 seconds) -------------------- */
     useEffect(() => {
         if (!startTime || !session?.user?.id || overLimit) return;
 
         const sendWpmData = () => {
-            // Always send current values (including 0s at start)
             const currentCorrectWords = correctWordsRef.current;
             const minutes = (Date.now() - startTime) / 60000;
 
-            // Calculate speed (0 if no time has passed or no words)
             const speed = minutes > 0 && currentCorrectWords > 0
                 ? Math.round(currentCorrectWords / minutes)
                 : 0;
 
-            // Cap at reasonable maximum
             const finalSpeed = speed > 250 ? 250 : speed;
 
             fetch("/api/room", {
@@ -137,49 +135,63 @@ export default function TypingInput({
             });
         };
 
-        // Send immediately on start (will send 0 WPM, 0 correct words)
         sendWpmData();
-
-        // Then send every 10 seconds
         const interval = setInterval(sendWpmData, 10000);
 
         return () => clearInterval(interval);
     }, [startTime, session?.user?.id, overLimit, roomId]);
 
+    /* -------------------- ✅ Push Character Performance on Completion -------------------- */
+    useEffect(() => {
+        // Check if user completed the paragraph
+        if (input.length >= normalizedParagraph.length && session?.user?.id && startTime) {
+            console.log('✅ Paragraph completed - pushing character performance');
+            pushCharacterPerformance(roomId, session.user.id).catch(err => {
+                console.error('❌ Failed to push character performance on completion:', err);
+            });
+        }
+    }, [input.length, normalizedParagraph.length, session?.user?.id, roomId, startTime]);
 
-    /* -------------------- Input Handling -------------------- */
-
+    /* -------------------- ✅ FIXED: Input Handling -------------------- */
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (overLimit) return;
 
         const value = e.target.value;
         const now = Date.now();
+        const previousLength = lastInputLengthRef.current;
 
-        // start typing
+        // ✅ Initialize timing on first keystroke
         if (!startTime && value.length > 0) {
             setStartTime(now);
-            lastKeyTimeRef.current = now;
             onTypingStatusChange?.(true);
         }
 
-        // ✅ record ONLY forward typing (ignore backspace)
-        if (
-            startTime &&
-            lastKeyTimeRef.current &&
-            value.length === input.length + 1
-        ) {
+        // ✅ Record character ONLY on forward typing (not backspace/paste)
+        if (value.length === previousLength + 1) {
             const index = value.length - 1;
             const char = value[index];
-            const latency = now - lastKeyTimeRef.current;
+
+            // ✅ Calculate latency properly
+            const latency = lastKeyTimeRef.current ? now - lastKeyTimeRef.current : 0;
             const isError = char !== normalizedParagraph[index];
-            // check fuction is called or not 
-            console.log('Recording character:', { char, latency, isError });
+
+            console.log('📝 Recording character:', {
+                char,
+                latency,
+                isError,
+                index,
+                expected: normalizedParagraph[index]
+            });
+
             recordCharacter(char, latency, isError);
-            lastKeyTimeRef.current = now;
         }
 
-        // reset when cleared
-        if (startTime && value.length === 0) {
+        // ✅ Always update lastKeyTime after any input
+        lastKeyTimeRef.current = now;
+        lastInputLengthRef.current = value.length;
+
+        // Reset when cleared
+        if (value.length === 0 && startTime) {
             setStartTime(null);
             setWpm(0);
             setCorrectWordsCount(0);
@@ -192,7 +204,6 @@ export default function TypingInput({
     };
 
     /* -------------------- UI -------------------- */
-
     return (
         <div className="space-y-4 bg-[#10151a] p-6 rounded-xl border border-green-900/40">
             <div

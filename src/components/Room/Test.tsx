@@ -75,6 +75,9 @@ export default function TypingTestPage() {
                     roomData.status === "FINISHED" ||
                     roomData.status === "EXPIRED"
                 ) {
+                    if (roomId && session?.user?.id) {
+                        await pushCharacterPerformance(roomId, session.user.id);
+                    }
                     if (!hasRedirectedRef.current) {
                         hasRedirectedRef.current = true;
                         toast.info("The test has already ended. Redirecting to results.");
@@ -120,6 +123,9 @@ export default function TypingTestPage() {
                         !hasRedirectedRef.current
                     ) {
                         hasRedirectedRef.current = true;
+                        if (roomId && session?.user?.id) {
+                            await pushCharacterPerformance(roomId, session.user.id);
+                        }
                         router.push(`/room/${roomId}/result`);
                     }
                 }
