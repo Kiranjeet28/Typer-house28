@@ -8,6 +8,7 @@ export async function pushCharacterPerformance(
     typingSpeedId: string,
     userId: string
 ) {
+    console.log("Pushing character performance data...");
     if (!hasCharacterData()) return;
 
     const characters = getFinalCharacterPerformance();

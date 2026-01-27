@@ -213,7 +213,6 @@ export default function WaitingRoomPage() {
         
         try {
             const requestBody = { action: 'start', id: roomId,status:'IN_GAME' };
-            console.log('Start game request body:', requestBody);
             
             const res = await fetch(`/api/room`, {
                 method: 'POST',
