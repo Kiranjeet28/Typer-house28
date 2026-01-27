@@ -52,7 +52,7 @@ export function LeaveRoomButton({ id: roomId }: { id: string }) {
             await new Promise(resolve => setTimeout(resolve, 150));
 
             // Navigate to home
-            router.push("/");
+            router.push(`/room/${roomId}/result`);
 
         } catch (err) {
             console.error("Failed to leave room:", err);

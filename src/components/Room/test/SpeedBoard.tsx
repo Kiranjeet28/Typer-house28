@@ -35,7 +35,7 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
         isFetchingRef.current = true;
 
         try {
-            const response = await fetch(`/api/room?id=${roomId}&action=getSpeeds`, {
+            const response = await fetch(`/api/room?id=${roomId}&action=speed`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
