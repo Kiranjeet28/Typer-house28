@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import RestrictedTextarea from "./textarea";
-import { recordCharacter } from "@/lib/store/characterStore";
+import { recordCharacter,getFinalCharacterPerformance} from "@/lib/store/characterStore";
 import { getColorizedParagraph } from "./getColorizedParagraph";
 
 interface TypingInputProps {
@@ -53,7 +53,8 @@ export default function TypingInput({
         return count;
     };
 
-
+    /*** */
+    console.log('Character Performance:', getFinalCharacterPerformance());
     /* -------------------- Focus & Scroll -------------------- */
 
     useEffect(() => {
@@ -120,12 +121,6 @@ export default function TypingInput({
             // Cap at reasonable maximum
             const finalSpeed = speed > 250 ? 250 : speed;
 
-            console.log('📤 Sending WPM data:', {
-                wpm: finalSpeed,
-                correctWords: currentCorrectWords,
-                duration: getDurationSeconds()
-            });
-
             fetch("/api/room", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -177,7 +172,8 @@ export default function TypingInput({
             const char = value[index];
             const latency = now - lastKeyTimeRef.current;
             const isError = char !== normalizedParagraph[index];
-
+            // check fuction is called or not 
+            console.log('Recording character:', { char, latency, isError });
             recordCharacter(char, latency, isError);
             lastKeyTimeRef.current = now;
         }
