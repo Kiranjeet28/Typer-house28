@@ -3,9 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import RestrictedTextarea from "./textarea";
-import { recordCharacter, getFinalCharacterPerformance } from "@/lib/store/characterStore";
+import { recordCharacter } from "@/lib/store/characterStore";
 import { getColorizedParagraph } from "./getColorizedParagraph";
-import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 
 interface TypingInputProps {
     roomId: string;
@@ -29,7 +28,6 @@ export default function TypingInput({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastKeyTimeRef = useRef<number | null>(null);
     const correctWordsRef = useRef(0);
-    const lastInputLengthRef = useRef(0); // ✅ Track previous input length
 
     const { data: session } = useSession();
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
@@ -42,21 +40,40 @@ export default function TypingInput({
     const getCorrectWordsCount = (typed: string) => {
         if (!typed.trim()) return 0;
 
-        const typedWords = typed.trim().replace(/\s+/g, " ").split(" ");
-        const originalWords = normalizedParagraph.split(" ");
-
-        let count = 0;
-
-        for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
-            if (typedWords[i] === originalWords[i]) {
-                count++;
+        const typedText = typed.trim();
+        const originalText = normalizedParagraph.trim();
+        
+        // Method 1: Character-based calculation for partial progress
+        let correctChars = 0;
+        const minLength = Math.min(typedText.length, originalText.length);
+        
+        for (let i = 0; i < minLength; i++) {
+            if (typedText[i] === originalText[i]) {
+                correctChars++;
             }
         }
-        return count;
+        
+        // Method 2: Count complete correct words for accuracy
+        const typedWords = typedText.replace(/\s+/g, " ").split(" ");
+        const originalWords = originalText.replace(/\s+/g, " ").split(" ");
+        
+        let completeCorrectWords = 0;
+        for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
+            if (typedWords[i] === originalWords[i]) {
+                completeCorrectWords++;
+            }
+        }
+        
+        // Hybrid approach: Use the greater of the two methods
+        // This gives credit for both complete words AND partial progress
+        const charBasedWords = correctChars / 5; // Standard WPM calculation (5 chars = 1 word)
+        
+        return Math.max(
+            completeCorrectWords,
+            Math.floor(charBasedWords)
+        );
     };
 
-    /* -------------------- Debug Log -------------------- */
-    console.log('Character Performance:', getFinalCharacterPerformance());
 
     /* -------------------- Focus & Scroll -------------------- */
 
@@ -89,38 +106,46 @@ export default function TypingInput({
     useEffect(() => {
         const count = getCorrectWordsCount(input);
         setCorrectWordsCount(count);
-        correctWordsRef.current = count;
-    }, [input, normalizedParagraph]);
+        correctWordsRef.current = count; // Keep ref in sync
+    }, [input, normalizedParagraph]); // Add normalizedParagraph dependency
 
     /* -------------------- WPM Calculation (Fast UI Update) -------------------- */
+
     useEffect(() => {
-        if (!input || !startTime || overLimit) return;
+        if (!input || !startTime || overLimit || correctWordsCount === 0) return;
 
         const minutes = (Date.now() - startTime) / 60000;
         if (minutes <= 0) return;
 
-        const speed = correctWordsCount > 0
-            ? Math.round(correctWordsCount / minutes)
-            : 0;
+        const speed = Math.round(correctWordsCount / minutes);
+        if (speed <= 0 || speed > 250) return;
 
-        // Cap at reasonable maximum, but allow 0 WPM
-        const finalSpeed = speed > 250 ? 250 : speed;
-        setWpm(finalSpeed);
+        setWpm(speed);
     }, [correctWordsCount, startTime, overLimit, input]);
 
-    /* -------------------- WPM API Call (Every 10 seconds) -------------------- */
+    /* -------------------- WPM API Call (Every 10 seconds on change) -------------------- */
+
     useEffect(() => {
         if (!startTime || !session?.user?.id || overLimit) return;
 
         const sendWpmData = () => {
+            // Always send current values (including 0s at start)
             const currentCorrectWords = correctWordsRef.current;
             const minutes = (Date.now() - startTime) / 60000;
-
-            const speed = minutes > 0 && currentCorrectWords > 0
-                ? Math.round(currentCorrectWords / minutes)
+            
+            // Calculate speed (0 if no time has passed or no words)
+            const speed = minutes > 0 && currentCorrectWords > 0 
+                ? Math.round(currentCorrectWords / minutes) 
                 : 0;
 
+            // Cap at reasonable maximum
             const finalSpeed = speed > 250 ? 250 : speed;
+
+            console.log('📤 Sending WPM data:', { 
+                wpm: finalSpeed, 
+                correctWords: currentCorrectWords, 
+                duration: getDurationSeconds() 
+            });
 
             fetch("/api/room", {
                 method: "POST",
@@ -138,63 +163,48 @@ export default function TypingInput({
             });
         };
 
+        // Send immediately on start (will send 0 WPM, 0 correct words)
         sendWpmData();
+
+        // Then send every 10 seconds
         const interval = setInterval(sendWpmData, 10000);
 
         return () => clearInterval(interval);
     }, [startTime, session?.user?.id, overLimit, roomId]);
 
-    /* -------------------- ✅ Push Character Performance on Completion -------------------- */
-    useEffect(() => {
-        // Check if user completed the paragraph
-        if (input.length >= normalizedParagraph.length && session?.user?.id && startTime) {
-            console.log('✅ Paragraph completed - pushing character performance');
-            pushCharacterPerformance(roomId, session.user.id).catch(err => {
-                console.error('❌ Failed to push character performance on completion:', err);
-            });
-        }
-    }, [input.length, normalizedParagraph.length, session?.user?.id, roomId, startTime]);
 
-    /* -------------------- ✅ FIXED: Input Handling -------------------- */
+    /* -------------------- Input Handling -------------------- */
+
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (overLimit) return;
 
         const value = e.target.value;
         const now = Date.now();
-        const previousLength = lastInputLengthRef.current;
 
-        // ✅ Initialize timing on first keystroke
+        // start typing
         if (!startTime && value.length > 0) {
             setStartTime(now);
+            lastKeyTimeRef.current = now;
             onTypingStatusChange?.(true);
         }
 
-        // ✅ Record character ONLY on forward typing (not backspace/paste)
-        if (value.length === previousLength + 1) {
+        // ✅ record ONLY forward typing (ignore backspace)
+        if (
+            startTime &&
+            lastKeyTimeRef.current &&
+            value.length === input.length + 1
+        ) {
             const index = value.length - 1;
             const char = value[index];
-
-            // ✅ Calculate latency properly
-            const latency = lastKeyTimeRef.current ? now - lastKeyTimeRef.current : 0;
+            const latency = now - lastKeyTimeRef.current;
             const isError = char !== normalizedParagraph[index];
 
-            console.log('📝 Recording character:', {
-                char,
-                latency,
-                isError,
-                index,
-                expected: normalizedParagraph[index]
-            });
-
             recordCharacter(char, latency, isError);
+            lastKeyTimeRef.current = now;
         }
 
-        // ✅ Always update lastKeyTime after any input
-        lastKeyTimeRef.current = now;
-        lastInputLengthRef.current = value.length;
-
-        // Reset when cleared
-        if (value.length === 0 && startTime) {
+        // reset when cleared
+        if (startTime && value.length === 0) {
             setStartTime(null);
             setWpm(0);
             setCorrectWordsCount(0);
@@ -207,6 +217,7 @@ export default function TypingInput({
     };
 
     /* -------------------- UI -------------------- */
+
     return (
         <div className="space-y-4 bg-[#10151a] p-6 rounded-xl border border-green-900/40">
             <div
