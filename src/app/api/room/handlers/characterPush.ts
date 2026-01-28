@@ -1,31 +1,37 @@
-import { NextApiRequest, NextApiResponse } from "next"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server";
 
-export default async function characterPushHandler(
-    body: any
-) {
+export default async function characterPushHandler(body: any) {
     console.log("=== CHARACTER PUSH HANDLER ===");
     console.log("Received body:", body);
 
-    // Extract values (roomId is misleadingly named typingSpeedId)
-    const roomId = body.typingSpeedId;  // This is actually roomId
+    // Extract values - the parameter is named typingSpeedId but it's actually roomId
+    const roomId = body.typingSpeedId;  // ✅ This is actually the roomId being sent
     const userId = body.userId;
     const characters = body.characters;
 
+    // Validate inputs
     if (!roomId || !userId || !Array.isArray(characters)) {
-        console.error("❌ Missing fields:", { roomId, userId, characters: !!characters });
+        console.error("❌ Missing required fields:", { roomId, userId, hasCharacters: !!characters });
         return NextResponse.json(
             {
-                error: 'Missing required fields',
+                error: 'Missing required fields: roomId, userId, or characters',
                 code: 'BAD_REQUEST',
             },
             { status: 400 }
         );
     }
 
+    if (characters.length === 0) {
+        console.warn("⚠️ Characters array is empty");
+        return NextResponse.json(
+            { error: 'Characters array is empty' },
+            { status: 400 }
+        );
+    }
+
     try {
-        // ✅ STEP 1: Find or create the actual TypingSpeed record
+        // ✅ STEP 1: Find the TypingSpeed record using roomId and userId
         let typingSpeed = await prisma.typingSpeed.findUnique({
             where: {
                 userId_roomId: {
@@ -35,8 +41,9 @@ export default async function characterPushHandler(
             },
         });
 
+        // ✅ STEP 2: If not found, create a new TypingSpeed record
         if (!typingSpeed) {
-            console.log("📝 Creating TypingSpeed record for user:", userId);
+            console.log("📝 TypingSpeed record not found. Creating new one for user:", userId);
 
             typingSpeed = await prisma.typingSpeed.create({
                 data: {
@@ -49,32 +56,32 @@ export default async function characterPushHandler(
                 },
             });
 
-            console.log("✅ Created TypingSpeed:", typingSpeed.id);
+            console.log("✅ Created new TypingSpeed record with ID:", typingSpeed.id);
         } else {
-            console.log("✅ Found existing TypingSpeed:", typingSpeed.id);
+            console.log("✅ Found existing TypingSpeed record with ID:", typingSpeed.id);
         }
 
-        // ✅ STEP 2: Save character performance using the actual typingSpeedId
+        // ✅ STEP 3: Save character performance data using the actual TypingSpeed record ID
         await prisma.$transaction([
-            // 🔥 REMOVE existing character rows for this session
+            // Delete existing character performance for this typing session
             prisma.characterPerformance.deleteMany({
-                where: { typingSpeedId: typingSpeed.id }  // ✅ Use actual DB record ID
+                where: { typingSpeedId: typingSpeed.id }  // ✅ Using the actual DB record ID
             }),
 
-            // 🔥 INSERT exactly ONE row per character
+            // Insert new character performance records
             prisma.characterPerformance.createMany({
                 data: characters.map((c: any) => ({
                     char: c.char,
                     avgTimePerChar: c.avgTimePerChar,
                     maxTimePerChar: c.maxTimePerChar,
                     errorFrequency: c.errorFrequency,
-                    typingSpeedId: typingSpeed.id,  // ✅ Use actual DB record ID
+                    typingSpeedId: typingSpeed.id,  // ✅ Using the actual DB record ID
                     userId: userId
                 }))
             })
         ]);
 
-        console.log("✅ Saved", characters.length, "character records");
+        console.log("✅ Successfully saved", characters.length, "character performance records");
 
         return NextResponse.json(
             {
@@ -86,16 +93,18 @@ export default async function characterPushHandler(
             { status: 200 }
         );
     } catch (err: any) {
-        console.error("❌ Database error:", err);
+        console.error("❌ Database error in characterPushHandler:", err);
         console.error("Error details:", {
             message: err.message,
             code: err.code,
-            meta: err.meta
+            meta: err.meta,
+            stack: err.stack
         });
 
         return NextResponse.json({
             error: "Failed to save character performance",
-            details: err.message
+            details: err.message,
+            code: err.code
         }, { status: 500 });
     }
 }
