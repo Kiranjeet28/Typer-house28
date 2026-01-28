@@ -2,66 +2,46 @@
 import TypingTestPage from '@/components/Room/Test'
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
-import { useEffect } from 'react'
-import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
+import { useEffect, useRef } from 'react'
 
 function page() {
     const { id: rawId } = useParams();
     const roomId = Array.isArray(rawId) ? rawId[0] : rawId;
     const { data: session } = useSession();
 
+    // ✅ Track if we've already called the API (prevents duplicate calls)
+    const hasCalledRef = useRef(false);
+
     useEffect(() => {
         if (!roomId || !session?.user?.id) return;
 
         const userId = session.user.id as string;
 
-        const handleUnload = (e: BeforeUnloadEvent) => {
-            // Use sendBeacon for guaranteed delivery
-            const data = JSON.stringify({
-                roomId,
-                userId,
-                timestamp: Date.now()
+        const requestBody = { action: 'start', id: roomId, status: 'FINISHED' };
+
+        // ✅ Handle page unload (tab close, browser close, refresh)
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            // Prevent duplicate calls
+            if (hasCalledRef.current) return;
+            hasCalledRef.current = true;
+
+            // Use sendBeacon for guaranteed delivery even as page closes
+            const data = new Blob([JSON.stringify(requestBody)], {
+                type: 'application/json'
             });
 
-            // sendBeacon is synchronous and guaranteed to send even as page closes
-            const beaconUrl = `/api/character-performance`;
-            navigator.sendBeacon(beaconUrl, data);
-
-            // Also try pushCharacterPerformance as backup
-            void pushCharacterPerformance(roomId, userId);
+            // sendBeacon is synchronous and works even when page is closing
+            navigator.sendBeacon('/api/room', data);
         };
 
-        const handleVisibilityChange = () => {
-            // When page becomes hidden (tab switch, minimize, etc.)
-            if (document.hidden) {
-                void pushCharacterPerformance(roomId, userId);
-            }
-        };
+        // ✅ Register the event listener
+        window.addEventListener('beforeunload', handleBeforeUnload);
 
-        const handlePageHide = () => {
-            // Fires when navigating away, closing tab, etc.
-            const data = JSON.stringify({
-                roomId,
-                userId,
-                timestamp: Date.now()
-            });
-            navigator.sendBeacon(`/api/character-performance`, data);
-        };
-
-        // Multiple event listeners for comprehensive coverage
-        window.addEventListener("beforeunload", handleUnload);
-        window.addEventListener("pagehide", handlePageHide);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
+        // ✅ Cleanup
         return () => {
-            // Cleanup on unmount (route change within app)
-            void pushCharacterPerformance(roomId, userId);
-
-            window.removeEventListener("beforeunload", handleUnload);
-            window.removeEventListener("pagehide", handlePageHide);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [roomId, session]);
+    }, [roomId, session?.user?.id]);
 
     return (
         <TypingTestPage />
