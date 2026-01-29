@@ -7,20 +7,32 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        // Add some logging to debug
+        // Validate that action exists
+        if (!body.action) {
+            console.error('Missing action in request body');
+            throw new AppError(400, 'Missing action parameter');
+        }
+
+        console.log('Processing action:', body.action);
+
         switch (body.action) {
-            case 'get-room':
+            case 'get-room': {
                 const userData = await getRoom(body);
                 return NextResponse.json({
                     success: true,
                     data: userData
                 });
-            case "get-analysis":
-                const analysisResult = await getAnalysis(body)
-                return NextResponse.json({ success: true, data: analysisResult })
+            }
+            case "get-analysis": {
+                const analysisResult = await getAnalysis(body);
+                return NextResponse.json({
+                    success: true,
+                    data: analysisResult
+                });
+            }
             default:
-                console.log('Invalid action received:', body.action);
-                throw new AppError(400, 'Invalid action');
+                console.error('Invalid action received:', body.action);
+                throw new AppError(400, `Invalid action: ${body.action}`);
         }
     } catch (error) {
         console.error('Route handler error:', error);

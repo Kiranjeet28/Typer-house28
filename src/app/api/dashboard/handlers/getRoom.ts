@@ -1,23 +1,24 @@
-import { prisma } from "@/lib/prisma"
-import { getRoomSchema } from "../schema"
+import { prisma } from "@/lib/prisma";
+import { getRoomSchema } from "../schema";
 
 export async function getRoom(body: unknown) {
     try {
-        const result = getRoomSchema.safeParse(body)
+        const result = getRoomSchema.safeParse(body);
         if (!result.success) {
-            throw new Error("Invalid data format")
+            console.error("Schema validation failed:", result.error);
+            throw new Error("Invalid data format");
         }
 
-        const { email } = result.data
+        const { email } = result.data;
 
         // 1. Get user ID only (fast)
         const user = await prisma.user.findUnique({
             where: { email },
             select: { id: true },
-        })
+        });
 
         if (!user) {
-            throw new Error("User not found")
+            throw new Error("User not found");
         }
 
         // 2. Get all rooms user participated in (created OR joined)
@@ -31,7 +32,11 @@ export async function getRoom(body: unknown) {
             },
             include: {
                 creator: {
-                    select: { id: true, email: true },
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                    },
                 },
                 members: {
                     select: {
@@ -39,16 +44,20 @@ export async function getRoom(body: unknown) {
                         role: true,
                     },
                 },
-                typingSpeeds: true,
+                typingSpeeds: {
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                },
             },
             orderBy: {
                 createdAt: "desc",
             },
-        })
+        });
 
-        return rooms
+        return rooms;
     } catch (error) {
-        console.error("getRoom error:", error)
-        throw error
+        console.error("getRoom error:", error);
+        throw error;
     }
 }
