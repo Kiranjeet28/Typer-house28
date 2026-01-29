@@ -14,11 +14,11 @@ export const sendLeaveBeacon = (id: string, session: any) => {
 
     navigator.sendBeacon("/api/room", payload);
 };
-export const getTextByTimeLimit = (seconds: number, customText?: string) => {
+export const getTextByTimeLimit = (textLength: string, customText?: string) => {
     if (customText?.trim()) return customText;
 
-    if (seconds <= 60) return smallText;
-    if (seconds <= 180) return mediumText;
-    if (seconds <= 300) return largeText;
+    if (textLength === "SHORT") return smallText;
+    if (textLength === "MEDIUM") return mediumText;
+    if (textLength === "HARD") return largeText;
     return tenMinuteText || customParagraphs.join(" ");
 };

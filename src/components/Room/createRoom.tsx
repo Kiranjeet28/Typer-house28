@@ -20,7 +20,6 @@ import {
 import { toast } from "sonner";
 import { ShineBorder } from "../magicui/shine-border";
 import { BottomGradient } from "./joinRoom";
-
 export default function CreateRoomForm() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -147,31 +146,53 @@ export default function CreateRoomForm() {
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        {/* Time Limit */}
+                        {/* Text Type */}
                         <div className="flex gap-2 items-center space-y-2">
-                            <Label htmlFor="timeLimit">Time Limit</Label>
+                            <Label htmlFor="textType">Text Type</Label>
                             <Select
                                 disabled={loading}
-                                value={form.timeLimit.toString()}
+                                value={form.textLength}
                                 onValueChange={(value) =>
                                     setForm((prev) => ({
                                         ...prev,
-                                        timeLimit: Number(value),
+                                        textLength: value,
                                     }))
                                 }
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select time limit" />
+                                    <SelectValue placeholder="Text Type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="60">1 minute</SelectItem>
-                                    <SelectItem value="180">3 minutes</SelectItem>
-                                    <SelectItem value="300">5 minutes</SelectItem>
-                                    <SelectItem value="600">10 minutes</SelectItem>
+                                    <SelectItem value="SHORT">SIMPLE</SelectItem>
+                                    <SelectItem value="MEDIUM">MEDIUM</SelectItem>
+                                    <SelectItem value="HARD">HARD</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
+                        {/* Time Limit */}
+                            <div className="flex gap-2 items-center space-y-2">
+                                <Label htmlFor="timeLimit">Time Limit</Label>
+                                <Select
+                                    disabled={loading}
+                                    value={form.timeLimit.toString()}
+                                    onValueChange={(value) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            timeLimit: Number(value),
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select time limit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="60">1 minute</SelectItem>
+                                        <SelectItem value="180">3 minutes</SelectItem>
+                                        <SelectItem value="300">5 minutes</SelectItem>
+                                        <SelectItem value="600">10 minutes</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                     </div>
 
                     {/* Submit */}

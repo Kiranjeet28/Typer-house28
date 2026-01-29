@@ -19,7 +19,7 @@ export default function TypingTestPage() {
     const router = useRouter();
     const { state, dispatch } = useRoomContext();
     const { data: session } = useSession();
-
+    const [textLength, setTextLength] = useState("MEDIUM");
     const [timeLimit, setTimeLimit] = useState(60);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export default function TypingTestPage() {
                 const roomData: Room = await res.json();
                 dispatch({ type: "SET_ROOM", payload: roomData });
                 setTimeLimit(roomData.timeLimit || 60);
-
+                setTextLength(roomData.textLength || "MEDIUM");
                 if (
                     roomData.status === "FINISHED" ||
                     roomData.status === "EXPIRED"
@@ -190,7 +190,7 @@ export default function TypingTestPage() {
     }
 
     const paragraphText = getTextByTimeLimit(
-        timeLimit,
+        textLength,
         state.room.customText
     );
 
