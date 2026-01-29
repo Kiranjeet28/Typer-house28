@@ -17,15 +17,18 @@ interface TypingSpeedData {
     createdAt: string
     roomName: string
     date: string
-    accuracy: number
 }
 
 interface AnalysisData {
+    user: {
+        id: string
+        email: string | null
+        name: string | null
+    }
     typingSpeeds: TypingSpeedData[]
     totalSessions: number
     averageWpm: number
     bestWpm: number
-    averageAccuracy: number
 }
 
 export default function Analysis() {
@@ -84,6 +87,22 @@ export default function Analysis() {
             fetchAnalysis()
         }
     }, [session?.user?.email])
+
+    // Calculate average accuracy from typing speeds
+    const calculateAverageAccuracy = () => {
+        if (!analysisData?.typingSpeeds.length) return 0
+
+        const totalAccuracy = analysisData.typingSpeeds.reduce((sum, ts) => {
+            // Calculate accuracy: correct words / (correct words + incorrect chars count) * 100
+            const totalChars = ts.correctword + (ts.incorrectchar?.length || 0)
+            const accuracy = totalChars > 0 ? (ts.correctword / totalChars) * 100 : 0
+            return sum + accuracy
+        }, 0)
+
+        return Math.round(totalAccuracy / analysisData.typingSpeeds.length)
+    }
+
+    const averageAccuracy = calculateAverageAccuracy()
 
     if (status === "loading") {
         return (
@@ -202,7 +221,7 @@ export default function Analysis() {
                                     <Target className="h-5 w-5 lg:h-6 lg:w-6 text-purple-400" />
                                 </div>
                                 <div className="text-2xl lg:text-3xl xl:text-4xl font-bold text-purple-500 mb-1">
-                                    {Math.round(analysisData.averageAccuracy)}%
+                                    {averageAccuracy}%
                                 </div>
                                 <div className="text-xs lg:text-sm text-gray-400">Avg Accuracy</div>
                             </div>
@@ -212,12 +231,12 @@ export default function Analysis() {
                         <div className="w-full">
                             <LevelProgress
                                 averageWpm={analysisData.averageWpm}
-                                averageAccuracy={analysisData.averageAccuracy}
+                                averageAccuracy={averageAccuracy}
                                 totalSessions={analysisData.totalSessions}
                             />
                         </div>
 
-                        
+
                     </div>
                 )}
             </div>

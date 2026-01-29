@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter, usePathname } from "next/navigation"
-import { RoomCard } from "../Rooms/room-card" 
-import { DashboardStats } from "./dashboard-stats" 
+import { RoomCard } from "../Rooms/room-card"
+import { DashboardStats } from "./dashboard-stats"
 import { UserProfileCard } from "./user-profile-card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Loader2, LogOut, BarChart3 } from "lucide-react"
@@ -27,21 +27,11 @@ interface Room {
     typingSpeeds: TypingSpeed[]
 }
 
-interface UserData {
-    id: string
-    name?: string
-    email?: string
-    image?: string
-    username?: string
-    createdAt: string
-    createdRooms: Room[]
-}
-
 export default function DashboardPage() {
     const { data: session, status } = useSession()
     const router = useRouter()
     const pathname = usePathname()
-    const [userData, setUserData] = useState<UserData | null>(null)
+    const [rooms, setRooms] = useState<Room[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -82,7 +72,8 @@ export default function DashboardPage() {
                 throw new Error(result.error || "Failed to fetch rooms")
             }
 
-            setUserData(result.data)
+            // The API returns an array of rooms directly
+            setRooms(Array.isArray(result.data) ? result.data : [])
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred")
         } finally {
@@ -115,12 +106,16 @@ export default function DashboardPage() {
         return null
     }
 
-    // Calculate stats
-    const totalRooms = userData?.createdRooms.length || 0
-    const allTypingSpeeds = userData?.createdRooms.flatMap((room) => room.typingSpeeds) || []
+    // Calculate stats from rooms array
+    const totalRooms = rooms.length
+    const allTypingSpeeds = rooms.flatMap((room) => room.typingSpeeds || [])
     const totalGames = allTypingSpeeds.length
-    const avgWpm = totalGames > 0 ? Math.round(allTypingSpeeds.reduce((sum, ts) => sum + ts.wpm, 0) / totalGames) : 0
-    const bestWpm = totalGames > 0 ? Math.max(...allTypingSpeeds.map((ts) => ts.wpm)) : 0
+    const avgWpm = totalGames > 0
+        ? Math.round(allTypingSpeeds.reduce((sum, ts) => sum + ts.wpm, 0) / totalGames)
+        : 0
+    const bestWpm = totalGames > 0
+        ? Math.max(...allTypingSpeeds.map((ts) => ts.wpm))
+        : 0
 
     if (loading) {
         return (
@@ -161,10 +156,10 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-green-400 mb-2">Typing Dashboard</h1>
-                        <p className="text-gray-400">Welcome back, {userData?.name || session?.user?.name || "User"}!</p>
+                        <p className="text-gray-400">Welcome back, {session?.user?.name || "User"}!</p>
                     </div>
                     <div className="flex items-center gap-2">
-                       
+
                         <Button
                             onClick={fetchRooms}
                             variant="outline"
@@ -174,29 +169,29 @@ export default function DashboardPage() {
                             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                             Refresh
                         </Button>
-                        {!pathname.endsWith("/room") && 
+                        {!pathname.endsWith("/room") &&
                             (
-                            <Button
-                                onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-                                variant="outline"
-                                className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent"
-                            >
-                                <LogOut className="h-4 w-4 mr-2" />
-                                Sign Out
-                            </Button>
-                        )}
-                       
+                                <Button
+                                    onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                                    variant="outline"
+                                    className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent"
+                                >
+                                    <LogOut className="h-4 w-4 mr-2" />
+                                    Sign Out
+                                </Button>
+                            )}
+
                     </div>
                 </div>
 
-                {userData && (
+                {session?.user && (
                     <UserProfileCard
                         user={{
-                            name: userData.name || session?.user?.name,
-                            email: userData.email || session?.user?.email,
-                            image: userData.image || session?.user?.image,
-                            username: userData.username,
-                            createdAt: userData.createdAt,
+                            name: session.user.name,
+                            email: session.user.email,
+                            image: session.user.image,
+                            username: undefined,
+                            createdAt: new Date().toISOString(), // Fallback
                         }}
                         stats={{
                             totalRooms,
@@ -207,9 +202,14 @@ export default function DashboardPage() {
                     />
                 )}
 
-                <DashboardStats totalRooms={totalRooms} totalGames={totalGames} avgWpm={avgWpm} bestWpm={bestWpm} />
+                <DashboardStats
+                    totalRooms={totalRooms}
+                    totalGames={totalGames}
+                    avgWpm={avgWpm}
+                    bestWpm={bestWpm}
+                />
 
-               
+
 
             </div>
         </div>
