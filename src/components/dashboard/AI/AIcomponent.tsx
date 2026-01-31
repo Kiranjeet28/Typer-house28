@@ -147,7 +147,7 @@ export default function RoomDashboard() {
                         {riskyKeys.map((key) => (
                             <div
                                 key={key.char}
-                                className="flex items-center gap-3 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors min-w-[140px]"
+                                className=""
                             >
                                 {/* Key Display */}
                                 <div className="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-lg">
