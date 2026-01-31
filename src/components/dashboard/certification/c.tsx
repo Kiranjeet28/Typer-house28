@@ -8,6 +8,26 @@ import { Badge } from "@/components/ui/badge"
 import { Download, Award, Zap, Target, TrendingUp, Loader2, AlertCircle } from "lucide-react"
 import { generatePDF } from "@/lib/dashboard/pdf-generator"
 
+interface TypingSpeed {
+    id: string
+    wpm: number
+    correctword: number
+    incorrectchar?: string[]
+    createdAt: string
+}
+
+interface Room {
+    id: string
+    name: string
+    description?: string
+    status: string
+    createdAt: string
+    isCreator?: boolean
+    isMember?: boolean
+    userRole?: string
+    typingSpeeds: TypingSpeed[]
+}
+
 interface CertificationData {
     wpm: number
     accuracy: number
@@ -20,7 +40,7 @@ interface CertificationData {
 export default function CertificationPage() {
     const { data: session } = useSession()
     const [isGenerating, setIsGenerating] = useState(false)
-    const [userData, setUserData] = useState<any>(null)
+    const [userData, setUserData] = useState<Room[] | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const certificateRef = useRef<HTMLDivElement>(null)
@@ -30,6 +50,8 @@ export default function CertificationPage() {
             if (!session?.user?.email) return
 
             try {
+                console.log("🔍 Fetching certification data for:", session.user.email)
+
                 const response = await fetch("/api/dashboard", {
                     method: "POST",
                     headers: {
@@ -42,11 +64,17 @@ export default function CertificationPage() {
                 })
 
                 const result = await response.json()
+                console.log("📦 API Response:", result)
+
                 if (result.success) {
+                    console.log("✅ Data structure:", Array.isArray(result.data) ? "ARRAY" : "OBJECT")
+                    console.log("✅ Number of rooms:", result.data?.length)
                     setUserData(result.data)
+                } else {
+                    throw new Error(result.error || "Failed to fetch data")
                 }
             } catch (error) {
-                console.error("Failed to fetch user data:", error)
+                console.error("💥 Failed to fetch user data:", error)
                 setError("Failed to load user data")
             } finally {
                 setLoading(false)
@@ -56,8 +84,10 @@ export default function CertificationPage() {
         fetchUserData()
     }, [session?.user?.email])
 
-    const calculateStats = () => {
-        if (!userData?.createdRooms) {
+    const calculateStats = (): CertificationData => {
+        // Check if userData is a valid array
+        if (!userData || !Array.isArray(userData) || userData.length === 0) {
+            console.log("⚠️ No user data available, returning default stats")
             return {
                 wpm: 0,
                 accuracy: 0,
@@ -68,20 +98,41 @@ export default function CertificationPage() {
             }
         }
 
-        const allTypingSpeeds = userData.createdRooms.flatMap((room: any) => room.typingSpeeds) || []
+        console.log("📊 Calculating stats from", userData.length, "rooms")
+
+        // Flatten all typing speeds from all rooms
+        const allTypingSpeeds = userData.flatMap((room) => room.typingSpeeds || [])
+        console.log("📈 Total typing speeds:", allTypingSpeeds.length)
+
+        if (allTypingSpeeds.length === 0) {
+            console.log("⚠️ No typing speeds found")
+            return {
+                wpm: 0,
+                accuracy: 0,
+                totalWords: 0,
+                totalTests: 0,
+                level: 1,
+                rank: "Beginner Typist",
+            }
+        }
+
         const totalTests = allTypingSpeeds.length
-        const avgWpm =
-            totalTests > 0 ? Math.round(allTypingSpeeds.reduce((sum: number, ts: any) => sum + ts.wpm, 0) / totalTests) : 0
-        const totalWords = allTypingSpeeds.reduce((sum: number, ts: any) => sum + ts.correctword, 0)
+        const avgWpm = Math.round(
+            allTypingSpeeds.reduce((sum, ts) => sum + ts.wpm, 0) / totalTests
+        )
+        const totalWords = allTypingSpeeds.reduce((sum, ts) => sum + ts.correctword, 0)
 
         // Calculate accuracy based on correct words vs total characters
-        const totalCorrectWords = allTypingSpeeds.reduce((sum: number, ts: any) => sum + ts.correctword, 0)
+        const totalCorrectWords = allTypingSpeeds.reduce((sum, ts) => sum + ts.correctword, 0)
         const totalIncorrectChars = allTypingSpeeds.reduce(
-            (sum: number, ts: any) => sum + (ts.incorrectchar?.length || 0),
-            0,
+            (sum, ts) => sum + (ts.incorrectchar?.length || 0),
+            0
         )
+
         const accuracy =
-            totalCorrectWords > 0 ? Math.round((totalCorrectWords / (totalCorrectWords + totalIncorrectChars)) * 100) : 0
+            totalCorrectWords > 0
+                ? Math.round((totalCorrectWords / (totalCorrectWords + totalIncorrectChars)) * 100)
+                : 0
 
         // Determine level and rank based on WPM
         const level = Math.floor(avgWpm / 10) + 1
@@ -92,7 +143,7 @@ export default function CertificationPage() {
         else if (avgWpm >= 40) rank = "Intermediate Typist"
         else if (avgWpm >= 20) rank = "Novice Typist"
 
-        return {
+        const stats = {
             wpm: avgWpm,
             accuracy: Math.min(accuracy, 100),
             totalWords,
@@ -100,6 +151,9 @@ export default function CertificationPage() {
             level: Math.min(level, 10),
             rank,
         }
+
+        console.log("✅ Calculated stats:", stats)
+        return stats
     }
 
     const certData = calculateStats()
@@ -152,7 +206,7 @@ export default function CertificationPage() {
 
     if (!session) {
         return (
-            <div className="min-h-screen  flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <Card className="w-full max-w-md bg-gray-900 border-gray-800">
                     <CardContent className="pt-6">
                         <p className="text-center text-gray-400">Please sign in to access certification</p>
@@ -164,25 +218,25 @@ export default function CertificationPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen  flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="flex items-center gap-2 text-white">
-                    <Loader2 className="h-6 w-6 animate-spin text-green-500" />
-                    <span>Loading your typing data...</span>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading your certification data...</span>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen mt-8  p-4">
-            <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen text-white py-8">
+            <div className="container mx-auto px-4 space-y-6">
                 {/* Header */}
-                <div className="text-left space-y-2">
-                    <h1 className="text-3xl font-bold text-white">Typing Certification</h1>
+                <div className="text-center space-y-2">
+                    <h1 className="text-4xl font-bold text-green-400">Typing Certification</h1>
                     <p className="text-gray-400">Generate your official typing proficiency certificate</p>
                 </div>
 
-                {/* Error Display */}
+                {/* Error/Success Message */}
                 {error && (
                     <Card className={`border ${error.includes('successfully') ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'}`}>
                         <CardContent className="p-4">
@@ -231,6 +285,20 @@ export default function CertificationPage() {
                     </Card>
                 </div>
 
+                {/* No Data Warning */}
+                {certData.totalTests === 0 && (
+                    <Card className="border-yellow-500 bg-yellow-900/20">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                                <p className="text-yellow-400">
+                                    You need to complete at least one typing test to generate a certificate.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Certificate Preview */}
                 <Card className="bg-gray-900 border-gray-800">
                     <CardHeader>
@@ -256,7 +324,7 @@ export default function CertificationPage() {
                             <div className="relative z-10 text-center space-y-6">
                                 {/* Logo and Header */}
                                 <div className="space-y-4">
-                                    <div className="mx-auto flex items-center justify-center ">
+                                    <div className="mx-auto flex items-center justify-center">
                                         <img
                                             src="/logo/Logo.png"
                                             alt="Typer House Logo"
@@ -331,7 +399,7 @@ export default function CertificationPage() {
                 <div className="text-center">
                     <Button
                         onClick={handleGeneratePDF}
-                        disabled={isGenerating}
+                        disabled={isGenerating || certData.totalTests === 0}
                         className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg disabled:opacity-50"
                     >
                         {isGenerating ? (
@@ -346,6 +414,11 @@ export default function CertificationPage() {
                             </>
                         )}
                     </Button>
+                    {certData.totalTests === 0 && (
+                        <p className="text-sm text-yellow-400 mt-2">
+                            Complete at least one typing test to download your certificate
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
