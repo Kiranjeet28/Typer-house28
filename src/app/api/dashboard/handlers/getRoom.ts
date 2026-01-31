@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { getRoomSchema } from "../schema"; // Changed from "../schema" to "./schema" or "../index"
+import { getRoomSchema } from "../schema";
 
 export async function getRoom(body: unknown) {
     try {
-        // Add logging to debug
         console.log("getRoom called with body:", body);
 
         const result = getRoomSchema.safeParse(body);
@@ -13,68 +12,61 @@ export async function getRoom(body: unknown) {
         }
 
         const { email } = result.data;
-        console.log("Fetching rooms for email:", email);
 
-        // 1. Get user ID only (fast)
+        // 1. Find user by email
         const user = await prisma.user.findUnique({
             where: { email },
             select: { id: true },
         });
 
         if (!user) {
-            console.error("User not found for email:", email);
-            throw new Error("User not found");
+            console.warn("User not found for email:", email, "- returning empty array");
+            return [];
         }
 
-        console.log("User found with ID:", user.id);
-
-        // 2. Get all rooms user participated in (created OR joined)
+        // 2. Find rooms where user is creator OR member
         const rooms = await prisma.room.findMany({
             where: {
-                members: {
-                    some: {
-                        userId: user.id,
+                OR: [
+                    { creatorId: user.id },
+                    {
+                        members: {
+                            some: { userId: user.id },
+                        },
                     },
-                },
+                ],
             },
             include: {
-                creator: {
-                    select: {
-                        id: true,
-                        email: true,
-                        name: true,
-                    },
-                },
-                members: {
-                    select: {
-                        userId: true,
-                        role: true,
-                    },
-                },
+                creator: { select: { id: true, email: true, name: true } },
+                members: { select: { userId: true, role: true } },
                 typingSpeeds: {
-                    orderBy: {
-                        createdAt: "desc",
-                    },
+                    orderBy: { createdAt: "desc" },
+                    include: { charPerformance: true },
                 },
             },
-            orderBy: {
-                createdAt: "desc",
-            },
+            orderBy: { createdAt: "desc" },
         });
 
-        console.log(`Found ${rooms.length} rooms for user`);
-
-        // Transform the data to match frontend expectations
-        const transformedRooms = rooms.map(room => ({
+        // Transform to frontend-friendly shape
+        const transformed = rooms.map((room) => ({
             id: room.id,
             name: room.name,
-            description: room.description,
+            description: room.description || "",
             status: room.status,
-            createdAt: room.createdAt,
-            typingSpeeds: room.typingSpeeds || [],
+            createdAt: room.createdAt.toISOString(),
+            typingSpeeds: (room.typingSpeeds || []).map((ts) => ({
+                id: ts.id,
+                wpm: ts.wpm,
+                correctword: ts.correctword,
+                incorrectchar: (ts.charPerformance || [])
+                    .filter((cp) => cp.errorFrequency && cp.errorFrequency > 0)
+                    .map((cp) => cp.char),
+                createdAt: ts.createdAt.toISOString(),
+            })),
         }));
 
-        return transformedRooms;
+        console.log(`Found ${transformed.length} rooms for user ${email}`);
+        return transformed;
     } catch (error) {
         console.error("getRoom error:", error);
         throw error;
