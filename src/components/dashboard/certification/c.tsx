@@ -228,7 +228,7 @@ export default function CertificationPage() {
     }
 
     return (
-        <div className="min-h-screen text-white py-8">
+        <div className="min-h-screen text-white py-8 mt-20">
             <div className="container mx-auto px-4 space-y-6">
                 {/* Header */}
                 <div className="text-center space-y-2">
@@ -251,39 +251,7 @@ export default function CertificationPage() {
                 )}
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="bg-gray-900 border-gray-800">
-                        <CardContent className="p-4 text-center">
-                            <Zap className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                            <p className="text-2xl font-bold text-white">{certData.wpm}</p>
-                            <p className="text-sm text-gray-400">WPM</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-gray-900 border-gray-800">
-                        <CardContent className="p-4 text-center">
-                            <Target className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                            <p className="text-2xl font-bold text-white">{certData.accuracy}%</p>
-                            <p className="text-sm text-gray-400">Accuracy</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-gray-900 border-gray-800">
-                        <CardContent className="p-4 text-center">
-                            <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                            <p className="text-2xl font-bold text-white">Level {certData.level}</p>
-                            <p className="text-sm text-gray-400">Current Level</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-gray-900 border-gray-800">
-                        <CardContent className="p-4 text-center">
-                            <Award className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                            <p className="text-2xl font-bold text-white">{certData.totalTests}</p>
-                            <p className="text-sm text-gray-400">Tests Completed</p>
-                        </CardContent>
-                    </Card>
-                </div>
+               
 
                 {/* No Data Warning */}
                 {certData.totalTests === 0 && (
