@@ -38,23 +38,24 @@ export default function RoomDashboard() {
 
                 console.log("📡 Response status:", res.status);
 
-                // Parse response
                 const result = await res.json();
                 console.log("📦 Response data:", result);
 
-                // Check for errors
                 if (!res.ok) {
                     throw new Error(result?.error || `Server error: ${res.status}`);
                 }
 
-                // Check for success flag
                 if (!result.success && result.error) {
                     throw new Error(result.error);
                 }
 
-                // Set the risky keys
-                setRiskyKeys(result.riskyKeys || []);
-                console.log("✅ Risky keys loaded:", result.riskyKeys?.length || 0);
+                // Validate payload: ensure riskyKeys is an array before setting state
+                if (!Array.isArray(result.riskyKeys)) {
+                    throw new Error("Invalid response: riskyKeys missing or malformed");
+                }
+
+                setRiskyKeys(result.riskyKeys as RiskyKey[]);
+                console.log("✅ Risky keys loaded:", result.riskyKeys.length || 0);
 
             } catch (err) {
                 console.error("💥 Error fetching ML data:", err);
@@ -136,17 +137,13 @@ export default function RoomDashboard() {
 
                 {riskyKeys.length === 0 ? (
                     <div className="text-center py-8">
-                        <div className="text-6xl mb-4">🎉</div>
                         <p className="text-gray-400 text-lg">
-                            No risky keys detected. Great job!
-                        </p>
-                        <p className="text-gray-500 text-sm mt-2">
-                            Keep practicing to maintain your excellent performance.
+                            No typing data available. Perform typing sessions to generate insights.
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {riskyKeys.map((key, index) => (
+                        {riskyKeys.map((key) => (
                             <div
                                 key={key.char}
                                 className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors"
