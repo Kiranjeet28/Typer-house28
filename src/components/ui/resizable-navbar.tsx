@@ -9,6 +9,7 @@ import {
 } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import path from "path/win32";
 
 import React, { useRef, useState } from "react";
 
@@ -76,9 +77,9 @@ export const Navbar = ({ children, className }: NavbarProps) => {
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
           ? React.cloneElement(
-              child as React.ReactElement<{ visible?: boolean }>,
-              { visible },
-            )
+            child as React.ReactElement<{ visible?: boolean }>,
+            { visible },
+          )
           : child,
       )}
     </motion.div>
@@ -105,7 +106,10 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
         minWidth: "800px",
       }}
       className={cn(
-        "relative z-[60] mx-auto hidden w-full max-w-9xl flex-row items-center justify-between self-start rounded-full bg-transparent px-4 py-2 lg:flex dark:bg-transparent",
+        `relative z-[60] mx-auto hidden w-full max-w-9xl flex-row items-center justify-between self-start rounded-full bg-transparent px-4 ${typeof window !== "undefined" && window.location.pathname.includes("dashboard")
+          ? "py-0"
+          : "py-2"
+        } lg:flex dark:bg-transparent`,
         visible && "bg-white/80 dark:bg-neutral-950/80",
         className,
       )}
@@ -132,7 +136,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
           onClick={onItemClick}
           className={cn(
             "relative px-4 py-2 hover:text-black text-green-300 transition-colors duration-200",
-            
+
           )}
           key={`link-${idx}`}
           href={item.link}
@@ -264,8 +268,8 @@ export const NavbarButton = ({
   className?: string;
   variant?: "primary" | "secondary" | "dark" | "gradient";
 } & (
-  | React.ComponentPropsWithoutRef<"button">
-)) => {
+    | React.ComponentPropsWithoutRef<"button">
+  )) => {
   const baseStyles =
     "px-4 py-2 rounded-md bg-white button bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
 
@@ -280,7 +284,7 @@ export const NavbarButton = ({
 
   // Type guard to check if Tag is 'a'
 
-  return( 
+  return (
     <Link
       href={href || "#"}
       className={cn(baseStyles, variantStyles[variant], className)}
