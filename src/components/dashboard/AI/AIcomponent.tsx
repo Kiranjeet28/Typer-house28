@@ -142,41 +142,20 @@ export default function RoomDashboard() {
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    // Render keys in a horizontal row (wraps on small screens)
+                    <div className="flex flex-row gap-3 flex-wrap">
                         {riskyKeys.map((key) => (
                             <div
                                 key={key.char}
-                                className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors"
+                                className="flex items-center gap-3 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors min-w-[140px]"
                             >
                                 {/* Key Display */}
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-lg">
-                                        <span className="text-xl font-mono font-bold text-white">
-                                            {key.char.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <span className="text-gray-400 text-sm">
-                                        Risk Level
+                                <div className="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-lg">
+                                    <span className="text-xl font-mono font-bold text-white">
+                                        {key.char.toUpperCase()}
                                     </span>
                                 </div>
 
-                                {/* Risk Bar */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-32 bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                                        <div
-                                            className={`h-2.5 rounded-full transition-all ${key.risk >= 0.7
-                                                    ? "bg-red-500"
-                                                    : key.risk >= 0.4
-                                                        ? "bg-yellow-500"
-                                                        : "bg-green-500"
-                                                }`}
-                                            style={{ width: `${Math.round(key.risk * 100)}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-sm font-semibold text-white min-w-[3rem] text-right">
-                                        {Math.round(key.risk * 100)}%
-                                    </span>
-                                </div>
                             </div>
                         ))}
                     </div>
