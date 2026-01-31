@@ -1,2 +1,18 @@
-1. no store the correct count of words & wpm calculation is wrong 
-2. push status of user not shown
+Prompt to Text scrap 
+1. Check the each row it have 1 col as the class axisx 
+2. th table head have 2 row one for the YearSecction other have class axisy 
+3. you just have to go each row col of the table except row of axisx and axisY 
+4. each col have  3 br in it one have subject name 2nd have teacher name & 3rd have classRome 
+5. any of the box  have more than 3 values in it mark it as the elective 
+6. if the box no br or only have one br and br have --- or -x- then mark it as the free class 
+you just have to doing maping of xAxis and yAxis corsponces classRoom , Subject and teacher store it in the form of the Json where structure of the json is like { YearSection  // can't be null
+{ xAxis : TimeOFClass // can't be null
+y Axis : DayOF class // can't be null 
+{
+subject // Elective then of other can be null 
+teacher 
+classRoom 
+FreeClass Boolean 
+
+}
+}
