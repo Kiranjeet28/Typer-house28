@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { Loader2, AlertCircle, TrendingDown } from "lucide-react";
 
 type RiskyKey = {
     char: string;
@@ -22,26 +23,41 @@ export default function RoomDashboard() {
                 setLoading(true);
                 setError(null);
 
+                console.log("🔍 Fetching ML data for:", session.user.email);
+
                 const res = await fetch("/api/ai", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ action: "getAll", email: session.user.email }),
+                    body: JSON.stringify({
+                        action: "getAll",
+                        email: session.user.email
+                    }),
                 });
 
-                const raw = await res.text();
-                console.log("STATUS:", res.status);
-                console.log("RAW RESPONSE:", raw);
+                console.log("📡 Response status:", res.status);
 
-                const result = raw ? JSON.parse(raw) : null;
+                // Parse response
+                const result = await res.json();
+                console.log("📦 Response data:", result);
 
+                // Check for errors
                 if (!res.ok) {
-                    throw new Error(result?.error || "Failed to load dashboard data");
+                    throw new Error(result?.error || `Server error: ${res.status}`);
                 }
 
-                setRiskyKeys(result.riskyKeys);
+                // Check for success flag
+                if (!result.success && result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Set the risky keys
+                setRiskyKeys(result.riskyKeys || []);
+                console.log("✅ Risky keys loaded:", result.riskyKeys?.length || 0);
+
             } catch (err) {
+                console.error("💥 Error fetching ML data:", err);
                 setError(err instanceof Error ? err.message : "Something went wrong");
             } finally {
                 setLoading(false);
@@ -54,74 +70,126 @@ export default function RoomDashboard() {
     // -------- UI STATES --------
 
     if (status === "loading") {
-        return <p className="p-4" > Checking session...</p>;
+        return (
+            <div className="p-4 flex items-center gap-2 text-gray-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Checking session...</span>
+            </div>
+        );
     }
 
     if (!session) {
-        return <p className="p-4" > Please log in to view your dashboard.</p>;
+        return (
+            <div className="p-4 flex items-center gap-2 text-yellow-500">
+                <AlertCircle className="h-5 w-5" />
+                <span>Please log in to view your dashboard.</span>
+            </div>
+        );
     }
 
     if (loading) {
-        return <p className="p-4" > Loading your typing insights…</p>;
+        return (
+            <div className="p-4 flex items-center gap-2 text-green-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading your typing insights...</span>
+            </div>
+        );
     }
 
     if (error) {
-        return <p className="p-4 text-red-500" > {error} </p>;
+        return (
+            <div className="p-4">
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                        <div>
+                            <h3 className="font-semibold text-red-500 mb-1">Error Loading Data</h3>
+                            <p className="text-sm text-red-400">{error}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // -------- DASHBOARD --------
 
     return (
-        <div className="p-6 space-y-6" >
-            <h1 className="text-2xl font-semibold" >
-                Typing Performance Dashboard
-            </h1>
-
-            {/* ML Insight Card */}
-            <div className="bg-white shadow rounded-lg p-4" >
-                <h2 className="text-lg font-medium mb-2" >
-                    ⚠️ Keys to Focus On
-                </h2>
-
-                {
-                    riskyKeys.length === 0 ? (
-                        <p className="text-gray-500" >
-                            No risky keys detected.Great job 👏
-                        </p>
-                    ) : (
-                        <ul className="space-y-2" >
-                            {
-                                riskyKeys.map((key) => (
-                                    <li
-                                        key={key.char}
-                                        className="flex items-center justify-between border rounded px-3 py-2"
-                                    >
-                                        <span className="text-lg font-mono" >
-                                            {key.char.toUpperCase()}
-                                        </span>
-
-                                        < div className="flex items-center gap-2" >
-                                            <div className="w-32 bg-gray-200 rounded-full h-2" >
-                                                <div
-                                                    className="bg-red-500 h-2 rounded-full"
-                                                    style={{ width: `${Math.round(key.risk * 100)}%` }}
-                                                />
-                                            </div>
-                                            < span className="text-sm text-gray-600" >
-                                                {Math.round(key.risk * 100)} %
-                                            </span>
-                                        </div>
-                                    </li>
-                                ))
-                            }
-                        </ul>
-                    )
-                }
+        <div className="p-6 space-y-6">
+            <div>
+                <h1 className="text-2xl font-semibold text-white mb-2">
+                    Typing Performance Dashboard
+                </h1>
+                <p className="text-gray-400">
+                    AI-powered insights to improve your typing
+                </p>
             </div>
 
-            {/* Future sections */}
-            <div className="text-sm text-gray-400" >
-                Predictions are based on your recent typing sessions.
+            {/* ML Insight Card */}
+            <div className="bg-gray-900 border border-gray-800 shadow-lg rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <TrendingDown className="h-5 w-5 text-yellow-500" />
+                    <h2 className="text-lg font-medium text-white">
+                        Keys to Focus On
+                    </h2>
+                </div>
+
+                {riskyKeys.length === 0 ? (
+                    <div className="text-center py-8">
+                        <div className="text-6xl mb-4">🎉</div>
+                        <p className="text-gray-400 text-lg">
+                            No risky keys detected. Great job!
+                        </p>
+                        <p className="text-gray-500 text-sm mt-2">
+                            Keep practicing to maintain your excellent performance.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {riskyKeys.map((key, index) => (
+                            <div
+                                key={key.char}
+                                className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition-colors"
+                            >
+                                {/* Key Display */}
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-lg">
+                                        <span className="text-xl font-mono font-bold text-white">
+                                            {key.char.toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <span className="text-gray-400 text-sm">
+                                        Risk Level
+                                    </span>
+                                </div>
+
+                                {/* Risk Bar */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-32 bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                                        <div
+                                            className={`h-2.5 rounded-full transition-all ${key.risk >= 0.7
+                                                    ? "bg-red-500"
+                                                    : key.risk >= 0.4
+                                                        ? "bg-yellow-500"
+                                                        : "bg-green-500"
+                                                }`}
+                                            style={{ width: `${Math.round(key.risk * 100)}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-sm font-semibold text-white min-w-[3rem] text-right">
+                                        {Math.round(key.risk * 100)}%
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Info Footer */}
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>Predictions are based on your recent typing sessions</span>
             </div>
         </div>
     );

@@ -1,13 +1,20 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAllSchema } from "../schema";
+import { getAllSchema } from "../schema"; // Fix: Update path if needed (../index or ../schema)
 
-const ML_URL = process.env.ML_SERVICE_URL as string;
+const ML_URL = process.env.ML_SERVICE_URL;
 
-export async function getAll(body: Object) {
+// Validate ML_URL exists
+if (!ML_URL) {
+    throw new Error("ML_SERVICE_URL environment variable is not configured");
+}
+
+export async function getAll(body: unknown) {
     try {
-       
+        console.log("🔍 getAll called with body:", body);
+
+        // Validate request body
         const data = getAllSchema.parse(body);
+        console.log("✅ Schema validation passed for email:", data.email);
 
         // 1️⃣ Find user
         const user = await prisma.user.findUnique({
@@ -15,11 +22,15 @@ export async function getAll(body: Object) {
         });
 
         if (!user) {
-            return NextResponse.json(
-                { message: "User not found" },
-                { status: 404 }
-            );
+            console.error("❌ User not found:", data.email);
+            // Return error object, NOT NextResponse
+            return {
+                error: "User not found",
+                status: 404
+            };
         }
+
+        console.log("✅ User found:", user.id);
 
         // 2️⃣ Fetch character performance
         const characters = await prisma.characterPerformance.findMany({
@@ -51,11 +62,14 @@ export async function getAll(body: Object) {
             take: 200,
         });
 
+        console.log(`📊 Found ${characters.length} character performance records`);
+
         if (!characters.length) {
-            return NextResponse.json({
+            console.log("⚠️ No character data found, returning empty riskyKeys");
+            return {
                 userId: user.id,
                 riskyKeys: [],
-            });
+            };
         }
 
         // 3️⃣ Feature mapping
@@ -78,6 +92,8 @@ export async function getAll(body: Object) {
                 lengthMap[cp.typingSpeed.room.textLength] ?? 1,
         }));
 
+        console.log(`🤖 Calling ML service at ${ML_URL}/predict with ${rows.length} rows`);
+
         // 4️⃣ Call ML service
         const mlResponse = await fetch(`${ML_URL}/predict`, {
             method: "POST",
@@ -86,10 +102,13 @@ export async function getAll(body: Object) {
         });
 
         if (!mlResponse.ok) {
-            throw new Error("ML service error");
+            const errorText = await mlResponse.text();
+            console.error("❌ ML service error:", mlResponse.status, errorText);
+            throw new Error(`ML service error: ${mlResponse.status} - ${errorText}`);
         }
 
         const predictions = await mlResponse.json();
+        console.log(`✅ ML predictions received:`, predictions.length, "predictions");
 
         // 5️⃣ Top risky keys
         const riskyKeys = predictions
@@ -100,17 +119,21 @@ export async function getAll(body: Object) {
                 risk: Number(p.risk_probability.toFixed(2)),
             }));
 
-        return NextResponse.json({
+        console.log("✅ Returning risky keys:", riskyKeys);
+
+        // Return data object, NOT NextResponse
+        return {
             userId: user.id,
             riskyKeys,
-        });
+        };
 
     } catch (error: any) {
-        console.error("GET ALL + ML ERROR:", error);
+        console.error("💥 GET ALL + ML ERROR:", error);
 
-        return NextResponse.json(
-            { message: "Internal Server Error", error: error.message },
-            { status: 500 }
-        );
+        // Return error object, NOT NextResponse
+        return {
+            error: error.message || "Internal Server Error",
+            status: 500
+        };
     }
 }
