@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { Keyboard } from 'lucide-react';
 import Image from 'next/image';
@@ -70,8 +69,15 @@ function Dropdown() {
                                 ) : (
                                     <Keyboard className="w-4 h-4" />
                                 )}
-                                <DropdownMenuLabel className="text-sm font-semibold">
-                                    {session.user.name || 'User'}
+                                <DropdownMenuLabel className="flex flex-col">
+                                    <span className="text-sm font-semibold">
+                                        {session.user.name || 'User'}
+                                    </span>
+                                    {session.user.email && (
+                                        <span className="text-xs text-gray-500">
+                                            {session.user.email}
+                                        </span>
+                                    )}
                                 </DropdownMenuLabel>
                             </div>
 
