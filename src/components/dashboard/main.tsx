@@ -43,7 +43,7 @@ export function Sidebar() {
 
   return (
     // FIXED: Proper flex layout with no overlap
-    <div className="flex h-screen w-full bg-neutral-950">
+    <div className="flex h-screen w-full -mt-10 bg-neutral-950">
       {/* Sidebar - Takes fixed width, not positioned fixed */}
       <div className="w-[260px] flex-shrink-0">
         <Sb open={open} setOpen={setOpen} animate={false}>
