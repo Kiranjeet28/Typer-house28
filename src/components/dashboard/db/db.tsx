@@ -151,7 +151,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="h-[90vh] mt-5 text-white">
+        <div className=" ml-5 h-[90vh] mt-5 text-white">
             <div className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <div>

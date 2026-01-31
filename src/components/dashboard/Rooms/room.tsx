@@ -117,7 +117,7 @@ export default function Room() {
     }
 
     return (
-        <div className="min-h-screen mt-5 text-white">
+        <div className="min-h-screen ml-5 mt-5 text-white">
             <div className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <div>
