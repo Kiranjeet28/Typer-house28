@@ -9,7 +9,7 @@ import {
 } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import path from "path/win32";
+import { usePathname } from "next/navigation";
 
 import React, { useRef, useState } from "react";
 
@@ -59,7 +59,6 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     offset: ["start start", "end start"],
   });
   const [visible, setVisible] = useState<boolean>(false);
-
   useMotionValueEvent(scrollY, "change", (latest) => {
     if (latest > 100) {
       setVisible(true);
@@ -87,6 +86,8 @@ export const Navbar = ({ children, className }: NavbarProps) => {
 };
 
 export const NavBody = ({ children, className, visible }: NavBodyProps) => {
+  const path = usePathname();
+
   return (
     <motion.div
       animate={{
@@ -106,10 +107,7 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
         minWidth: "800px",
       }}
       className={cn(
-        `relative z-[60] mx-auto hidden w-full max-w-9xl flex-row items-center justify-between self-start rounded-full bg-transparent px-4 ${typeof window !== "undefined" && window.location.pathname.includes("dashboard")
-          ? "py-0"
-          : "py-2"
-        } lg:flex dark:bg-transparent`,
+        `relative z-[60] mx-auto hidden w-full max-w-9xl flex-row items-center justify-between self-start rounded-full bg-transparent px-4 ${path.includes("dashboard") ? "py-0" : "py-2"} lg:flex dark:bg-transparent`,
         visible && "bg-white/80 dark:bg-neutral-950/80",
         className,
       )}
