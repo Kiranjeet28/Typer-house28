@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { getAnalysisSchema } from "../schema";
+import { getAnalysisSchema } from "../schema"; // Fix this import path
 
 export async function getAnalysis(body: unknown) {
     try {
+        // Add logging
+        console.log("getAnalysis called with body:", body);
+
         const result = getAnalysisSchema.safeParse(body);
         if (!result.success) {
             console.error("Schema validation failed:", result.error);
@@ -10,6 +13,7 @@ export async function getAnalysis(body: unknown) {
         }
 
         const { email } = result.data;
+        console.log("Fetching analysis for email:", email);
 
         const user = await prisma.user.findFirst({
             where: { email },
@@ -27,8 +31,11 @@ export async function getAnalysis(body: unknown) {
         });
 
         if (!user) {
+            console.error("User not found for email:", email);
             throw new Error("User not found");
         }
+
+        console.log(`User found with ${user.createdRooms?.length || 0} rooms`);
 
         // Process data for analysis
         const allTypingSpeeds = user.createdRooms.flatMap((room) =>
@@ -38,6 +45,8 @@ export async function getAnalysis(body: unknown) {
                 date: new Date(ts.createdAt).toLocaleDateString(),
             }))
         );
+
+        console.log(`Total typing speeds: ${allTypingSpeeds.length}`);
 
         const totalSessions = allTypingSpeeds.length;
         const averageWpm =
