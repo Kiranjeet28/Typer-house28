@@ -42,11 +42,13 @@ export function Sidebar() {
   const handleLinkClick = (linkLabel: SidebarLinkItem["label"]): void => {
     setActiveTab(linkLabel);
   };
+
   return (
-    <div className="flex md:mt-[-5vw] mt-[-4vw] bg-neutral-950">
-      {/* Sidebar */}
+    // FIXED: Changed to fixed positioning layout
+    <div className="flex h-screen w-full bg-neutral-950 overflow-hidden">
+      {/* Sidebar - Fixed position */}
       <Sb open={open} setOpen={setOpen} animate={false}>
-        <SidebarBody className="flex w-[260px] flex-col justify-between border-r border-neutral-700 bg-neutral-900">
+        <SidebarBody className="flex w-[260px] flex-col justify-between border-r border-neutral-700 bg-neutral-900 h-screen fixed left-0 top-0">
           <div className="flex flex-1 flex-col overflow-y-auto">
             <div className="mt-8 mb-4 px-4">
               <h2 className="text-xl font-bold text-white invisible">Your App</h2>
@@ -129,8 +131,8 @@ export function Sidebar() {
         </SidebarBody>
       </Sb>
 
-      {/* Main Dashboard Content */}
-      <main className="flex-1 overflow-y-auto">
+      {/* Main Dashboard Content - With margin for sidebar and scrollable */}
+      <main className="flex-1 ml-[260px] h-screen overflow-y-auto">
         <Dashboard activeTab={activeTab} />
       </main>
     </div>
@@ -147,33 +149,33 @@ const Dashboard = ({ activeTab }: DashboardProps) => {
     switch (activeTab) {
       case "Analysis":
         return (
-          <Analysis/>
+          <Analysis />
         );
       case "Certification":
         return (
-          <CertificationPage/>
+          <CertificationPage />
         );
       case "Rooms":
         return (
-          <Room/>
+          <Room />
         );
       case "AI":
         return (
-          <RoomDashboard/>
+          <RoomDashboard />
         );
       case "Dashboard":
       default:
         return (
-          <div className= "">
-          <DashboardPage/>
+          <div className="">
+            <DashboardPage />
           </div>
         );
     }
   };
 
   return (
-    <div className="flex flex-1">
-      <div className="flex h-full w-full flex-1 flex-col mt-10 gap-4">
+    <div className="flex flex-1 w-full">
+      <div className="flex w-full flex-1 flex-col gap-4">
         {renderContent()}
       </div>
     </div>
