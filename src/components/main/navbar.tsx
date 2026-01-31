@@ -20,7 +20,8 @@ import { useRouter } from "next/navigation";
 import Dropdown from "./Profile/Dropdown";
 
 export function NavbarMain() {
-    const { data: session } = useSession();
+    // Add status to track loading state
+    const { data: session, status } = useSession();
     const route = useRouter();
     const navItems = [
         {
@@ -59,6 +60,10 @@ export function NavbarMain() {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    // Don't render auth buttons until session status is determined
+    const isLoading = status === "loading";
+    const isAuthenticated = status === "authenticated";
+
     return (
         <Navbar>
             {/* Desktop Navigation */}
@@ -66,7 +71,8 @@ export function NavbarMain() {
                 <NavbarLogo />
                 <NavItems items={navItems} />
                 <div className="flex items-center gap-4">
-                    <Dropdown/>
+                    {/* Only render Dropdown when not loading */}
+                    {!isLoading && <Dropdown />}
                 </div>
             </NavBody>
 
@@ -96,7 +102,12 @@ export function NavbarMain() {
                     ))}
 
                     <div className="flex w-full flex-col gap-4 mt-4">
-                        {session?.user ? (
+                        {/* Show loading state or nothing while determining session */}
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-4">
+                                <div className="animate-pulse text-neutral-500">Loading...</div>
+                            </div>
+                        ) : isAuthenticated && session?.user ? (
                             <div className="flex items-center gap-2">
                                 {session.user.image && session.user.image !== "" ? (
                                     <Image
