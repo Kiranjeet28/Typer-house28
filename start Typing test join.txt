@@ -16,3 +16,11 @@ FreeClass Boolean
 
 }
 }
+
+
+Problems in typerHouse : 
+1. Text level in create page 
+2. room join should also show 
+3. Create room for text only own speed 
+4. correct c.tsx not a correct data 
+5. 

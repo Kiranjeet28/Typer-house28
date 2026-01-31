@@ -3,12 +3,11 @@ import Section1 from '@/components/main/layout/Section1'
 import Section2 from '@/components/main/layout/Section2'
 import Section3 from '@/components/main/layout/Section3'
 import { Spotlight } from '@/components/ui/spotlight'
-import React, { useRef, useState } from 'react'
 function page() {
 
   return (
     <div className="">
-      {/* <Spotlight
+      <Spotlight
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="white"
       />
@@ -16,7 +15,7 @@ function page() {
         <Section1 />
         <Section3 />
         <Section2 /> 
-    </div> */}
+    </div>
 
      
     </div>
