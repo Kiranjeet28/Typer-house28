@@ -22,4 +22,3 @@ Problems in typerHouse :
 1. Text level in create page 
 2. room join should also show on dashboard 
 3. Create room for text only own speed 
-5. 
