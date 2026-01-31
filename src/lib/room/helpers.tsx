@@ -19,7 +19,7 @@ export const getTextByTimeLimit = (textLength: string, customText?: string) => {
 
     if (textLength === "SHORT") return simpleText;
     if (textLength === "MEDIUM") return mediumText;
-    if (textLength === "HARD") return hardText;
+    if (textLength === "LONG") return hardText;
 
     const joinAlternatives = (alt: any) => {
         if (Array.isArray(alt)) return alt.join(" ");
