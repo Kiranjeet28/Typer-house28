@@ -15,6 +15,10 @@ interface MagicCardProps {
   gradientTo?: string;
   onMouseEnter?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  role?: string;
+  tabIndex?: number;
 }
 
 export function MagicCard({
