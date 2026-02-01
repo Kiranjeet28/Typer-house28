@@ -129,10 +129,8 @@ export function Section3() {
                     </TextAnimate>
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 overflow-y-auto">
                         {DUMMY_FEATURES.map((feature) => (
-                            <MagicCard
-                                gradientColor={"#262626"}
+                            <div
                                 key={feature.title}
-                                className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg  p-4 transition-colors hover:bg-accent/20 cursor-pointer"
                                 onMouseEnter={() => handleFeatureHover(feature.key)}
                                 onMouseLeave={() => handleFeatureHover(null)}
                                 onClick={() => handleFeatureClick(feature)}
@@ -145,16 +143,21 @@ export function Section3() {
                                     }
                                 }}
                             >
-                                <div className="mb-2 inline-flex items-center gap-2">
-                                    <RainbowButton className={[
-                                        "inline-flex h-7 min-w-7 px-2 items-center justify-center rounded",
-                                        "text-sm bg-muted text-foreground/80 border border-border",
-                                        hoveredKey === feature.key ? "pressing shadow-inner" : "shadow-sm",
-                                    ].join(" ")} variant="outline">{feature.key}</RainbowButton>
-                                    <h3 className="text-foreground font-medium">{feature.title}</h3>
-                                </div>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-                            </MagicCard>
+                                <MagicCard
+                                    gradientColor={"#262626"}
+                                    className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg  p-4 transition-colors hover:bg-accent/20 cursor-pointer"
+                                >
+                                    <div className="mb-2 inline-flex items-center gap-2">
+                                        <RainbowButton className={[
+                                            "inline-flex h-7 min-w-7 px-2 items-center justify-center rounded",
+                                            "text-sm bg-muted text-foreground/80 border border-border",
+                                            hoveredKey === feature.key ? "pressing shadow-inner" : "shadow-sm",
+                                        ].join(" ")} variant="outline">{feature.key}</RainbowButton>
+                                        <h3 className="text-foreground font-medium">{feature.title}</h3>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                                </MagicCard>
+                            </div>
                         ))}
                     </div>
                 </div>
