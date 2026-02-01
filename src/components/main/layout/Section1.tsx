@@ -38,24 +38,11 @@ function Section1() {
                                 <p className="text-lg text-slate-300 ">
                                         Experience instant results and track your progress easily.
                                 </p>
-                                {/* <div className="flex gap-4">
-                                        <RainbowButton
-                                                variant="outline"
-                                                onClick={() => handleButtonClick("/createRoom")}
-                                        >
-                                                Create Typo&apos;s
-                                        </RainbowButton>
-                                        <RainbowButton
-                                                variant="outline"
-                                                onClick={() => handleButtonClick("/join")}
-                                        >
-                                                Join Typo&apos;s
-                                        </RainbowButton>
-                                </div> */}
+
                         </div>
 
                         {/* Right side takes 2 columns */}
-                        <div className="lg:col-span-2">
+                        <div className="hidden lg:block lg:col-span-2">
                                 <KeyboardWrapper />
                         </div>
                 </div>

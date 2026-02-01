@@ -11,13 +11,15 @@ function page() {
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="white"
       />
-      <div className="mt-8"> 
+      <div className="mt-8 ">
         <Section1 />
+        <div className="hidden md:block">
         <Section3 />
-        <Section2 /> 
-    </div>
+        </div>
+        <Section2 />
+      </div>
 
-     
+
     </div>
   )
 }
