@@ -4,7 +4,9 @@ import { MagicCard } from "@/components/magicui/magic-card"
 import { RainbowButton } from "@/components/magicui/rainbow-button"
 import { TextAnimate } from "@/components/ui/text-animate"
 import { DUMMY_FEATURES } from "@/resources/constant"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
+import SelfTestButton from "@/components/selfTest/button"
 
 export function Section3() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -12,6 +14,8 @@ export function Section3() {
     const keyboardRef = useRef<any>(null)
     const gsapRef = useRef<any>(null)
     const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+    const router = useRouter()
+    const selfTestContainerRef = useRef<HTMLDivElement | null>(null)
 
 
     // Load Spline scene and wire up references
@@ -79,6 +83,37 @@ export function Section3() {
         }
     }
 
+    // Handle clicks on the feature cards
+    const handleFeatureClick = (feature: any) => {
+        if (!feature) return
+
+        console.debug("feature click:", feature?.key)
+
+        const key = feature.key
+        switch (key) {
+            case "A": // Create Room
+                router.push("/createRoom")
+                break
+            case "S": // Join Room
+                router.push("/join")
+                break
+            case "D": // Test your Typing -> trigger hidden SelfTestButton
+                try {
+                    const container = selfTestContainerRef.current
+                    const btn = container?.querySelector("button") as HTMLButtonElement | null
+                    if (btn) btn.click()
+                } catch (e) {
+                    console.error("Failed to trigger self test:", e)
+                }
+                break
+            case "F": // AI Coach
+                router.push("/dashboard#ai-tips")
+                break
+            default:
+                break
+        }
+    }
+
     return (
         <section
             aria-labelledby="typerhouse-features-heading "
@@ -97,9 +132,18 @@ export function Section3() {
                             <MagicCard
                                 gradientColor={"#262626"}
                                 key={feature.title}
-                                className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg  p-4 transition-colors hover:bg-accent/20"
+                                className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg  p-4 transition-colors hover:bg-accent/20 cursor-pointer"
                                 onMouseEnter={() => handleFeatureHover(feature.key)}
                                 onMouseLeave={() => handleFeatureHover(null)}
+                                onClick={() => handleFeatureClick(feature)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault()
+                                        handleFeatureClick(feature)
+                                    }
+                                }}
                             >
                                 <div className="mb-2 inline-flex items-center gap-2">
                                     <RainbowButton className={[
@@ -127,7 +171,11 @@ export function Section3() {
                 </div>
             </div>
 
-        
+            {/* Hidden offscreen SelfTestButton used for programmatic triggering */}
+            <div ref={selfTestContainerRef} style={{ position: "absolute", left: "-9999px", top: 0 }}>
+                <SelfTestButton />
+            </div>
+
         </section>
     )
 }

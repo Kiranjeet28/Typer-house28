@@ -27,6 +27,10 @@ export function MagicCard({
   gradientTo = "#FE8BBB",
   onMouseEnter,
   onMouseLeave,
+  onClick,
+  onKeyDown,
+  role,
+  tabIndex,
 }: MagicCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(-gradientSize);
@@ -98,7 +102,7 @@ export function MagicCard({
           `,
         }}
       />
-      <div className="absolute inset-px rounded-[inherit] bg-background" />
+      <div className="absolute inset-px rounded-[inherit] bg-background pointer-events-none" />
       <motion.div
         className="pointer-events-none absolute inset-px rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
@@ -108,7 +112,7 @@ export function MagicCard({
           opacity: gradientOpacity,
         }}
       />
-      <div className="relative">{children}</div>
+      <div className="relative" onClick={onClick} onKeyDown={onKeyDown} role={role} tabIndex={tabIndex}>{children}</div>
     </div>
   );
 }
