@@ -11,7 +11,7 @@ export const createRoomSchema = z.object({
         .optional(),
     maxPlayers: z.number()
         .int()
-        .min(2, 'Room must allow at least 2 players')
+        .min(1, 'Room must allow at least 1 players')
         .max(10, 'Room cannot have more than 10 players')
         .default(4),
     isPrivate: z.boolean().default(false),
