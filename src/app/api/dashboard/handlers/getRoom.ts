@@ -24,21 +24,33 @@ export async function getRoom(body: unknown) {
             return [];
         }
 
-        // 2. Find rooms where user is creator OR member
+        // 2. Find RoomMember entries for the user to get roomIds
+        const memberships = await prisma.roomMember.findMany({
+            where: { userId: user.id },
+            select: { roomId: true },
+        });
+
+        const roomIds = memberships.map(m => m.roomId);
+
+        // Include rooms where the user is creator as well
         const rooms = await prisma.room.findMany({
             where: {
                 OR: [
+                    { id: { in: roomIds.length ? roomIds : [''] } },
                     { creatorId: user.id },
-                    {
-                        members: {
-                            some: { userId: user.id },
-                        },
-                    },
                 ],
             },
             include: {
-                creator: { select: { id: true, email: true, name: true } },
-                members: { select: { userId: true, role: true } },
+                creator: { select: { id: true, email: true, name: true, username: true } },
+                members: {
+                    select: {
+                        id: true,
+                        role: true,
+                        status: true,
+                        joinedAt: true,
+                        user: { select: { id: true, name: true, username: true, email: true } },
+                    },
+                },
                 typingSpeeds: {
                     orderBy: { createdAt: "desc" },
                     include: { charPerformance: true },
@@ -54,6 +66,24 @@ export async function getRoom(body: unknown) {
             description: room.description || "",
             status: room.status,
             createdAt: room.createdAt.toISOString(),
+            creator: room.creator ? {
+                id: room.creator.id,
+                name: room.creator.name,
+                username: room.creator.username,
+                email: room.creator.email,
+            } : null,
+            members: (room.members || []).map(m => ({
+                id: m.id,
+                role: m.role,
+                status: m.status,
+                joinedAt: m.joinedAt.toISOString(),
+                user: m.user ? {
+                    id: m.user.id,
+                    name: m.user.name,
+                    username: m.user.username,
+                    email: m.user.email,
+                } : null,
+            })),
             typingSpeeds: (room.typingSpeeds || []).map((ts) => ({
                 id: ts.id,
                 wpm: ts.wpm,
@@ -63,6 +93,7 @@ export async function getRoom(body: unknown) {
                     .map((cp) => cp.char),
                 createdAt: ts.createdAt.toISOString(),
             })),
+            _count: { members: room.members ? room.members.length : 0 },
         }));
 
         console.log(`Found ${transformed.length} rooms for user ${email}`);
