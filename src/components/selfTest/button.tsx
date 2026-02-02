@@ -27,7 +27,7 @@ export default function SelfTestButton() {
                 maxPlayers: 1,
                 isPrivate: true,
                 textLength: "MEDIUM",
-                timeLimit: 60,
+                timeLimit: 60*5,
                 customText: "",
             };
 
