@@ -7,6 +7,7 @@ import { RoomCard } from "../Rooms/room-card"
 import { DashboardStats } from "./dashboard-stats"
 import { UserProfileCard } from "./user-profile-card"
 import { Button } from "@/components/ui/button"
+import FeedbackForm from "@/components/ui/feedback-form"
 import { RefreshCw, Loader2, LogOut, BarChart3 } from "lucide-react"
 import Link from "next/link"
 
@@ -208,6 +209,8 @@ export default function DashboardPage() {
                     avgWpm={avgWpm}
                     bestWpm={bestWpm}
                 />
+
+                <FeedbackForm />
 
 
 

@@ -146,6 +146,15 @@ model CharacterPerformance {
   @@index([typingSpeedId])
   @@index([userId])
 }
+
+// Feedback model for storing user reviews and star ratings
+model Feedback {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  rating    Int
+  review    String?
+  createdAt DateTime @default(now())
+}
 enum UserStatus {
   ACTIVE
   LEFT
