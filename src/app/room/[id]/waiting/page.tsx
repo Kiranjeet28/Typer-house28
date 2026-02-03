@@ -177,7 +177,7 @@ export default function WaitingRoomPage() {
             if (room?.status !== 'IN_GAME') {
                 expireGame();
             }
-        }, 15000);
+        }, 30000);
 
         return () => clearTimeout(timeout);
     }, [roomId, room?.status]);
@@ -186,7 +186,7 @@ export default function WaitingRoomPage() {
     useEffect(() => {
         if (roomId) {
             fetchRoom();
-            const interval = setInterval(fetchRoom, 30000);
+            const interval = setInterval(fetchRoom, 1500);
             return () => clearInterval(interval);
         } else {
             setLoading(false);
