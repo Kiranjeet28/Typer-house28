@@ -25,7 +25,7 @@ export async function getRoom(body: unknown) {
         }
 
         // 2. Find RoomMember entries for the user to get roomIds
-        const memberships = await prisma.roomMember.findMany({
+        const memberships = await prisma.typingSpeed.findMany({
             where: { userId: user.id },
             select: { roomId: true },
         });
