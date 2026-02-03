@@ -24,20 +24,20 @@ export async function getRoom(body: unknown) {
             return [];
         }
 
-        // 2. Find RoomMember entries for the user to get roomIds
-        const memberships = await prisma.typingSpeed.findMany({
+        // 2. Find rooms where user is a member (via RoomMember table)
+        const memberRooms = await prisma.roomMember.findMany({
             where: { userId: user.id },
             select: { roomId: true },
         });
 
-        const roomIds = memberships.map(m => m.roomId);
+        const memberRoomIds = memberRooms.map(m => m.roomId);
 
-        // Include rooms where the user is creator as well
+        // Include rooms where the user is creator OR a member
         const rooms = await prisma.room.findMany({
             where: {
                 OR: [
-                    { id: { in: roomIds.length ? roomIds : [''] } },
                     { creatorId: user.id },
+                    { id: { in: memberRoomIds.length ? memberRoomIds : [] } },
                 ],
             },
             include: {
