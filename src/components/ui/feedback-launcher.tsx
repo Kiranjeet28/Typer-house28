@@ -5,6 +5,7 @@ import FeedbackForm from "./feedback-form"
 
 export default function FeedbackLauncher() {
     const [open, setOpen] = useState(false)
+    const [hidden, setHidden] = useState(false)
     const overlayRef = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
@@ -15,16 +16,29 @@ export default function FeedbackLauncher() {
         return () => document.removeEventListener("keydown", onKey)
     }, [])
 
+    useEffect(() => {
+        try {
+            const v = typeof window !== "undefined" ? localStorage.getItem("feedback_submitted") : null
+            if (v) setHidden(true)
+        } catch (e) { }
+
+        const onSubmitted = () => setHidden(true)
+        window.addEventListener("feedback:submitted", onSubmitted as EventListener)
+        return () => window.removeEventListener("feedback:submitted", onSubmitted as EventListener)
+    }, [])
+
     return (
         <>
-            <div className="container mx-auto px-4 py-8 flex justify-end">
-                <button
-                    onClick={() => setOpen(true)}
-                    className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
-                >
-                    Give Feedback
-                </button>
-            </div>
+            {!hidden && (
+                <div className="container mx-auto px-4 py-8 flex justify-end">
+                    <button
+                        onClick={() => setOpen(true)}
+                        className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
+                    >
+                        Give Feedback
+                    </button>
+                </div>
+            )}
 
             {open && (
                 <div

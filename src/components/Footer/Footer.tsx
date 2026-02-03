@@ -1,10 +1,23 @@
-import React from 'react';
+"use client"
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 const Footer: React.FC = () => {
   const pathname = usePathname();
+  const [hideFeedback, setHideFeedback] = useState(false)
+
+  useEffect(() => {
+    try {
+      const v = typeof window !== 'undefined' ? localStorage.getItem('feedback_submitted') : null
+      if (v) setHideFeedback(true)
+      const onSubmitted = () => setHideFeedback(true)
+      window.addEventListener('feedback:submitted', onSubmitted as EventListener)
+      return () => window.removeEventListener('feedback:submitted', onSubmitted as EventListener)
+    } catch (e) { }
+  }, [])
 
   if (pathname?.includes('/dashboard')) {
     return null;
@@ -21,9 +34,11 @@ const Footer: React.FC = () => {
           Privacy Policy
         </Link>
         <span>|</span>
-        <Link href="#feedback" className="hover:text-foreground transition-colors">
-          Feedback
-        </Link>
+        {!hideFeedback && (
+          <Link href="#feedback" className="hover:text-foreground transition-colors">
+            Feedback
+          </Link>
+        )}
       </div>
 
       <div className="flex gap-3">

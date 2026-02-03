@@ -1,6 +1,6 @@
 "use client"
 
-import React, {  useState } from "react"
+import React, { useEffect, useState } from "react"
 
 type Review = {
     id: string
@@ -11,12 +11,21 @@ type Review = {
 }
 
 export default function FeedbackForm() {
+    const [hidden, setHidden] = useState(false)
+    useEffect(() => {
+        try {
+            const v = typeof window !== "undefined" ? localStorage.getItem("feedback_submitted") : null
+            if (v) setHidden(true)
+        } catch (e) { }
+    }, [])
+
+    if (hidden) return null
     const [rating, setRating] = useState(5)
     const [review, setReview] = useState("")
     const [name, setName] = useState("")
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
- 
+
     const submit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -35,6 +44,11 @@ export default function FeedbackForm() {
             setMessage("Thank you for your feedback!")
             setReview("")
             setRating(5)
+            try {
+                localStorage.setItem("feedback_submitted", "1")
+                // notify other components
+                window.dispatchEvent(new CustomEvent("feedback:submitted"))
+            } catch (e) { }
         } catch (err: any) {
             setMessage(err?.message || "Failed to submit")
         } finally {
@@ -97,7 +111,7 @@ export default function FeedbackForm() {
                 </div>
             </form>
 
-           
+
         </div>
     )
 }
