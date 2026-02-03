@@ -20,7 +20,7 @@ export default function FeedbackLauncher() {
             <div className="container mx-auto px-4 py-8 flex justify-end">
                 <button
                     onClick={() => setOpen(true)}
-                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:opacity-95"
+                    className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
                 >
                     Give Feedback
                 </button>

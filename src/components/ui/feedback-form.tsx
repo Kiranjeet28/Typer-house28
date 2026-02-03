@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, {  useState } from "react"
 
 type Review = {
     id: string
@@ -16,22 +16,7 @@ export default function FeedbackForm() {
     const [name, setName] = useState("")
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
-    const [reviews, setReviews] = useState<Review[]>([])
-
-    useEffect(() => {
-        fetchReviews()
-    }, [])
-
-    const fetchReviews = async () => {
-        try {
-            const res = await fetch("/api/feedback", { cache: "no-store" })
-            const data = await res.json()
-            if (data?.success) setReviews(Array.isArray(data.data) ? data.data : [])
-        } catch (e) {
-            // ignore
-        }
-    }
-
+ 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -50,7 +35,6 @@ export default function FeedbackForm() {
             setMessage("Thank you for your feedback!")
             setReview("")
             setRating(5)
-            fetchReviews()
         } catch (err: any) {
             setMessage(err?.message || "Failed to submit")
         } finally {
@@ -113,22 +97,7 @@ export default function FeedbackForm() {
                 </div>
             </form>
 
-            <div className="mt-6">
-                <h4 className="text-sm font-medium text-white mb-2">Recent reviews</h4>
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-
-                    {reviews.map((r) => (
-                        <div key={r.id} className="rounded-md bg-neutral-800 p-3">
-                            <div className="flex items-center justify-between">
-                                <div className="text-sm font-semibold text-white">{r.name || "Anonymous"}</div>
-                                <div className="text-sm text-yellow-400">{'★'.repeat(r.rating)}</div>
-                            </div>
-                            {r.review && <div className="text-sm text-neutral-300 mt-1">{r.review}</div>}
-                            <div className="text-xs text-neutral-500 mt-1">{new Date(r.createdAt).toLocaleString()}</div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+           
         </div>
     )
 }
