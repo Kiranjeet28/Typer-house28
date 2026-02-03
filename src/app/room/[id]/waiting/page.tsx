@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Copy, Check } from 'lucide-react';
 import {
     Card,
@@ -77,11 +77,12 @@ export default function WaitingRoomPage() {
     const [loading, setLoading] = useState(true);
     const [starting, setStarting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const route = useRouter();
     const fetchRoom = async () => {
         // More robust validation
         if (!roomId || roomId === '') {
             setError('Invalid room ID');
+            route.push('/');
             setLoading(false);
             return;
         }
