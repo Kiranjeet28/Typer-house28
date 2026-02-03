@@ -22,7 +22,10 @@ export default function FeedbackLauncher() {
             if (v) setHidden(true)
         } catch (e) { }
 
-        const onSubmitted = () => setHidden(true)
+        const onSubmitted = () => {
+            setHidden(true)
+            setOpen(false)
+        }
         window.addEventListener("feedback:submitted", onSubmitted as EventListener)
         return () => window.removeEventListener("feedback:submitted", onSubmitted as EventListener)
     }, [])

@@ -48,6 +48,7 @@ export default function FeedbackForm() {
                 localStorage.setItem("feedback_submitted", "1")
                 // notify other components
                 window.dispatchEvent(new CustomEvent("feedback:submitted"))
+                setHidden(true)
             } catch (e) { }
         } catch (err: any) {
             setMessage(err?.message || "Failed to submit")
