@@ -45,7 +45,7 @@ export async function joinRoomHandler(body: object) {
                         user: {
                             select: { id: true, name: true, username: true },
                         },
-                
+                    },
                 },
                 _count: {
                     select: {
