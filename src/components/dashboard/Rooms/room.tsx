@@ -50,7 +50,6 @@ export default function Room() {
                     email: session.user.email,
                 }),
             })
-console.log("API Response Status:", response.status)
             const result = await response.json()
 
             if (!result.success) {

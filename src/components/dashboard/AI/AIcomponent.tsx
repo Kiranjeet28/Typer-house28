@@ -72,7 +72,7 @@ export default function RoomDashboard() {
 
     if (status === "loading") {
         return (
-            <div className="p-4 flex items-center gap-2 text-gray-400">
+            <div className="p-4 mt-5 flex items-center gap-2 text-gray-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Checking session...</span>
             </div>
@@ -81,7 +81,7 @@ export default function RoomDashboard() {
 
     if (!session) {
         return (
-            <div className="p-4 flex items-center gap-2 text-yellow-500">
+            <div className="p-4 mt-5flex items-center gap-2 text-yellow-500">
                 <AlertCircle className="h-5 w-5" />
                 <span>Please log in to view your dashboard.</span>
             </div>
@@ -90,7 +90,7 @@ export default function RoomDashboard() {
 
     if (loading) {
         return (
-            <div className="p-4 flex items-center gap-2 text-green-400">
+            <div className="p-4 mt-5 flex items-center gap-2 text-green-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Loading your typing insights...</span>
             </div>
@@ -99,7 +99,7 @@ export default function RoomDashboard() {
 
     if (error) {
         return (
-            <div className="p-4">
+            <div className="p-4 mt-5">
                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
