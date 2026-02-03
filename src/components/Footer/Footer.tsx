@@ -12,13 +12,17 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="w-full pt-7 pb-3 border-t border-border flex justify-between items-center flex-wrap gap-5">
-      <div className="text-muted-foreground flex gap-2">
+      <div className="text-muted-foreground flex gap-2 items-center">
         <Link href="/terms" className="hover:text-foreground transition-colors">
           Terms & Conditions
         </Link>
         <span>|</span>
         <Link href="/privacy" className="hover:text-foreground transition-colors">
           Privacy Policy
+        </Link>
+        <span>|</span>
+        <Link href="#feedback" className="hover:text-foreground transition-colors">
+          Feedback
         </Link>
       </div>
 
