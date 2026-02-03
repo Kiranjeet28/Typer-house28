@@ -46,7 +46,7 @@ export default function Room() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    action: 'get-room',
+                    action: 'get-all-games',
                     email: session.user.email,
                 }),
             })
