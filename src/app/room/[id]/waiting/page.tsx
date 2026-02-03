@@ -177,7 +177,7 @@ export default function WaitingRoomPage() {
             if (room?.status !== 'IN_GAME') {
                 expireGame();
             }
-        }, 300000);
+        }, 15000);
 
         return () => clearTimeout(timeout);
     }, [roomId, room?.status]);
