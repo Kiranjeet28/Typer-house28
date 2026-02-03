@@ -18,11 +18,18 @@ export async function getAllGames(body: unknown) {
         }
 
         // Find rooms where the user is creator or a member
+        const memberRooms = await prisma.roomMember.findMany({
+            where: { userId: user.id },
+            select: { roomId: true },
+        });
+        const memberRoomIds = memberRooms.map((rm) => rm.roomId);
+
+        // Include rooms where the user is creator OR a member
         const rooms = await prisma.room.findMany({
             where: {
                 OR: [
                     { creatorId: user.id },
-                    { members: { some: { userId: user.id } } },
+                    { id: { in: memberRoomIds.length ? memberRoomIds : [] } },
                 ],
             },
             include: {
@@ -37,6 +44,7 @@ export async function getAllGames(body: unknown) {
                     },
                 },
                 typingSpeeds: {
+                    where: { userId: user.id }, // Only get current user's typing sessions
                     orderBy: { createdAt: "desc" },
                     include: { charPerformance: true },
                 },
@@ -44,34 +52,31 @@ export async function getAllGames(body: unknown) {
             orderBy: { createdAt: "desc" },
         });
 
+        // Transform to frontend-friendly shape
         const transformed = rooms.map((room) => ({
             id: room.id,
             name: room.name,
             description: room.description || "",
             status: room.status,
             createdAt: room.createdAt.toISOString(),
-            creator: room.creator
-                ? {
-                    id: room.creator.id,
-                    name: room.creator.name,
-                    username: room.creator.username,
-                    email: room.creator.email,
-                }
-                : null,
-            members: (room.members || []).map((m) => ({
+            creator: room.creator ? {
+                id: room.creator.id,
+                name: room.creator.name,
+                username: room.creator.username,
+                email: room.creator.email,
+            } : null,
+            members: (room.members || []).map(m => ({
                 id: m.id,
                 role: m.role,
                 status: m.status,
                 joinedAt: m.joinedAt.toISOString(),
-                user: m.user
-                    ? {
-                        id: m.user.id,
-                        name: m.user.name,
-                        username: m.user.username,
-                        email: m.user.email,
-                    }
-                    : null,
-            })) as any,
+                user: m.user ? {
+                    id: m.user.id,
+                    name: m.user.name,
+                    username: m.user.username,
+                    email: m.user.email,
+                } : null,
+            })),
             typingSpeeds: (room.typingSpeeds || []).map((ts) => ({
                 id: ts.id,
                 wpm: ts.wpm,
@@ -84,7 +89,8 @@ export async function getAllGames(body: unknown) {
             _count: { members: room.members ? room.members.length : 0 },
         }));
 
-        console.log(`Found ${transformed.length} rooms for user ${email}`);
+        console.log(`getAllGames: found ${transformed.length} rooms for user ${email}`);
+
         return transformed;
     } catch (error) {
         console.error("getAllGames error:", error);

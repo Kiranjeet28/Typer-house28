@@ -52,6 +52,7 @@ export async function getRoom(body: unknown) {
                     },
                 },
                 typingSpeeds: {
+                    where: { userId: user.id }, // Only get current user's typing sessions
                     orderBy: { createdAt: "desc" },
                     include: { charPerformance: true },
                 },
