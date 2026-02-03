@@ -23,22 +23,21 @@ function Section1() {
                 <div className="grid bg-gradient-to-br from-slate-800 to-slate-900 lg:grid-cols-3 gap-12 items-center p-10">
                         {/* Left side takes 1 column */}
                         <div className="lg:col-span-1">
+                               
+                                <p className="text-lg text-slate-300 ">
+                                        To use AI you need prompts.
+                                </p>
                                 <h1 className="text-4xl lg:text-5xl font-bold text-slate-100 ">
-                                        Engage in real-time
-                                        <span className="m-2 md:hidden block">Typing</span>
+                                        To write prompts fast you need to increase your   <span className="m-2 md:hidden block">Typing Speed</span>
                                         <PointerHighlight
                                                 rectangleClassName="bg-[oklch(0.91_0.23_133/0.52)] border-green-300 dark:border-green-700"
                                                 pointerClassName="text-green-500 h-3 w-3"
                                                 containerClassName="inline-block ml-1 hidden md:block"
                                         >
-                                                <span className="m-2">Typing</span>
+                                                <span className="m-2">Typing Speed</span>
                                         </PointerHighlight>
-                                        tests, anytime!
+                                        .
                                 </h1>
-                                <p className="text-lg text-slate-300 ">
-                                        Experience instant results and track your progress easily.
-                                </p>
-
                         </div>
 
                         {/* Right side takes 2 columns */}
