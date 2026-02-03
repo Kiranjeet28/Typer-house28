@@ -22,6 +22,7 @@ export async function getAllGames(body: unknown) {
             where: { userId: user.id },
             select: { roomId: true },
         });
+        console.log(`getAllGames: user ${email} is a member of ${memberRooms.length} rooms`);
         const memberRoomIds = memberRooms.map((rm) => rm.roomId);
 
         // Include rooms where the user is creator OR a member
