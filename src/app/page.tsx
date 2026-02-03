@@ -3,7 +3,8 @@ import Section1 from '@/components/main/layout/Section1'
 import Section2 from '@/components/main/layout/Section2'
 import Section3 from '@/components/main/layout/Section3'
 import { Spotlight } from '@/components/ui/spotlight'
-import FeedbackForm from '@/components/ui/feedback-form'
+import FeedbackLauncher from '@/components/ui/feedback-launcher'
+
 function page() {
 
   return (
@@ -18,10 +19,8 @@ function page() {
           <Section3 />
         </div>
         <Section2 />
-        {/* Feedback section for homepage */}
-        <div id="feedback" className="container mx-auto px-4 py-8">
-          <FeedbackForm />
-        </div>
+        {/* Feedback launcher button (opens overlayed form) */}
+        <FeedbackLauncher />
       </div>
 
 

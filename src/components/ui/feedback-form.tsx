@@ -116,7 +116,7 @@ export default function FeedbackForm() {
             <div className="mt-6">
                 <h4 className="text-sm font-medium text-white mb-2">Recent reviews</h4>
                 <div className="space-y-3 max-h-48 overflow-y-auto">
-                    {reviews.length === 0 && <div className="text-sm text-neutral-400">No reviews yet.</div>}
+
                     {reviews.map((r) => (
                         <div key={r.id} className="rounded-md bg-neutral-800 p-3">
                             <div className="flex items-center justify-between">
