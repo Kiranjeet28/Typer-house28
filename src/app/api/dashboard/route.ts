@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRoom } from "./handlers/getRoom";
+import { getAllGames } from "./handlers/getAllGames";
 import { AppError, handleError } from "@/lib/error";
 import { getAnalysis } from "./handlers/get-analysis";
 
@@ -49,6 +50,16 @@ export async function POST(request: NextRequest) {
                     success: true,
                     data: analysisResult
                 });
+            }
+
+            case "get-all-games": {
+                console.log("🎮 Handling get-all-games action");
+
+                const games = await getAllGames(body);
+
+                console.log("✅ get-all-games completed successfully");
+
+                return NextResponse.json({ success: true, data: games });
             }
 
             default:
