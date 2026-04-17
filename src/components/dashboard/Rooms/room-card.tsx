@@ -66,8 +66,10 @@ export function RoomCard({ room, onDelete, deleting = false }: RoomCardProps) {
                         {room.name}
                     </CardTitle>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                        <Badge className={getStatusColor(room.status)}>{room.status}</Badge>
-                        <Badge variant={room.isActive ? "default" : "secondary"}>
+                        <Badge className={`${getStatusColor(room.status)} max-w-full truncate shrink`}>
+                            {room.status}
+                        </Badge>
+                        <Badge variant={room.isActive ? "default" : "secondary"} className="max-w-full truncate shrink">
                             {room.isActive ? "Active" : "Inactive"}
                         </Badge>
                     </div>
