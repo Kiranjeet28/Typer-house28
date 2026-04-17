@@ -61,9 +61,11 @@ export function RoomCard({ room, onDelete, deleting = false }: RoomCardProps) {
     return (
         <Card className="bg-gray-900 border-gray-700 hover:border-green-500 transition-colors">
             <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-green-400 text-lg font-semibold">{room.name}</CardTitle>
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <CardTitle className="min-w-0 truncate text-green-400 text-lg font-semibold">
+                        {room.name}
+                    </CardTitle>
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                         <Badge className={getStatusColor(room.status)}>{room.status}</Badge>
                         <Badge variant={room.isActive ? "default" : "secondary"}>
                             {room.isActive ? "Active" : "Inactive"}
