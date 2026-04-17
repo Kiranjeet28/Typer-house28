@@ -66,13 +66,3 @@ export function resetCharacterStore(): void {
     console.log('🗑️ Resetting character store');
     characterMap.clear();
 }
-
-/**
- * Debug: Get current store state
- */
-export function getCharacterStoreDebug() {
-    return {
-        size: characterMap.size,
-        data: Array.from(characterMap.entries()),
-    };
-}

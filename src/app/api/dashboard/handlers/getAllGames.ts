@@ -59,6 +59,8 @@ export async function getAllGames(body: unknown) {
             name: room.name,
             description: room.description || "",
             status: room.status,
+            isActive: room.status === "WAITING" || room.status === "IN_GAME",
+            isCreator: room.creatorId === user.id,
             createdAt: room.createdAt.toISOString(),
             creator: room.creator ? {
                 id: room.creator.id,

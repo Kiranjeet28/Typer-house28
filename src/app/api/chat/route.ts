@@ -12,21 +12,42 @@ export async function POST(req: Request) {
       );
     }
 
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { success: false, error: "Missing GEMINI_API_KEY environment variable" },
+        { status: 500 }
+      );
+    }
+
+    const headers = new Headers({
+      "Content-Type": "application/json",
+    });
+    headers.set("X-goog-api-key", apiKey);
+
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM2-1.7B-Instruct",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: prompt }),
+        headers,
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `${prompt}\n\nReturn exactly 3 short actionable typing tips. Output only a JSON array of strings.`,
+                },
+              ],
+            },
+          ],
+        }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("HuggingFace API error:", errorText); // <-- log actual error
+      console.error("Gemini API error:", errorText);
       return NextResponse.json(
         { success: false, error: errorText },
         { status: response.status }
@@ -34,16 +55,28 @@ export async function POST(req: Request) {
     }
 
     const data = await response.json();
-    console.log("HuggingFace API response:", data);
+    const output =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((part: { text?: string }) => part?.text || "")
+        .join("\n")
+        .trim() || "";
+
+    if (!output) {
+      return NextResponse.json(
+        { success: false, error: "No content generated" },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      output: data[0]?.summary_text || data,
+      output,
     });
-  } catch (error: any) {
-    console.error("Route Error:", error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown server error";
+    console.error("Route Error:", message);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: message },
       { status: 500 }
     );
   }

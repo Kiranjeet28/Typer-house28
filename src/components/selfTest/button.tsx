@@ -18,7 +18,8 @@ export default function SelfTestButton() {
             const next = Number(localStorage.getItem(key) || "0") + 1;
             localStorage.setItem(key, String(next));
 
-            const name = `Self Test #${next}`;
+            // Use a name that only contains allowed characters: letters, numbers, spaces, hyphens, underscores
+            const name = `Self_Test_${next}`;
 
             const createBody = {
                 action: "create",
@@ -27,7 +28,7 @@ export default function SelfTestButton() {
                 maxPlayers: 1,
                 isPrivate: true,
                 textLength: "MEDIUM",
-                timeLimit: 60*5,
+                timeLimit: 60 * 5,
                 customText: "",
             };
 
@@ -53,7 +54,7 @@ export default function SelfTestButton() {
             const startData = await startRes.json();
             if (!startRes.ok) throw new Error(startData?.error || "Failed to start room");
 
-            router.push("/room/" + roomId+"/test");
+            router.push("/room/" + roomId + "/test");
         } catch (err: any) {
             console.error(err);
             toast.error(err?.message || "Something went wrong");

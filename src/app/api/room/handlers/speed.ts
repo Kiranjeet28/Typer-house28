@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { TypingSpeed, User } from "@prisma/client";
 import { speedRoomSchema } from '../schema';
 
 /* ----------------------------------
@@ -101,21 +100,40 @@ export async function SpeedRoomHandler(body: unknown) {
 
 export async function getSpeedsForRoom(roomId: string) {
   try {
-    const data: (TypingSpeed & { user: User })[] =
-      await prisma.typingSpeed.findMany({
-        where: { roomId },
-        include: { user: true },
-        orderBy: { wpm: "desc" },
-      });
+    const data = await prisma.typingSpeed.findMany({
+      where: { roomId },
+      include: { user: true, charPerformance: true },
+      orderBy: { wpm: "desc" },
+    });
 
     return NextResponse.json(
-      data.map((entry) => ({
-        name: entry.user?.name ?? "Anonymous",
-        wpm: entry.wpm,
-        status: entry.userStatus,
-        correctWords: entry.correctword,
-        duration: entry.duration,
-      }))
+      data.map((entry) => {
+        const errorByChar = new Map<string, number>();
+
+        for (const perf of entry.charPerformance) {
+          if (!perf.char) continue;
+          const prev = errorByChar.get(perf.char) ?? 0;
+          errorByChar.set(perf.char, prev + (perf.errorFrequency ?? 0));
+        }
+
+        const incorrectChars = Array.from(errorByChar.entries())
+          .map(([char, count]) => ({ char, count }))
+          .filter((item) => item.count > 0)
+          .sort((a, b) => b.count - a.count);
+
+        const incorrectchar = incorrectChars.reduce((sum, item) => sum + item.count, 0);
+
+        return {
+          name: entry.user?.name ?? "Anonymous",
+          wpm: entry.wpm,
+          status: entry.userStatus,
+          correctword: entry.correctword,
+          correctWords: entry.correctword,
+          duration: entry.duration,
+          incorrectchar,
+          incorrectChars,
+        };
+      })
     );
 
   } catch (error) {

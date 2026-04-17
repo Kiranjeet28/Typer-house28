@@ -87,8 +87,6 @@ export function Section3() {
     const handleFeatureClick = (feature: any) => {
         if (!feature) return
 
-        console.debug("feature click:", feature?.key)
-
         const key = feature.key
         switch (key) {
             case "A": // Create Room

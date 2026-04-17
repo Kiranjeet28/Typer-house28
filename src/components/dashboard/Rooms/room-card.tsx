@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
 
 interface TypingSpeed {
     id: string
@@ -17,15 +19,19 @@ interface Room {
     name: string
     description?: string
     status: string
+    isActive: boolean
+    isCreator: boolean
     createdAt: string
     typingSpeeds: TypingSpeed[]
 }
 
 interface RoomCardProps {
     room: Room
+    onDelete: (roomId: string, roomName: string) => Promise<void>
+    deleting?: boolean
 }
 
-export function RoomCard({ room }: RoomCardProps) {
+export function RoomCard({ room, onDelete, deleting = false }: RoomCardProps) {
     const [showAll, setShowAll] = useState(false)
 
     // Calculate average stats from all typing speeds in this room
@@ -57,6 +63,12 @@ export function RoomCard({ room }: RoomCardProps) {
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-green-400 text-lg font-semibold">{room.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                        <Badge className={getStatusColor(room.status)}>{room.status}</Badge>
+                        <Badge variant={room.isActive ? "default" : "secondary"}>
+                            {room.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                    </div>
                 </div>
                 {room.description && <p className="text-gray-400 text-sm">{room.description}</p>}
             </CardHeader>
@@ -110,6 +122,20 @@ export function RoomCard({ room }: RoomCardProps) {
                 </div>
 
                 <div className="text-gray-500 text-xs">Created: {new Date(room.createdAt).toLocaleDateString()}</div>
+
+                {room.isCreator && (
+                    <div className="pt-2">
+                        <Button
+                            variant="destructive"
+                            className="w-full"
+                            onClick={() => void onDelete(room.id, room.name)}
+                            disabled={deleting}
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {deleting ? "Deleting..." : "Delete Room"}
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     )

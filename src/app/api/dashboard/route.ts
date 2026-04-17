@@ -3,82 +3,64 @@ import { getRoom } from "./handlers/getRoom";
 import { getAllGames } from "./handlers/getAllGames";
 import { AppError, handleError } from "@/lib/error";
 import { getAnalysis } from "./handlers/get-analysis";
+import { isRateLimited, getRateLimitStatus } from '@/lib/middleware/rateLimit';
+import { logApiRequest } from '@/lib/utils/logging';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log("📥 ============================================");
-        console.log("📥 DASHBOARD API - New Request Received");
-        console.log("📥 ============================================");
+        // Rate limiting
+        if (isRateLimited(request, 100, 60000)) {
+            const status = getRateLimitStatus(request);
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: { 'Retry-After': String(Math.ceil((status.resetTime - Date.now()) / 1000)) } }
+            );
+        }
 
         const body = await request.json();
-        console.log("📦 Request body:", JSON.stringify(body, null, 2));
+        logApiRequest('POST', '/api/dashboard', { action: body.action });
 
         // Validate that action exists
         if (!body.action) {
-            console.error('❌ Missing action in request body');
             throw new AppError(400, 'Missing action parameter');
         }
 
-        console.log('✅ Processing action:', body.action);
-
         switch (body.action) {
             case 'get-room': {
-                console.log("🏠 Handling get-room action");
-
                 const userData = await getRoom(body);
-
-                console.log("✅ get-room completed successfully");
-                console.log("📊 Data summary:", {
-                    roomCount: Array.isArray(userData) ? userData.length : 0,
-                    dataType: Array.isArray(userData) ? 'array' : typeof userData,
-                });
-
-                return NextResponse.json({
+                const response = NextResponse.json({
                     success: true,
                     data: userData
                 });
+                // Cache for 10 seconds
+                response.headers.set('Cache-Control', 'public, max-age=10');
+                return response;
             }
 
             case "get-analysis": {
-                console.log("📊 Handling get-analysis action");
-
                 const analysisResult = await getAnalysis(body);
-
-                console.log("✅ get-analysis completed successfully");
-
-                return NextResponse.json({
+                const response = NextResponse.json({
                     success: true,
                     data: analysisResult
                 });
+                // Cache for 30 seconds
+                response.headers.set('Cache-Control', 'public, max-age=30');
+                return response;
             }
 
             case "get-all-games": {
-                console.log("🎮 Handling get-all-games action");
-
                 const games = await getAllGames(body);
-
-                console.log("✅ get-all-games completed successfully");
-
-                return NextResponse.json({ success: true, data: games });
+                const response = NextResponse.json({ success: true, data: games });
+                // Cache for 10 seconds
+                response.headers.set('Cache-Control', 'public, max-age=10');
+                return response;
             }
 
             default:
-                console.error('❌ Invalid action received:', body.action);
                 throw new AppError(400, `Invalid action: ${body.action}`);
         }
 
     } catch (error) {
-        console.error('💥 ============================================');
-        console.error('💥 DASHBOARD API - Error Occurred');
-        console.error('💥 ============================================');
-        console.error('Error details:', error);
-        console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
-
-        if (error instanceof Error) {
-            console.error('Error message:', error.message);
-            console.error('Stack trace:', error.stack);
-        }
-
         return handleError(error);
     }
 }

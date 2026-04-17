@@ -3,9 +3,10 @@ import { z } from 'zod';
 export const createRoomSchema = z.object({
     action: z.literal('create'),
     name: z.string()
-        .min(1, 'Room name is required')
         .max(50, 'Room name must be less than 50 characters')
-        .trim(),
+        .trim()
+        .optional()
+        .default(''), // Allow empty, will auto-generate
     description: z.string()
         .max(200, 'Description must be less than 200 characters')
         .optional(),
@@ -96,22 +97,27 @@ export const get = z.object({
     action: z.literal('get'),
     roomId: z.string(),
 });
+
+export const deleteRoomSchema = z.object({
+    action: z.literal('delete'),
+    roomId: z.string().min(1, 'Room ID is required'),
+});
 export const characterPerformanceSchema = z.object({
-  char: z.string().min(1).max(2),
-  avgTimePerChar: z.number().positive(),
-  maxTimePerChar: z.number().positive(),
-  errorFrequency: z.number().int().min(0),
+    char: z.string().min(1).max(2),
+    avgTimePerChar: z.number().positive(),
+    maxTimePerChar: z.number().positive(),
+    errorFrequency: z.number().int().min(0),
 });
 
 export const speedRoomSchema = z.object({
-  action: z.literal("speed"),
-  roomId: z.string().min(1),
-  userId: z.string().min(1),
-  wpm: z.number().int().min(0).max(300),
-  correctword: z.number().int().min(0),
-  duration: z.number().int().min(0),
-  userStatus: z.enum(["ACTIVE", "LEFT"]).optional(),
-  charPerformance: z.array(characterPerformanceSchema),
+    action: z.literal("speed"),
+    roomId: z.string().min(1),
+    userId: z.string().min(1),
+    wpm: z.number().int().min(0).max(300),
+    correctword: z.number().int().min(0),
+    duration: z.number().int().min(0),
+    userStatus: z.enum(["ACTIVE", "LEFT"]).optional(),
+    charPerformance: z.array(characterPerformanceSchema),
 });
 
 export const speedWpmSchema = z.object({
@@ -126,27 +132,27 @@ export const speedWpmSchema = z.object({
 
 export const characterPerformanceItemSchema = z.object({
     action: z.literal("charPerformance"),
-       typingSpeedId: z.string().min(1, "Typing Speed ID is required"),
-       userId: z.string().min(1, "User ID is required"),
-       characters: z.array(characterPerformanceSchema).min(1, "At least one character performance is required"),
+    typingSpeedId: z.string().min(1, "Typing Speed ID is required"),
+    userId: z.string().min(1, "User ID is required"),
+    characters: z.array(characterPerformanceSchema).min(1, "At least one character performance is required"),
 });
 
 export const characterPerformanceEntrySchema = z.object({
-        char: z
-            .string()
-            .min(1, "Character is required")
-            .max(1, "Only single character allowed"),
+    char: z
+        .string()
+        .min(1, "Character is required")
+        .max(1, "Only single character allowed"),
 
-        avgTimePerChar: z
-            .number()
-            .positive("Average time must be positive"),
+    avgTimePerChar: z
+        .number()
+        .positive("Average time must be positive"),
 
-        maxTimePerChar: z
-            .number()
-            .positive("Max time must be positive"),
+    maxTimePerChar: z
+        .number()
+        .positive("Max time must be positive"),
 
-        errorFrequency: z
-            .number()
-            .int()
-            .min(0, "Error frequency cannot be negative"),
-    })
+    errorFrequency: z
+        .number()
+        .int()
+        .min(0, "Error frequency cannot be negative"),
+})

@@ -66,13 +66,13 @@ const CopyButton = ({ text }: { text: string }) => {
 export default function WaitingRoomPage() {
     const params = useParams();
     const router = useRouter();
-    
+
     // Better handling of the id parameter
     const roomId = Array.isArray(params.id) ? params.id[0] : params.id;
-    
+
     console.log('Room ID from params:', roomId);
     console.log('Room ID type:', typeof roomId);
-    
+
     const [room, setRoom] = useState<RoomData | null>(null);
     const [loading, setLoading] = useState(true);
     const [starting, setStarting] = useState(false);
@@ -91,12 +91,12 @@ export default function WaitingRoomPage() {
 
         try {
             setError(null); // Clear previous errors
-            
+
             const requestBody = {
                 action: "endroll",
                 id: roomId,
             };
-            
+
             console.log('Request body:', requestBody);
             console.log('Request body JSON:', JSON.stringify(requestBody));
 
@@ -114,7 +114,7 @@ export default function WaitingRoomPage() {
             if (!res.ok) {
                 const errorText = await res.text();
                 console.error('Error response text:', errorText);
-                
+
                 try {
                     const errorJson = JSON.parse(errorText);
                     console.error('Error response JSON:', errorJson);
@@ -211,10 +211,10 @@ export default function WaitingRoomPage() {
         console.log('Starting game for room:', roomId);
         setStarting(true);
         setError(null);
-        
+
         try {
-            const requestBody = { action: 'start', id: roomId,status:'IN_GAME' };
-            
+            const requestBody = { action: 'start', id: roomId, status: 'IN_GAME' };
+
             const res = await fetch(`/api/room`, {
                 method: 'POST',
                 headers: {
@@ -222,16 +222,16 @@ export default function WaitingRoomPage() {
                 },
                 body: JSON.stringify(requestBody),
             });
-            
+
             console.log('Start game response status:', res.status);
-            
+
             const data = await res.json();
             console.log('Start game response data:', data);
-            
+
             if (!res.ok) {
                 throw new Error(data.error || `HTTP error! status: ${res.status}`);
             }
-            
+
             console.log('Game started successfully, redirecting...');
             router.push(`./test`);
         } catch (err: any) {
@@ -252,9 +252,6 @@ export default function WaitingRoomPage() {
                 <p className="text-muted-foreground">
                     Room ID is missing from the URL.
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
-                    Debug: params = {JSON.stringify(params)}
-                </p>
             </div>
         );
     }
@@ -267,7 +264,7 @@ export default function WaitingRoomPage() {
                     Error
                 </div>
                 <p className="text-muted-foreground mb-4">{error}</p>
-               
+
                 <Button onClick={() => {
                     setError(null);
                     setLoading(true);
@@ -290,16 +287,16 @@ export default function WaitingRoomPage() {
                 </div>
             </div>
         );
-        }
+    }
 
-        return (
+    return (
         <Card className=" max-w-2xl mx-auto my-[20vh] bg-background">
             <CardHeader>
-            <p className="text-md text-muted-foreground text-center flex items-center justify-center gap-2">
-                {/* Copy button with icon switching */}
-                <CopyButton text={room.joinCode} />
-                Join Code: <Highlight className="text-white font-bold text-2xl">{room.joinCode}</Highlight>
-            </p>
+                <p className="text-md text-muted-foreground text-center flex items-center justify-center gap-2">
+                    {/* Copy button with icon switching */}
+                    <CopyButton text={room.joinCode} />
+                    Join Code: <Highlight className="text-white font-bold text-2xl">{room.joinCode}</Highlight>
+                </p>
             </CardHeader>
 
             <CardContent className="space-y-6">
@@ -308,7 +305,7 @@ export default function WaitingRoomPage() {
                         <p className="text-red-700 text-sm">{error}</p>
                     </div>
                 )}
-                
+
                 <div className="bg-muted rounded-xl p-4">
                     <h2 className="font-semibold text-lg mb-2 text-white">Players Joined:</h2>
                     <ul className="space-y-2">
@@ -325,8 +322,8 @@ export default function WaitingRoomPage() {
 
                 <div className="flex justify-end">
                     {room.members.length >= 2 ? (
-                        <Button 
-                            onClick={startGame} 
+                        <Button
+                            onClick={startGame}
                             disabled={starting}
                             className="min-w-[140px]"
                         >

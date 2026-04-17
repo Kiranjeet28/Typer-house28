@@ -9,11 +9,19 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface IncorrectCharStat {
+  char: string;
+  count: number;
+}
+
 interface SpeedData {
   name: string;
   wpm: number;
   correctword: number;
   incorrectchar: number;
+  duration?: number;
+  status?: string;
+  incorrectChars?: IncorrectCharStat[];
 }
 
 interface AITipsResponse {
@@ -83,8 +91,11 @@ export default function ResultPage({ params }: PageProps) {
           const transformed = speedData.map((user: any) => ({
             name: user.name || "Unknown",
             wpm: user.wpm || 0,
-            correctword: user.correctword || 0,
+            correctword: user.correctword ?? user.correctWords ?? 0,
             incorrectchar: user.incorrectchar || 0,
+            duration: user.duration ?? 0,
+            status: user.status ?? "ACTIVE",
+            incorrectChars: Array.isArray(user.incorrectChars) ? user.incorrectChars : [],
           }));
           setData(transformed);
         })
@@ -113,16 +124,31 @@ export default function ResultPage({ params }: PageProps) {
     setAiTipsError(null);
 
     try {
+      const incorrectCharBreakdown =
+        userResult.incorrectChars && userResult.incorrectChars.length > 0
+          ? userResult.incorrectChars
+            .map((item) => `${item.char}: ${item.count}`)
+            .join(", ")
+          : "None";
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: `
-        You are a typing coach. 
-        Based on these results:
+        You are a typing coach.
+        Give 3 concise, practical tips based on this user's result from a single room.
+
+        User performance data:
         - WPM: ${userResult.wpm}
         - Correct Words: ${userResult.correctword}
-        - Incorrect Characters: ${userResult.incorrectchar}
+        - Total Incorrect Character Errors: ${userResult.incorrectchar}
+        - Incorrect Character Breakdown (character: mistake count): ${incorrectCharBreakdown}
+        - Duration (seconds): ${userResult.duration ?? 0}
+
+        Focus on finger arrangement for touch typing.
+        For each mistake-prone character, explain which finger should press it and what hand-position habit can reduce that mistake.
+        Keep the advice beginner-friendly and actionable.
         `,
         }),
       });
@@ -134,7 +160,12 @@ export default function ResultPage({ params }: PageProps) {
 
       if (response.output) {
         try {
-          tips = JSON.parse(response.output);
+          const cleanedOutput = String(response.output)
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .trim();
+
+          tips = JSON.parse(cleanedOutput);
         } catch {
           tips = response.output
             .split(/[\.\n]/)
@@ -262,13 +293,13 @@ export default function ResultPage({ params }: PageProps) {
                       window.innerWidth < 640
                         ? undefined
                         : {
-                            value: 'Words Per Minute (WPM)',
-                            angle: -90,
-                            position: 'insideLeft',
-                            fill: "#f3f4f6",
-                            fontWeight: 700,
-                            fontSize: 14,
-                          }
+                          value: 'Words Per Minute (WPM)',
+                          angle: -90,
+                          position: 'insideLeft',
+                          fill: "#f3f4f6",
+                          fontWeight: 700,
+                          fontSize: 14,
+                        }
                     }
                     tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: window.innerWidth < 640 ? 11 : 14 }}
                     axisLine={{ stroke: "#52525b" }}
@@ -442,19 +473,11 @@ export default function ResultPage({ params }: PageProps) {
                       </div>
                     </div>
                   ))}
-                  <div className="mt-6 pt-4 border-t border-[#27272a]">
-                    <button
-                      onClick={fetchAITips}
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      Generate New Tips
-                    </button>
-                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <SparklesIcon className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                  <p className="text-gray-400">Click "Generate New Tips" to get personalized advice!</p>
+                  <p className="text-gray-400">AI tips will appear here based on your performance</p>
                 </div>
               )}
             </div>

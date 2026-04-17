@@ -1,21 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AppError, handleError } from "@/lib/error";
+import { isRateLimited, getRateLimitStatus } from '@/lib/middleware/rateLimit';
+import { logInfo, logError, logApiRequest } from '@/lib/utils/logging';
 import { createRoomHandler } from './handlers/create';
 import { joinRoomHandler } from './handlers/join';
 import { StartRoomHandler } from './handlers/start';
 import { EndrollRoomHandler } from './handlers/endroll';
-import { SpeedRoomHandler,getSpeedsForRoom } from './handlers/speed';
+import { SpeedRoomHandler, getSpeedsForRoom } from './handlers/speed';
 import { joinRoomCheckHandler } from './handlers/checkJoin';
 import { getHandler } from './handlers/get';
 import characterPushHandler from './handlers/characterPush';
 import { SpeedWpmHandler } from './handlers/speedWpm';
+import { deleteRoomHandler } from './handlers/delete';
 
 // Handle POST requests (your existing logic)
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting
+        if (isRateLimited(request, 50, 60000)) {
+            const status = getRateLimitStatus(request);
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: { 'Retry-After': String(Math.ceil((status.resetTime - Date.now()) / 1000)) } }
+            );
+        }
+
         const body = await request.json();
-        
-        
+        logApiRequest('POST', '/api/room', { action: body.action });
+
         switch (body.action) {
             case 'create':
                 return createRoomHandler(body);
@@ -31,6 +43,8 @@ export async function POST(request: NextRequest) {
                 return characterPushHandler(body);
             case "speed":
                 return SpeedRoomHandler(body);
+            case 'delete':
+                return deleteRoomHandler(body);
             default:
                 console.log('Invalid action received:', body.action);
                 throw new AppError(400, 'Invalid action');
@@ -47,22 +61,31 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const roomId = searchParams.get("id");
         const action = searchParams.get("action") || "speed"; // Default to speed for backward compatibility
-        
-        
+
+
         if (!roomId) {
             throw new AppError(400, 'Missing room ID');
         }
-        
+
         switch (action) {
-            case "speed":
-                return getSpeedsForRoom(roomId);
-            case 'check-join':
+            case "speed": {
+                const response = await getSpeedsForRoom(roomId);
+                // Cache for 5 seconds
+                response.headers.set('Cache-Control', 'public, max-age=5');
+                return response;
+            }
+            case 'check-join': {
                 const checkJoinBody = { action: 'check-join', roomId };
                 return joinRoomCheckHandler(checkJoinBody);
-             case 'get':
+            }
+            case 'get': {
                 const getRoomBody = { action: 'get', roomId };
                 const roomData = await getHandler(getRoomBody);
-                return NextResponse.json(roomData);
+                const response = NextResponse.json(roomData);
+                // Cache for 3 seconds
+                response.headers.set('Cache-Control', 'public, max-age=3');
+                return response;
+            }
             default:
                 throw new AppError(400, 'Invalid GET action');
         }

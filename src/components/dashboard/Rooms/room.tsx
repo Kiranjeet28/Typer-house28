@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { RoomCard } from "./room-card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface TypingSpeed {
     id: string
@@ -19,6 +20,8 @@ interface Room {
     name: string
     description?: string
     status: string
+    isActive: boolean
+    isCreator: boolean
     createdAt: string
     typingSpeeds: TypingSpeed[]
 }
@@ -28,6 +31,7 @@ export default function Room() {
     const [rooms, setRooms] = useState<Room[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null)
 
     const fetchRooms = async () => {
         if (!session?.user?.email) {
@@ -71,8 +75,42 @@ export default function Room() {
         }
     }, [session?.user?.email])
 
+    const handleDeleteRoom = async (roomId: string, roomName: string) => {
+        const shouldDelete = window.confirm(`Delete room \"${roomName}\"? This action cannot be undone.`)
+        if (!shouldDelete) return
+
+        try {
+            setDeletingRoomId(roomId)
+
+            const response = await fetch("/api/room", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action: "delete",
+                    roomId,
+                }),
+            })
+
+            const result = await response.json()
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "Failed to delete room")
+            }
+
+            setRooms((prev) => prev.filter((room) => room.id !== roomId))
+            toast.success("Room deleted successfully")
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to delete room")
+        } finally {
+            setDeletingRoomId(null)
+        }
+    }
+
     // Calculate stats from rooms array
     const totalRooms = rooms.length
+    const activeRooms = rooms.filter((room) => room.isActive).length
     const allTypingSpeeds = rooms.flatMap((room) => room.typingSpeeds || [])
     const totalGames = allTypingSpeeds.length
     const avgWpm = totalGames > 0
@@ -136,6 +174,7 @@ export default function Room() {
 
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold text-green-400 mb-4">Your Rooms ({totalRooms})</h2>
+                    <p className="text-sm text-gray-400">Active rooms: {activeRooms}</p>
                 </div>
 
                 {rooms.length === 0 ? (
@@ -146,7 +185,12 @@ export default function Room() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {rooms.map((room) => (
-                            <RoomCard key={room.id} room={room} />
+                            <RoomCard
+                                key={room.id}
+                                room={room}
+                                onDelete={handleDeleteRoom}
+                                deleting={deletingRoomId === room.id}
+                            />
                         ))}
                     </div>
                 )}
