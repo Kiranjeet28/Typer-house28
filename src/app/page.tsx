@@ -15,9 +15,9 @@ function page() {
       />
       <div className="mt-8 ">
         <Section1 />
-        <div className="hidden md:block">
+        {/* <div className="hidden md:block">
           <Section3 />
-        </div>
+        </div> */}
         <Section2 />
         {/* Feedback launcher button (opens overlayed form) */}
         <FeedbackLauncher />
