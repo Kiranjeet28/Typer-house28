@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useSession } from "next-auth/react";
 import RestrictedTextarea from "./textarea";
 import { recordCharacter } from "@/lib/store/characterStore";
 import { getColorizedParagraph } from "./getColorizedParagraph";
+import { getRoomSocket } from "@/lib/room/roomSocket";
 
 interface TypingInputProps {
     roomId: string;
@@ -29,8 +29,11 @@ export default function TypingInput({
     const lastKeyTimeRef = useRef<number | null>(null);
     const correctWordsRef = useRef(0);
 
-    const { data: session } = useSession();
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
+    const lastSentWpmRef = useRef<number | null>(null);
+    const lastSentAtRef = useRef(0);
+    const pendingWpmRef = useRef<number | null>(null);
+    const sendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     /* -------------------- Helpers -------------------- */
 
@@ -42,32 +45,32 @@ export default function TypingInput({
 
         const typedText = typed.trim();
         const originalText = normalizedParagraph.trim();
-        
+
         // Method 1: Character-based calculation for partial progress
         let correctChars = 0;
         const minLength = Math.min(typedText.length, originalText.length);
-        
+
         for (let i = 0; i < minLength; i++) {
             if (typedText[i] === originalText[i]) {
                 correctChars++;
             }
         }
-        
+
         // Method 2: Count complete correct words for accuracy
         const typedWords = typedText.replace(/\s+/g, " ").split(" ");
         const originalWords = originalText.replace(/\s+/g, " ").split(" ");
-        
+
         let completeCorrectWords = 0;
         for (let i = 0; i < Math.min(typedWords.length, originalWords.length); i++) {
             if (typedWords[i] === originalWords[i]) {
                 completeCorrectWords++;
             }
         }
-        
+
         // Hybrid approach: Use the greater of the two methods
         // This gives credit for both complete words AND partial progress
         const charBasedWords = correctChars / 5; // Standard WPM calculation (5 chars = 1 word)
-        
+
         return Math.max(
             completeCorrectWords,
             Math.floor(charBasedWords)
@@ -123,54 +126,49 @@ export default function TypingInput({
         setWpm(speed);
     }, [correctWordsCount, startTime, overLimit, input]);
 
-    /* -------------------- WPM API Call (Every 10 seconds on change) -------------------- */
+    /* -------------------- WPM WebSocket Update (At most once per second) -------------------- */
 
     useEffect(() => {
-        if (!startTime || !session?.user?.id || overLimit) return;
+        const socket = getRoomSocket(roomId);
+        const unsubscribe = socket.subscribe(() => undefined);
 
-        const sendWpmData = () => {
-            // Always send current values (including 0s at start)
-            const currentCorrectWords = correctWordsRef.current;
-            const minutes = (Date.now() - startTime) / 60000;
-            
-            // Calculate speed (0 if no time has passed or no words)
-            const speed = minutes > 0 && currentCorrectWords > 0 
-                ? Math.round(currentCorrectWords / minutes) 
-                : 0;
+        return unsubscribe;
+    }, [roomId]);
 
-            // Cap at reasonable maximum
-            const finalSpeed = speed > 250 ? 250 : speed;
+    useEffect(() => {
+        if (!startTime || overLimit) {
+            pendingWpmRef.current = null;
+            if (sendTimerRef.current) clearTimeout(sendTimerRef.current);
+            sendTimerRef.current = null;
+            lastSentWpmRef.current = null;
+            return;
+        }
 
-            console.log('📤 Sending WPM data:', { 
-                wpm: finalSpeed, 
-                correctWords: currentCorrectWords, 
-                duration: getDurationSeconds() 
-            });
-
-            fetch("/api/room", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "speedWpm",
-                    roomId,
-                    userId: session.user.id,
-                    wpm: finalSpeed,
-                    correctword: currentCorrectWords,
-                    duration: getDurationSeconds(),
-                }),
-            }).catch(err => {
-                console.error('❌ Failed to send WPM data:', err);
-            });
+        const send = () => {
+            const nextWpm = pendingWpmRef.current;
+            if (nextWpm === null || nextWpm === lastSentWpmRef.current) return;
+            getRoomSocket(roomId).send({ type: "WPM_UPDATE", wpm: nextWpm });
+            lastSentWpmRef.current = nextWpm;
+            lastSentAtRef.current = Date.now();
+            pendingWpmRef.current = null;
         };
 
-        // Send immediately on start (will send 0 WPM, 0 correct words)
-        sendWpmData();
+        pendingWpmRef.current = wpm;
+        const wait = Math.max(0, 1000 - (Date.now() - lastSentAtRef.current));
+        if (wait === 0) {
+            send();
+        } else if (!sendTimerRef.current) {
+            sendTimerRef.current = setTimeout(() => {
+                sendTimerRef.current = null;
+                send();
+            }, wait);
+        }
 
-        // Then send every 10 seconds
-        const interval = setInterval(sendWpmData, 10000);
-
-        return () => clearInterval(interval);
-    }, [startTime, session?.user?.id, overLimit, roomId]);
+        return () => {
+            if (sendTimerRef.current) clearTimeout(sendTimerRef.current);
+            sendTimerRef.current = null;
+        };
+    }, [wpm, startTime, overLimit, roomId]);
 
 
     /* -------------------- Input Handling -------------------- */

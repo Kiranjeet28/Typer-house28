@@ -5,8 +5,10 @@
 
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { getRoomSocket } from '@/lib/room/roomSocket';
+import type { LivePlayer } from '@/lib/room/websocket-types';
 
 interface RoomUpdate {
     type: 'room-status' | 'speed-update' | 'player-joined' | 'player-left' | 'room-deleted';
@@ -18,84 +20,50 @@ interface RoomUpdate {
 interface UseRealTimeUpdatesOptions {
     roomId: string;
     enabled?: boolean;
-    pollInterval?: number; // milliseconds between polls
 }
 
 /**
  * Hook for real-time room updates
- * Polls the speed endpoint for live data
+ * Subscribes to the room WebSocket for live data.
  */
 export function useRealTimeRoomUpdates(options: UseRealTimeUpdatesOptions) {
-    const { roomId, enabled = true, pollInterval = 1000 } = options;
+    const { roomId, enabled = true } = options;
     const { data: session } = useSession();
     const [players, setPlayers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const lastUpdateRef = useRef<number>(0);
-
-    const fetchUpdate = useCallback(async () => {
-        if (!roomId || !enabled || !session?.user?.id) return;
-
-        try {
-            setError(null);
-
-            const response = await fetch(`/api/room?id=${roomId}&action=speed`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                cache: 'no-cache',
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            // Only update if data changed
-            const newTimestamp = Date.now();
-            if (JSON.stringify(data) !== JSON.stringify(players)) {
-                setPlayers(data || []);
-                lastUpdateRef.current = newTimestamp;
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
-        } finally {
-            setLoading(false);
-        }
-    }, [roomId, enabled, session?.user?.id, players]);
-
-    // Set up polling
     useEffect(() => {
-        if (!enabled || !roomId) {
-            if (pollTimerRef.current) {
-                clearInterval(pollTimerRef.current);
-                pollTimerRef.current = null;
+        if (!enabled || !roomId || !session?.user?.id) return;
+        const socket = getRoomSocket(roomId);
+        return socket.subscribe((message) => {
+            if (message.type === 'ROOM_STATE') {
+                setPlayers(message.players);
+                setLoading(false);
+                setError(null);
+            } else if (message.type === 'PLAYER_SPEED') {
+                setPlayers((currentPlayers: LivePlayer[]) => currentPlayers.map((player) =>
+                    player.id === message.userId ? { ...player, wpm: message.wpm } : player,
+                ));
+            } else if (message.type === 'PLAYER_JOINED') {
+                setPlayers((currentPlayers: LivePlayer[]) => currentPlayers.some((player) => player.id === message.player.id)
+                    ? currentPlayers.map((player) => player.id === message.player.id ? message.player : player)
+                    : [...currentPlayers, message.player]);
+            } else if (message.type === 'PLAYER_LEFT') {
+                setPlayers((currentPlayers: LivePlayer[]) => currentPlayers.map((player) =>
+                    player.id === message.userId ? { ...player, status: 'LEFT' } : player,
+                ));
+            } else if (message.type === 'ERROR' || message.type === 'CONNECTION_ERROR') {
+                setError(message.message);
+                setLoading(false);
             }
-            return;
-        }
-
-        // Fetch immediately
-        fetchUpdate();
-
-        // Set up polling interval
-        pollTimerRef.current = setInterval(fetchUpdate, pollInterval);
-
-        return () => {
-            if (pollTimerRef.current) {
-                clearInterval(pollTimerRef.current);
-                pollTimerRef.current = null;
-            }
-        };
-    }, [enabled, roomId, pollInterval, fetchUpdate]);
+        });
+    }, [enabled, roomId, session?.user?.id]);
 
     return {
         players,
         loading,
         error,
-        refresh: fetchUpdate,
+        refresh: () => undefined,
     };
 }
 

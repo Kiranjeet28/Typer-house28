@@ -1,18 +1,12 @@
 // src/components/Room/test/SpeedBoard.tsx
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useInterval } from "@/lib/hooks/useInterval";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { getRoomSocket } from "@/lib/room/roomSocket";
+import type { LivePlayer } from "@/lib/room/websocket-types";
 
-type UserStatus = "ACTIVE" | "LEFT";
-
-type PlayerSpeed = {
-    id?: string; // Add unique identifier for better tracking
-    name: string;
-    wpm: number;
-    status: UserStatus;
-};
+type PlayerSpeed = LivePlayer;
 
 interface SpeedBoardProps {
     roomId: string;
@@ -24,60 +18,34 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
     const [error, setError] = useState<string | null>(null);
     const { data: session } = useSession();
 
-    // Track previous players to detect status changes
-    const prevPlayersRef = useRef<PlayerSpeed[]>([]);
-    const isFetchingRef = useRef(false);
-
-    const fetchSpeeds = useCallback(async () => {
-        // Prevent concurrent requests
-        if (isFetchingRef.current) return;
-
-        isFetchingRef.current = true;
-
-        try {
-            const response = await fetch(`/api/room?id=${roomId}&action=speed`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                cache: "no-cache",
-            });
-
-            if (response.ok) {
-                const data: PlayerSpeed[] = await response.json();
-
-                // Only update state if data actually changed
-                const hasChanged = JSON.stringify(data) !== JSON.stringify(prevPlayersRef.current);
-
-                if (hasChanged) {
-                    setPlayers(data);
-                    prevPlayersRef.current = data;
-                }
-
-                setError(null);
+    useEffect(() => {
+        const socket = getRoomSocket(roomId);
+        return socket.subscribe((message) => {
+            if (message.type === "ROOM_STATE") {
+                setPlayers(message.players);
                 setIsLoading(false);
-            } else {
-                console.error("Failed to fetch speeds:", response.status);
-                setError("Failed to load player speeds");
+                setError(null);
+            } else if (message.type === "PLAYER_SPEED") {
+                setPlayers((currentPlayers) => currentPlayers.map((player) =>
+                    player.id === message.userId ? { ...player, wpm: message.wpm } : player,
+                ));
+            } else if (message.type === "PLAYER_JOINED") {
+                setPlayers((currentPlayers) => currentPlayers.some((player) => player.id === message.player.id)
+                    ? currentPlayers.map((player) => player.id === message.player.id ? message.player : player)
+                    : [...currentPlayers, message.player]);
+            } else if (message.type === "PLAYER_LEFT") {
+                setPlayers((currentPlayers) => currentPlayers.map((player) =>
+                    player.id === message.userId ? { ...player, status: "LEFT" } : player,
+                ));
+            } else if (message.type === "ERROR" || message.type === "CONNECTION_ERROR") {
+                setError(message.message);
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error("Error fetching speeds:", error);
-            setError("Connection error");
-        } finally {
-            isFetchingRef.current = false;
-        }
+        });
     }, [roomId]);
 
-    // Initial fetch
-    useEffect(() => {
-        fetchSpeeds();
-    }, [fetchSpeeds]);
-
-    // Poll every 3 seconds instead of 1 second (reduce API calls by 66%)
-    useInterval(fetchSpeeds, 3000);
-
     // Filter and sort players
-    const sortedPlayers = players
+    const sortedPlayers = [...players]
         .sort((a, b) => {
             // Active players first, then by WPM
             if (a.status === "ACTIVE" && b.status === "LEFT") return -1;
@@ -132,7 +100,7 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
                         <>
                             {/* Active Players */}
                             {activePlayers.map((p, i) => {
-                                const isCurrentUser = session?.user?.name === p.name;
+                                const isCurrentUser = session?.user?.id === p.id || session?.user?.name === p.name;
                                 const isTopPlayer = i === 0;
 
                                 return (
@@ -189,7 +157,7 @@ export default function SpeedBoard({ roomId }: SpeedBoardProps) {
                                         </li>
                                     )}
                                     {leftPlayers.map((p, i) => {
-                                        const isCurrentUser = session?.user?.name === p.name;
+                                        const isCurrentUser = session?.user?.id === p.id || session?.user?.name === p.name;
 
                                         return (
                                             <li

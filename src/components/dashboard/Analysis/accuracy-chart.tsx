@@ -1,8 +1,22 @@
 "use client"
 
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import {
+    Bar as RechartsBar,
+    BarChart as RechartsBarChart,
+    XAxis as RechartsXAxis,
+    YAxis as RechartsYAxis,
+    CartesianGrid as RechartsCartesianGrid,
+    ResponsiveContainer as RechartsResponsiveContainer,
+} from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+
+const Bar = RechartsBar as any
+const BarChart = RechartsBarChart as any
+const XAxis = RechartsXAxis as any
+const YAxis = RechartsYAxis as any
+const CartesianGrid = RechartsCartesianGrid as any
+const ResponsiveContainer = RechartsResponsiveContainer as any
 
 interface AccuracyChartProps {
     data: Array<{

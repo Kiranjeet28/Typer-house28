@@ -1,9 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import {
+  BarChart as RechartsBarChart,
+  Bar as RechartsBar,
+  XAxis as RechartsXAxis,
+  YAxis as RechartsYAxis,
+  CartesianGrid as RechartsCartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend as RechartsLegend,
+  ResponsiveContainer as RechartsResponsiveContainer,
+  Cell as RechartsCell,
+} from "recharts";
 import { Button } from "@/components/ui/button";
 import { SparklesIcon, X, Loader } from "lucide-react";
+
+// Recharts 2's component typings target React 18 and are incompatible with React 19 JSX.
+const BarChart = RechartsBarChart as any;
+const Bar = RechartsBar as any;
+const XAxis = RechartsXAxis as any;
+const YAxis = RechartsYAxis as any;
+const CartesianGrid = RechartsCartesianGrid as any;
+const Tooltip = RechartsTooltip as any;
+const Legend = RechartsLegend as any;
+const ResponsiveContainer = RechartsResponsiveContainer as any;
+const Cell = RechartsCell as any;
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -285,7 +306,7 @@ export default function ResultPage({ params }: PageProps) {
                     tick={{ fill: "#f3f4f6", fontWeight: 600, fontSize: window.innerWidth < 640 ? 11 : 14 }}
                     axisLine={{ stroke: "#52525b" }}
                     tickLine={{ stroke: "#52525b" }}
-                    tickFormatter={(value) => getDisplayName(value)}
+                    tickFormatter={(value: string) => getDisplayName(value)}
                   />
                   <YAxis
                     domain={[0, 'dataMax + 20']}
@@ -306,8 +327,8 @@ export default function ResultPage({ params }: PageProps) {
                     tickLine={{ stroke: "#52525b" }}
                   />
                   <Tooltip
-                    formatter={(value, name) => [`${value} WPM`, 'Speed']}
-                    labelFormatter={(label) => `Player: ${getDisplayName(label)}`}
+                    formatter={(value: unknown, _name: unknown) => [`${value} WPM`, 'Speed']}
+                    labelFormatter={(label: string) => `Player: ${getDisplayName(label)}`}
                     contentStyle={{
                       backgroundColor: '#23232b',
                       border: '1px solid #52525b',

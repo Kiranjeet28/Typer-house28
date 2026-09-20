@@ -1,8 +1,22 @@
 "use client"
 
-import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import {
+    Line as RechartsLine,
+    LineChart as RechartsLineChart,
+    XAxis as RechartsXAxis,
+    YAxis as RechartsYAxis,
+    CartesianGrid as RechartsCartesianGrid,
+    ResponsiveContainer as RechartsResponsiveContainer,
+} from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+
+const Line = RechartsLine as any
+const LineChart = RechartsLineChart as any
+const XAxis = RechartsXAxis as any
+const YAxis = RechartsYAxis as any
+const CartesianGrid = RechartsCartesianGrid as any
+const ResponsiveContainer = RechartsResponsiveContainer as any
 
 interface WpmChartProps {
     data: Array<{
