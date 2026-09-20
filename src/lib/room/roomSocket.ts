@@ -32,10 +32,22 @@ class RoomSocket {
         }
     }
 
-    private connect() {
+    private async connect() {
         if (!this.shouldReconnect || this.socket || typeof window === "undefined") return;
+
+        const response = await fetch("/api/auth/websocket-token", {
+            credentials: "include",
+        });
+        if (!response.ok) {
+            this.emit({ type: "CONNECTION_ERROR", message: "WebSocket authentication failed." });
+            return;
+        }
+
+        const { token } = await response.json() as { token: string };
         const configuredUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-        const url = configuredUrl ?? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.hostname}:3001`;
+        const baseUrl = configuredUrl ?? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.hostname}:3001`;
+        const separator = baseUrl.includes("?") ? "&" : "?";
+        const url = `${baseUrl}${separator}token=${encodeURIComponent(token)}`;
         const socket = new WebSocket(url);
         this.socket = socket;
 

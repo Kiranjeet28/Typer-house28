@@ -1,22 +1,31 @@
 import "dotenv/config";
-import { getToken } from "next-auth/jwt";
+import { decode, getToken } from "next-auth/jwt";
 import { IncomingMessage } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
 import { prisma } from "../src/lib/prisma";
 import type { ClientMessage, LivePlayer } from "../src/lib/room/websocket-types";
 import { roomManager } from "./roomManager";
-
-const port = Number(process.env.WS_PORT ?? 3001);
+const port = Number(process.env.PORT ?? process.env.WS_PORT ?? 3001);
 const wss = new WebSocketServer({ port });
 
 type AuthenticatedUser = { id: string; name: string };
 type HealthSocket = WebSocket & { isAlive?: boolean };
 
 async function authenticate(request: IncomingMessage): Promise<AuthenticatedUser | null> {
-    const token = await getToken({
-        req: request as never,
-        secret: process.env.NEXTAUTH_SECRET,
-    });
+    const requestUrl = new URL(
+        request.url ?? "/",
+        `http://${request.headers.host ?? "localhost"}`,
+    );
+    const websocketToken = requestUrl.searchParams.get("token");
+    const token = websocketToken
+        ? await decode({
+            token: websocketToken,
+            secret: process.env.NEXTAUTH_SECRET!,
+        })
+        : await getToken({
+            req: request as never,
+            secret: process.env.NEXTAUTH_SECRET,
+        });
     const userId = typeof token?.uid === "string" ? token.uid : token?.sub;
     if (!userId) return null;
 
