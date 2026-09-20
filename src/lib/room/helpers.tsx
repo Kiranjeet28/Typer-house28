@@ -1,15 +1,45 @@
 import { hardText, mediumText, simpleText, hardAlternatives, mediumAlternatives } from "@/resources/text";
 
-export const sendLeaveBeacon = (id: string, session: any) => {
+export type TypingMetrics = {
+    wpm: number;
+    correctword: number;
+    duration: number;
+};
+
+export async function saveTypingResult(
+    roomId: string,
+    userId: string,
+    metrics: TypingMetrics,
+    userStatus: "ACTIVE" | "LEFT" = "LEFT",
+) {
+    const response = await fetch("/api/room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            action: "speedWpm",
+            roomId,
+            userId,
+            ...metrics,
+            userStatus,
+        }),
+    });
+
+    if (!response.ok) throw new Error("Failed to save typing result");
+}
+
+export const sendLeaveBeacon = (
+    id: string,
+    session: any,
+    metrics: TypingMetrics = { wpm: 0, correctword: 0, duration: 0 },
+) => {
     if (!id || !session?.user?.id) return;
 
     const payload = JSON.stringify({
-        action: "speed",
+        action: "speedWpm",
         roomId: id,
         userStatus: "LEFT",
         userId: session.user.id,
-        duration: 0,
-        charPerformance: [],
+        ...metrics,
     });
 
     navigator.sendBeacon("/api/room", payload);

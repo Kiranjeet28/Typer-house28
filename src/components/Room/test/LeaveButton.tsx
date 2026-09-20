@@ -1,13 +1,13 @@
 "use client";
 
 import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
-import { sendLeaveBeacon } from "@/lib/room/helpers";
+import { saveTypingResult, sendLeaveBeacon, type TypingMetrics } from "@/lib/room/helpers";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 
-export function LeaveRoomButton({ id: roomId }: { id: string }) {
+export function LeaveRoomButton({ id: roomId, metrics }: { id: string; metrics: TypingMetrics }) {
     const router = useRouter();
     const { data: session } = useSession();
     const [leaving, setLeaving] = useState(false);
@@ -28,6 +28,7 @@ export function LeaveRoomButton({ id: roomId }: { id: string }) {
 
         try {
             // ✅ Push buffered character performance
+            await saveTypingResult(roomId, session.user.id, metrics);
             await pushCharacterPerformance(roomId, session.user.id);
 
             // ✅ Update room status to FINISHED
@@ -46,7 +47,7 @@ export function LeaveRoomButton({ id: roomId }: { id: string }) {
             });
 
             // ✅ Notify backend user left (beacon-safe)
-            sendLeaveBeacon(roomId, session);
+            sendLeaveBeacon(roomId, session, metrics);
 
             // Small delay to allow beacon to flush
             await new Promise(resolve => setTimeout(resolve, 150));

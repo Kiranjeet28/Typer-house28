@@ -5,12 +5,14 @@ import RestrictedTextarea from "./textarea";
 import { recordCharacter } from "@/lib/store/characterStore";
 import { getColorizedParagraph } from "./getColorizedParagraph";
 import { getRoomSocket } from "@/lib/room/roomSocket";
+import type { TypingMetrics } from "@/lib/room/helpers";
 
 interface TypingInputProps {
     roomId: string;
     paragraph: string;
     overLimit?: boolean;
     onTypingStatusChange?: (isTyping: boolean) => void;
+    onMetricsChange?: (metrics: TypingMetrics) => void;
 }
 
 export default function TypingInput({
@@ -18,6 +20,7 @@ export default function TypingInput({
     paragraph,
     overLimit,
     onTypingStatusChange,
+    onMetricsChange,
 }: TypingInputProps) {
     const [input, setInput] = useState("");
     const [wpm, setWpm] = useState(0);
@@ -28,6 +31,14 @@ export default function TypingInput({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastKeyTimeRef = useRef<number | null>(null);
     const correctWordsRef = useRef(0);
+
+    useEffect(() => {
+        onMetricsChange?.({
+            wpm,
+            correctword: correctWordsCount,
+            duration: startTime ? Math.round((Date.now() - startTime) / 1000) : 0,
+        });
+    }, [wpm, correctWordsCount, startTime, onMetricsChange]);
 
     const normalizedParagraph = paragraph.trim().replace(/\s+/g, " ");
     const lastSentWpmRef = useRef<number | null>(null);

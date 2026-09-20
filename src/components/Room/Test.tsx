@@ -7,7 +7,7 @@ import SpeedBoard from "./test/SpeedBoard";
 import { useRoomContext, Room } from "@/lib/context";
 import TypingClock from "./test/TypingClock";
 import { useSession } from "next-auth/react";
-import { getTextByTimeLimit, sendLeaveBeacon } from "@/lib/room/helpers";
+import { getTextByTimeLimit, saveTypingResult, type TypingMetrics } from "@/lib/room/helpers";
 import { LeaveRoomButton } from "./test/LeaveButton";
 import { pushCharacterPerformance } from "@/lib/apiHandler/pushCharacter";
 import { toast } from "sonner";
@@ -29,6 +29,7 @@ export default function TypingTestPage() {
     // Refs to prevent redundant operations
     const hasRedirectedRef = useRef(false);
     const isFetchingRef = useRef(false);
+    const metricsRef = useRef<TypingMetrics>({ wpm: 0, correctword: 0, duration: 0 });
 
     /* ----------------------------------
        Typing / Clock Callbacks
@@ -43,6 +44,7 @@ export default function TypingTestPage() {
         hasRedirectedRef.current = true;
 
         if (roomId && session?.user?.id) {
+            await saveTypingResult(roomId, session.user.id, metricsRef.current);
             await pushCharacterPerformance(roomId, session.user.id);
         }
 
@@ -205,10 +207,11 @@ export default function TypingTestPage() {
                 roomId={roomId as string}
                 onTypingStatusChange={handleTypingStatusChange}
                 overLimit={overLimit}
+                onMetricsChange={(metrics) => { metricsRef.current = metrics; }}
             />
 
             <div className="flex gap-2 flex-col items-center">
-                {roomId && <LeaveRoomButton id={roomId} />}
+                {roomId && <LeaveRoomButton id={roomId} metrics={metricsRef.current} />}
                 <TypingClock
                     isTyping={isTyping}
                     roomId={roomId as string}
